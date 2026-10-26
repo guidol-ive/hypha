@@ -1025,7 +1025,7 @@ EOF;
 
 		/** @var HyphaDomElement|null $comment */
 		$commentId = $request->getArg(1);
-		$comment = $this->xml->document()->getElementById($commentId);
+		$comment = $this->xml->getElementById($commentId);
 		if (!$comment instanceof HyphaDomElement || $comment->tagName !== self::FIELD_NAME_DISCUSSION_COMMENT) {
 			notify('error', __('not-found'));
 			return '404';
