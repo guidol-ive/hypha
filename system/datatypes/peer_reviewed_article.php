@@ -333,9 +333,7 @@ class peer_reviewed_article extends HyphaDatatypePage {
 		$discussions = $this->xml->findOneXPath(self::FIELD_NAME_DISCUSSION_CONTAINER . '/' . self::FIELD_NAME_DISCUSSION_PUBLIC_CONTAINER);
 
 		$xpath = './/' . self::FIELD_NAME_DISCUSSION_COMMENT . '[@' . self::FIELD_NAME_DISCUSSION_COMMENT_PENDING . '!="1"]';
-		$commentCollection = $discussions->findXPath($xpath);
-
-		$commentCount = $commentCollection->length;
+		$commentCount = $discussions ? $discussions->findXPath($xpath)->length : 0;
 		if ($commentCount > 0) {
 			if ($commentCount == 1) {
 				$commentCountText = __('art-public-comment-count-singular', ['count' => $commentCount]);
@@ -645,7 +643,7 @@ class peer_reviewed_article extends HyphaDatatypePage {
 
 		// create form
 		$formData = [
-			self::FIELD_NAME_TITLE => html_entity_decode(strip_tags($this->xml->findOneXPath('//' . self::FIELD_NAME_TITLE)->getText())),
+			self::FIELD_NAME_TITLE => html_entity_decode(strip_tags($this->xml->findOneXPath('//' . self::FIELD_NAME_TITLE)->extractText())),
 			self::FIELD_NAME_AUTHOR => $this->xml->findOneXPath(self::FIELD_NAME_ARTICLE)->getAttribute(self::FIELD_NAME_AUTHOR),
 			self::FIELD_NAME_TEXT => $this->xml->findOneXPath('//' . self::FIELD_NAME_TEXT)->getInnerHtml(),
 			self::FIELD_NAME_EXCERPT => $this->xml->findOneXPath('//' . self::FIELD_NAME_EXCERPT)->getInnerHtml(),
@@ -1023,8 +1021,8 @@ EOF;
 		$commentId = $request->getArg(1);
 		$comment = $this->xml->document()->getElementById($commentId);
 		if (!$comment instanceof HyphaDomElement || $comment->tagName !== self::FIELD_NAME_DISCUSSION_COMMENT) {
-			$this->xml->unlock();
-			notify('error', __('not-found')); // 404
+			notify('error', __('not-found'));
+			return '404';
 		}
 
 		$values = [
@@ -2009,7 +2007,9 @@ EOF;
 	public function getTitle() {
 		$title = $this->xml->findOneXPath('//' . self::FIELD_NAME_TITLE);
 		if ($title instanceof HyphaDomElement) {
-			$title = $title->getText();
+			// Older titles may contain markup (e.g. a <p>), so
+			// ignore it rather than failing.
+			$title = $title->extractText();
 		}
 		if (!$title) {
 			$title = showPagename($this->pagename);
