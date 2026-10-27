@@ -26,6 +26,7 @@ invitee choose a user name and password. A member can resend the invitation.
 | Markup | `/settings/markup` | The HTML template of the theme |
 | Styles | `/settings/styles` | The style sheet of the theme |
 | System tools | `hypha.php?maintenance` | Separate maintenance script with its own login (see below) |
+| Markdown editor | element `mdeditor` in `data/hypha.xml` | Sections (rubrieken), the editorial statute, embedded content and interactive blocks (level 2) on or off per role, and the allowed hosts. There is no settings screen yet: edit `hypha.xml` while the site is quiet. See [`../technical/DATA_MODEL.md`](../technical/DATA_MODEL.md#hypha-xml) |
 
 ## System tools (`hypha.php`)
 

@@ -83,6 +83,28 @@ timeline
 > [!info] De nieuwe tekst-editor
 > De nieuwe tekst-editor brengt zijn bibliotheken mee in `system/vendor/` (PHP) en `system/mdeditor/vendor/` (browser). Er is geen Composer of npm nodig op de server. De bestanden in de browser hebben de versie in hun naam, zodat een browser na een update nooit een oude versie uit zijn cache haalt.
 
+## Instellingen van de tekst-editor
+
+De tekst-editor heeft nog geen eigen scherm voor instellingen. Ze staan in het element `mdeditor` in `data/hypha.xml`. Zonder dat element gelden de standaardwaarden uit `hypha_mdeditorDefaults()` in `system/core/markdown.php`.
+
+```xml
+<mdeditor level2="on" level2Off="user">
+  <section>Politiek en bestuur</section>
+  <statute>Feiten in het artikel zijn gecontroleerd met ten minste één betrouwbare bron.</statute>
+  <frameHost>player.vimeo.com</frameHost>
+  <peertubeHost>framatube.org</peertubeHost>
+  <scriptHost>cdn.jsdelivr.net</scriptHost>
+</mdeditor>
+```
+
+1. `section`: de rubrieken waaruit een auteur kiest. Elke rubriek is één element.
+2. `statute`: de punten van het redactiestatuut. Wie een artikel goedkeurt, vinkt ze allemaal aan.
+3. `frameHost` en `peertubeHost`: de diensten die je mag insluiten, zoals video en kaarten.
+4. `scriptHost`: de enige plekken waar een interactief blok scripts en stijlen vandaan mag halen.
+5. `level2="off"` zet ingesloten inhoud en interactieve blokken uit voor de hele site. Met `level2Off="user"` zet je ze alleen uit voor gewone leden, met `level2Off="user,admin"` voor iedereen.
+
+Een lijst die je invult, vervangt de standaardlijst helemaal. Pas `hypha.xml` aan als het rustig is op de site, en maak eerst een [back-up](#back-up).
+
 ## PHP-versies
 
 Hypha draait op **PHP 8.2 tot en met 8.5**. Controleer de versie voor je van hosting wisselt, met `php -v` en de lijst met extensies in [Installatie](02-installatie.md#wat-je-nodig-hebt). PHP 8.2 krijgt van php.net beveiligingsupdates tot en met 31 december 2026.

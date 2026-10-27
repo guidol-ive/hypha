@@ -17,6 +17,12 @@ A wiki page.
 
 Every save is kept as a version with author and time. Deleting removes the page for everyone.
 
+A new text page can be written in the **Markdown editor** instead of WYMeditor: the dialog for a
+new page asks for *Opmaak* (visual) or *Markdown*, and remembers the choice if asked. Both are views
+of the same Markdown text; switching does not change it. Versions, compare and revert work as
+before; a translation is made in the same editor. See the handbook,
+[`../handleiding/gebruik/03-tekstpagina.md`](../handleiding/gebruik/03-tekstpagina.md).
+
 ## Peer-reviewed article (`peer_reviewed_article`)
 
 Made for De Stadsbron: an article is published only after review by fellow members.
@@ -50,6 +56,24 @@ newly created ──save──> draft ──"to review"──> review ──3 ap
 | `…/name/comments` | Moderation view |
 | `…/name/comment/<id>/confirm?code=…` | Confirmation link from the commenter's e-mail |
 | `…/name/unsubscribe` | Stop e-mails about a discussion |
+
+**Markdown articles.** A new article is written in the Markdown editor (WYMeditor stays for
+articles made before). The fields are the same, with a *section* (rubriek) from a list of the site.
+The life cycle has these additions:
+
+- **Approve with the statute:** a member who approves ticks every point of the editorial statute
+  of the site. The author cannot approve the own article.
+- **Take back from review:** the author can move an article in *review* or *approved* back to
+  *draft*; the approvals lapse and are kept as lapsed.
+- **Withdraw:** a published article can be withdrawn with a reason for readers. It stays readable
+  with a notice and the reason, is left out of page lists and gets `noindex`; it can be edited
+  again as a draft.
+- **Language and page name:** the author can change the language; the author or an administrator
+  can rename the page.
+- The checks gain *has title*, *has section* and *only known tags*.
+
+See the handbook, [`../handleiding/gebruik/04-artikel-schrijven.md`](../handleiding/gebruik/04-artikel-schrijven.md)
+and [`../handleiding/gebruik/05-beoordelen-en-publiceren.md`](../handleiding/gebruik/05-beoordelen-en-publiceren.md).
 
 ## Mailing list (`mailinglist`)
 

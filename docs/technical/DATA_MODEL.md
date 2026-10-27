@@ -52,6 +52,24 @@ A fresh installation, with personal values left out:
 | `pageList/page` | `id`, `type` (PHP class of the page type), `private` (`on`/`off`); one `language` child per translation with `id` and `name` (the address) |
 | `tagList/tag` | Tags with a label per language; pages refer to tags by id |
 | `digest` | Pending digest entries |
+| `mdeditor` | Optional settings of the Markdown editor (see below); without it the defaults of `hypha_mdeditorDefaults()` apply |
+| `userList/user/@mdeditor` | Preferences of a member for the Markdown editor, as JSON: `mode` (`visual` or `markdown`), `remember`, `split` (20–80) |
+
+The settings of the Markdown editor (`system/core/markdown.php`, `hypha_mdeditorSettings()`). Every
+list replaces its default when it has at least one item:
+
+```xml
+<mdeditor level2="on" level2Off="user">
+  <section>Politiek en bestuur</section>      <!-- sections (rubrieken) an article can have -->
+  <statute>Feiten zijn gecontroleerd …</statute> <!-- points of the editorial statute, ticked when approving -->
+  <frameHost>player.vimeo.com</frameHost>     <!-- hosts an embedded iframe may point to (level 2) -->
+  <peertubeHost>framatube.org</peertubeHost>  <!-- PeerTube instances for embedded video (level 2) -->
+  <scriptHost>cdn.jsdelivr.net</scriptHost>   <!-- hosts an interactive block may load scripts and styles from -->
+</mdeditor>
+```
+
+`level2="off"` turns embedded content and interactive blocks off for the whole site; `level2Off`
+is a comma-separated list of roles (`user`, `admin`) for which they are off.
 
 ## A page file
 
@@ -71,6 +89,63 @@ A peer-reviewed article stores, below the root, `article` (with `title`, `author
 blocking flag), `approves/approve`, and status and dates as attributes. A mailing list stores
 `addresses` (with confirm and unsubscribe codes) and `mailings`. A festival stores sign-ups,
 contributions and payments.
+
+### Pages from the Markdown editor
+
+A text page or article written in the Markdown editor keeps its page type. It has the attribute
+`format="markdown"` and an element `source` with the Markdown as the author wrote it, as CDATA.
+The XHTML stays where it always was: the server makes it when saving, so readers, search, the
+digest and the versions list work as before. A page without `format="markdown"` or without
+`source` opens in WYMeditor.
+
+A text page keeps one Markdown version per XHTML version, with the same time stamp. As with the
+XHTML, older versions are stored as a difference to the next one:
+
+```xml
+<hypha type="textpage" multiLingual="on" versions="on" format="markdown">
+  <language xml:id="nl">
+    <version xml:id="t1793000500" author="…user id…">…XHTML…</version>
+  </language>
+  <source format="markdown" profile="hypha-1.0">
+    <language id="nl">
+      <version at="t1793000500" author="…user id…"><![CDATA[## Over de redactie …]]></version>
+    </language>
+  </source>
+</hypha>
+```
+
+An article keeps only its latest state:
+
+```xml
+<hypha type="peer_reviewed_article">
+  <article format="markdown" status="draft" author="…">
+    <content><text>…XHTML…</text><sources>…XHTML…</sources></content>
+    <context><title>…</title><section>…</section><excerpt>…XHTML…</excerpt><method>…XHTML…</method></context>
+    <source format="markdown" profile="hypha-1.0" unknownTags="…">
+      <text><![CDATA[…]]></text><excerpt>…</excerpt><method>…</method><sources>…</sources><frontmatter>…</frontmatter>
+    </source>
+    <retraction at="t…" by="…user id…">reason for readers</retraction>
+  </article>
+  <featured_image alt="…" caption="…" credit="…">file name</featured_image>
+  <lapsed_approves>…</lapsed_approves>
+  …
+</hypha>
+```
+
+| Element / attribute | Meaning |
+|---|---|
+| `article/@status` | `draft`, `review`, `approved`, `published`, and for Markdown articles also `retracted` |
+| `source/@profile` | Version of the Markdown dialect, `hypha-1.0` |
+| `source/@unknownTags` | Tags from imported Frontmatter that the site does not have; kept so nothing is lost |
+| `source/frontmatter` | Frontmatter keys that are not fields of the article, kept as written |
+| `retraction` | Reason shown to readers of a withdrawn article; `at` and `by` |
+| `lapsed_approves` | Approvals that lapsed because the author took the article back from review |
+| `featured_image` | Under the root, not in `context`: the existing code reads it there |
+| `pageList/page/@retracted` | `on` for a withdrawn article: left out of page lists, and `noindex` for search engines |
+
+Diagrams and formulas are drawn in the browser and sent along as SVG and MathML; the server only
+puts them into the XHTML when the hash of their source matches. Everything goes through the
+HTML filter of `system/core/markdown/HyphaFilter.php` before it is stored.
 
 ## Writing and locking
 
