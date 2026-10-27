@@ -150,6 +150,30 @@ export default async function (t) {
 		assert(/^\[\^1\]: /m.test(text) && /```php/.test(text) && /^---$/m.test(text), 'footnote, code, rule: ' + text);
 	});
 
+	t.test('a large photo is made smaller before the upload', async () => {
+		const big = await page.evaluate(async () => {
+			const c = document.createElement('canvas');
+			c.width = 4000; c.height = 3000;
+			const g = c.getContext('2d'), img = g.createImageData(4000, 3000);
+			for (let i = 0; i < img.data.length; i++) img.data[i] = (i * 7919) % 251;
+			g.putImageData(img, 0, 0);
+			const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.98));
+			return [...new Uint8Array(await blob.arrayBuffer())];
+		});
+		assert(big.length > 1500000, 'test photo too small: ' + big.length);
+		await editor(() => {
+			window.mdeSent = 0;
+			const fetch0 = window.fetch;
+			window.fetch = (url, init) => { if (String(url).endsWith('upload/image')) window.mdeSent = init.body.get('uploadedfile').size; return fetch0(url, init); };
+			window.hyphaMdeditor.editor.dialogs.openImage({});
+		});
+		await page.setInputFiles('#mdeImageFile', { name: 'telefoon.jpg', mimeType: 'image/jpeg', buffer: Buffer.from(big) });
+		await page.waitForFunction(() => window.hyphaMdeditor.editor.dialogs.image.src, null, { timeout: 20000 });
+		const sent = await editor(() => window.mdeSent);
+		assert(sent > 0 && sent < big.length / 2, `sent ${sent} of ${big.length} bytes`);
+		await page.keyboard.press('Escape');
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

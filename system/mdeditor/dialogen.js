@@ -206,9 +206,30 @@ export class Dialogs {
 		drop.innerHTML = url ? `<span><img src="${esc(url)}" alt=""><small><i class="fa fa-upload" aria-hidden="true"></i> ${esc(this.t('field-image-other'))}</small></span>` : drop.dataset.empty;
 	}
 
+	//
+	// A large photo (a phone takes 4 to 12 MB) is made smaller in the browser before the upload: at most 2400 pixels on
+	// its long side, as JPEG. Faster on a mobile connection, and it stays under the upload limit of most hosts; Hypha
+	// itself makes the versions for the page from it. Small images and PNG (which may be transparent) go as they are.
+	//
+	async shrink(file) {
+		if (!/^image\/(jpeg|webp|heic|heif)$/i.test(file.type) || file.size < 1500000 || !window.createImageBitmap) return file;
+		try {
+			const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+			const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height));
+			const canvas = document.createElement('canvas');
+			canvas.width = Math.round(bitmap.width * scale);
+			canvas.height = Math.round(bitmap.height * scale);
+			canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+			const blob = await new Promise(done => canvas.toBlob(done, 'image/jpeg', 0.88));
+			return blob && blob.size < file.size ? new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file;
+		}
+		catch (e) { return file; }
+	}
+
 	async upload(file, d, update) {
 		const info = $('#mdeImageInfo', d);
 		this.showImage(d, URL.createObjectURL(file));
+		file = await this.shrink(file);
 		info.textContent = this.t('image-uploading', { file: file.name });
 		const body = new FormData();
 		body.append('uploadedfile', file);
