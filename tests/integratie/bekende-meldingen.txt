@@ -8,3 +8,10 @@ peer_reviewed_article::constructDiscussionFieldSuffix(): Implicitly marking para
 makeAction(): Implicitly marking parameter
 mailinglist::makeActionButton(): Implicitly marking parameter
 festivalpage::makeActionButton(): Implicitly marking parameter
+DOMDocument::loadHTML(): Attribute class redefined in Entity
+DOMDocument::loadHTML(): htmlParseCharRef: missing semicolon in Entity
+DOMDocument::loadHTML(): htmlParseEntityRef: expecting ';' in Entity
+Function strftime() is deprecated
+DOMDocument::loadHTML(): Tag editor invalid in Entity
+Passing null to parameter #2 ($value) of type string is deprecated in /var/www/html/system/core/document.php on line 566
+Passing null to parameter #1 ($data) of type string is deprecated in /var/www/html/system/core/database.php on line 488

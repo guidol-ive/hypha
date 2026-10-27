@@ -67,6 +67,19 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 3. Tests: 9 nieuwe; 98 van 98 op PHP 8.2.35 en 8.4.27.
 4. Bevinding over de opstelling: Docker Desktop toont een net geschreven bestand soms half aan een container (twee keer een parse-fout die bij de volgende run weg was); bij een onverwachte parse-fout eerst opnieuw draaien.
 
+### T04 Opslag en datatypes: artikel met review (2026-10-27)
+
+1. Gebouwd:
+   1. trait `MarkdownArticle` (`system/core/markdown_article.php`): opslaan in één vergrendelde schrijfactie (XHTML via XML ingelezen, zodat `viewBox` heel blijft; `wikify()` vóór het slot), rubriek, tags met onbekende tags apart, eigenschappen van de afbeelding, onbekende Frontmatter, de reviewstroom (goedkeuren met redactiestatuut en opmerking, terugtrekken naar schets, terugtrekken na publicatie met reden, opnieuw bewerken, taal wijzigen, webadres bijwerken) en de extra checks `has-title`, `has-section`, `known-tags`;
+   2. `system/core/mdeditor.php`: het element van de editor met de configuratie als JSON, de bestanden van `system/mdeditor/` met lange cache, het JSON-antwoord, de opdracht `mdNewArticle` (titel → webadres) en de voorkeuren per gebruiker;
+   3. wijzigingen in bestaande code: `peer_reviewed_article.php` (`use`, één doorschakeling in `process()`, `format` en bron in `ensureStructure()`, een bestaande titel blijft staan, `array_merge` met `mdChecks()`, BR-94 in `approveAction()` en bij de knop, exacte zoekpaden voor `title`, `method`, `sources`, `excerpt` en `featured_image`), `pages.php` (2 regels: teruggetrokken artikelen uit de overzichten), `index.php` (1 regel: `system/mdeditor/`);
+   4. 46 teksten in `system/languages/nl.php` en `en.php` via `tools/teksten.tsv` en `tools/teksten.py`.
+2. Tests en uitkomsten: `tests/integratie/test_artikel.py`, 26 tests over HTTP; elke bedrijfsregel die de server afdwingt met een geval dat slaagt en een dat faalt (BR-05, 07, 10, 11, 27, 28, 45, 47, 50, 63, 67, 71, 72, 73, 76, 77, 78, 86, 94 ook voor oude artikelen, 96, 97, 98), regressie met een oud HTML-artikel (opent in WYMeditor, opslaan houdt de structuur). Op PHP 8.2.35 en 8.4.27: 26 van 26 en 3 van 3, geen nieuwe PHP-meldingen; bewaren 10 tot 20 ms.
+3. Bevindingen in bestaande code (niet van de editor, wel opgevangen of genoteerd):
+   1. `featured_image` wordt gelezen en geschreven als kind van de wortel, maar `ensureStructure()` maakt er ook een lege in `context`; daarna geeft de check `//featured_image` een fatale fout. De check is nu exact; de nieuwe editor schrijft waar de bestaande code leest;
+   2. een nieuw artikel via de oude popup zonder titel geeft een fatale fout in `process()` (`writeToElement('pagename', ' ')`); de nieuwe opdracht `mdNewArticle` zet de titel vooraf, dus de nieuwe editor raakt dit niet;
+   3. `tags.php` schrijft `class` twee keer, het sterretje van een privépagina mist een `;`, de deellinks een `&amp;`, en `strftime()` is verouderd: allemaal in `bekende-meldingen.txt`.
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.
@@ -74,4 +87,8 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 3. **Kop-id's beginnen met `kop-`** (`kop-de-eerste-zetels`), omdat Hypha elementen als `main` en `menu` op id zoekt en een tussenkop „Menu” anders botst.
 4. **`system/vendor/` is 2,7 MB** in plaats van de geschatte 1,3 MB (§13.12): vooral league/commonmark zelf (1,4 MB met alle extensies).
 5. **Temml 0.14.0** zoals in het prototype; highlight.php kent HTML als `xml`, dus tien talen met negen definities.
+7. **De afbeelding bij het uittreksel staat onder de wortel** (`hypha/featured_image`), niet in `article/context` (§14.1): daar leest en schrijft de bestaande code haar.
+8. **Doorschakelen in `process()`** in plaats van in `editView()` en `editAction()` (§13.13): de nieuwe opdrachten (terugtrekken, goedkeuren met redactiestatuut, taal, webadres) hebben eigen routes, en zo blijft het bij één regel. In totaal raken de wijzigingen 27 regels van `peer_reviewed_article.php`, 2 van `pages.php` en 1 van `index.php` (het ontwerp schatte zes regels en geen wijziging in `index.php`).
+9. **Een tekstpagina houdt haar paginanaam als titel** (§9: „de paginanaam zoals Hypha hem toont”); het webadres uit de titel (kleine letters, koppeltekens) geldt alleen voor artikelen. Anders zou het menu „over-ons” tonen in plaats van „Over ons”.
+10. **Goedkeuren met het redactiestatuut gebeurt in de leesweergave**, waar beoordelaars nu ook goedkeuren, in een venster; de editor toont de status en de knop *trek terug*.
 6. **Ingesloten inhoud krijgt `sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"`**: de spelers van YouTube en Vimeo werken niet zonder hun eigen herkomst. Een `<iframe>` mag alleen naar het pad van de speler van een dienst (§13.5 noemde alleen de host).

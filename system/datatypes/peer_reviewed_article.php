@@ -12,6 +12,9 @@
 
 // TODO [LRM]: add version control on peer_reviewed_article
 class peer_reviewed_article extends HyphaDatatypePage {
+	// The Markdown editor (system/core/markdown_article.php) for articles with format="markdown".
+	use MarkdownArticle;
+
 	/** @var Xml */
 	protected $xml;
 
@@ -150,6 +153,9 @@ class peer_reviewed_article extends HyphaDatatypePage {
 
 		$this->ensureStructure();
 
+		$markdownResult = $this->mdProcess($request);
+		if ($markdownResult !== false) return $markdownResult;
+
 		switch ([$request->getView(), $request->getCommand()]) {
 			case [null,                   null]:                              return $this->defaultView($request);
 			case [null,                   self::CMD_DELETE]:                  return $this->deleteAction($request);
@@ -273,8 +279,10 @@ class peer_reviewed_article extends HyphaDatatypePage {
 		$article->setAttribute(self::FIELD_NAME_UPDATED_AT, 't' . time());
 		$article->setAttribute(self::FIELD_NAME_PUBLISHED_AT, '');
 		/** @var HyphaDomElement $title */
-		$title = $this->xml->findOneXPath('//' . self::FIELD_NAME_TITLE);
-		$title->setText(showPagename($this->pagename));
+		$title = $this->xml->findOneXPath('article/context/' . self::FIELD_NAME_TITLE);
+		if (!$title->hasTextContent()) $title->setText(showPagename($this->pagename));
+		// Every new article gets a Markdown source and opens in the new editor (BR-28).
+		$this->mdInitialise();
 		$this->xml->saveAndUnlock();
 	}
 
@@ -301,7 +309,7 @@ class peer_reviewed_article extends HyphaDatatypePage {
 
 			// the status change from review to approved is done automatically
 			if (self::STATUS_REVIEW === $status) {
-				if (!$this->hasUserApproved($userId)) {
+				if (!$this->hasUserApproved($userId) && !$this->hasUserCreated($userId)) {
 					$commandsAtEnd->appendChild($this->makeActionButton(__('art-approve'), null, self::CMD_APPROVE));
 				}
 			} else if ($checkStatus != self::CHECK_STATUS_FAILED) {
@@ -426,7 +434,7 @@ class peer_reviewed_article extends HyphaDatatypePage {
 	protected function getChecks() {
 		// This cannot be a static property, since anonymous
 		// functions are not allowed in initializers for those.
-		return [
+		return array_merge([
 			'has-article-body' => [
 				'statuses' => [self::STATUS_DRAFT, self::STATUS_REVIEW, self::STATUS_APPROVED],
 				'checker' => function() {
@@ -437,14 +445,14 @@ class peer_reviewed_article extends HyphaDatatypePage {
 			'has-method' => [
 				'statuses' => [self::STATUS_DRAFT, self::STATUS_REVIEW, self::STATUS_APPROVED],
 				'checker' => function() {
-					return [$this->xml->findOneXPath('//' . self::FIELD_NAME_METHOD)->hasTextContent(), []];
+					return [$this->xml->findOneXPath('article/context/' . self::FIELD_NAME_METHOD)->hasTextContent(), []];
 				},
 				'level' => self::CHECK_LEVEL_REQUIRED,
 			],
 			'has-sources' => [
 				'statuses' => [self::STATUS_DRAFT, self::STATUS_REVIEW, self::STATUS_APPROVED],
 				'checker' => function() {
-					return [$this->xml->findOneXPath('//' . self::FIELD_NAME_SOURCES)->hasTextContent(), []];
+					return [$this->xml->findOneXPath('article/content/' . self::FIELD_NAME_SOURCES)->hasTextContent(), []];
 				},
 				'level' => self::CHECK_LEVEL_RECOMMENDED,
 			],
@@ -458,7 +466,9 @@ class peer_reviewed_article extends HyphaDatatypePage {
 			'has-featured-image' => [
 				'statuses' => [self::STATUS_DRAFT, self::STATUS_REVIEW, self::STATUS_APPROVED],
 				'checker' => function() {
-					return [$this->xml->findOneXPath('//' . self::FIELD_NAME_FEATURED_IMAGE)->getText() !== "", []];
+					// The image is read and written as a child of the root (renderExcerptBody, editAction); ensureStructure also
+					// makes an empty one in context, so '//featured_image' finds two.
+					return [$this->xml->documentElement->getOrCreate(self::FIELD_NAME_FEATURED_IMAGE)->getText() !== "", []];
 				},
 				'level' => self::CHECK_LEVEL_RECOMMENDED,
 			],
@@ -486,7 +496,7 @@ class peer_reviewed_article extends HyphaDatatypePage {
 				},
 				'level' => self::CHECK_LEVEL_REQUIRED,
 			],
-		];
+		], $this->mdChecks());
 	}
 
 	/**
@@ -779,6 +789,13 @@ class peer_reviewed_article extends HyphaDatatypePage {
 		$approves = $this->xml->findOneXPath('//' . self::FIELD_NAME_APPROVE_CONTAINER);
 
 		$userId = $this->O_O->getUser()->getAttribute('id');
+
+		// The author does not approve the own article (BR-94).
+		if ($this->hasUserCreated($userId)) {
+			$this->xml->unlock();
+			notify('error', __('mde-error-author-approves'));
+			return ['redirect', $this->constructFullPath($this->pagename)];
+		}
 
 		if (!$this->hasUserApproved($userId)) {
 			/** @var HyphaDomElement $approve */
@@ -2007,7 +2024,7 @@ EOF;
 	 * @return string
 	 */
 	public function getTitle() {
-		$title = $this->xml->findOneXPath('//' . self::FIELD_NAME_TITLE);
+		$title = $this->xml->findOneXPath('article/context/' . self::FIELD_NAME_TITLE);
 		if ($title instanceof HyphaDomElement) {
 			$title = $title->getText();
 		}
@@ -2024,7 +2041,7 @@ EOF;
 	 * @return HyphDomElement
 	 */
 	public function getExcerpt() {
-		return $this->xml->findOneXPath('//' . self::FIELD_NAME_EXCERPT);
+		return $this->xml->findOneXPath('article/context/' . self::FIELD_NAME_EXCERPT);
 	}
 
 	/**

@@ -142,3 +142,88 @@
 		$role = $user ? $user->getAttribute('rights') : '';
 		return in_array($role, $settings['level2Off'], true) ? 1 : 2;
 	}
+
+	/*
+		Function: hypha_markdownWikify
+		Reads XHTML from the filter as XML (the HTML parser of libxml would lowercase viewBox and other SVG names), turns
+		links to pages into page ids with wikify() (design section 13.4.2), and returns the nodes, detached from their
+		temporary parent (DOM-004).
+
+		Parameters:
+		$scratch - a document that stays alive while the nodes are used
+		$xhtml - XHTML from <HyphaMarkdown::toXhtml>
+	*/
+	function hypha_markdownWikify(Xml $scratch, string $xhtml): array {
+		$element = $scratch->createElement('dummy');
+		if (trim($xhtml) !== '') {
+			$fragment = $scratch->createDocumentFragment();
+			if (!$fragment->appendXML($xhtml)) throw new UnexpectedValueException('XHTML of the Markdown renderer does not load as XML');
+			$element->appendChild($fragment);
+		}
+		if (function_exists('wikify')) wikify($element);
+		$nodes = [];
+		while ($element->firstChild) $nodes[] = $element->removeChild($element->firstChild);
+		return $nodes;
+	}
+
+	/*
+		Function: hypha_markdownReplaceChildren
+		Replaces the children of an element by copies of the given nodes.
+	*/
+	function hypha_markdownReplaceChildren(DOMElement $target, array $nodes): void {
+		while ($target->firstChild) $target->removeChild($target->firstChild);
+		foreach ($nodes as $node) $target->appendChild($target->ownerDocument->importNode($node, true));
+	}
+
+	/*
+		Function: hypha_markdownSetCdata
+		Sets the text of an element as CDATA, so < and & stay as they are in the XML file (design section 13.4.3).
+		A CDATA section cannot contain ']]>', so that is split over two sections.
+	*/
+	function hypha_markdownSetCdata(DOMElement $node, string $text): void {
+		while ($node->firstChild) $node->removeChild($node->firstChild);
+		if ($text === '') return;
+		$parts = explode(']]>', $text);
+		foreach ($parts as $i => $part) $node->appendChild($node->ownerDocument->createCDATASection($part . ($i < count($parts) - 1 ? ']]' : '')));
+		//
+		// The '>' that followed every ']]' starts the next section.
+		//
+		if (count($parts) > 1) {
+			$sections = iterator_to_array($node->childNodes);
+			for ($i = 1; $i < count($sections); $i++) $sections[$i]->data = '>' . $sections[$i]->data;
+		}
+	}
+
+	/*
+		Function: hypha_markdownDate
+		A date in words in the language of the article, without the intl extension: 27 oktober 2026, 27 October 2026.
+	*/
+	function hypha_markdownDate(int $timestamp, string $language): string {
+		$months = [
+			'nl' => ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'],
+			'en' => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+		];
+		$names = $months[$language] ?? $months['en'];
+		return date('j', $timestamp) . ' ' . $names[(int)date('n', $timestamp) - 1] . ' ' . date('Y', $timestamp);
+	}
+
+	/*
+		Function: hypha_mdeditorLanguages
+		The languages an article can have: the languages used by the pages of the site, plus Dutch and English.
+	*/
+	function hypha_mdeditorLanguages(): array {
+		$languages = function_exists('hypha_getUsedContentLanguages') ? hypha_getUsedContentLanguages() : [];
+		return array_values(array_unique(array_merge($languages, ['nl', 'en'])));
+	}
+
+	/*
+		Function: hypha_mdeditorTagLabels
+		The labels of all tags of the site in a language (BR-45).
+	*/
+	function hypha_mdeditorTagLabels(string $language): array {
+		global $hyphaXml;
+		$labels = [];
+		foreach ($hyphaXml->findXPath('tagList/tag/language[@id=' . xpath_encode($language) . ']') as $node) $labels[] = $node->getAttribute('label');
+		sort($labels, SORT_NATURAL | SORT_FLAG_CASE);
+		return $labels;
+	}

@@ -60,6 +60,7 @@
 	if (startsWith($hyphaQuery, 'system/wymeditor')) serveFile($hyphaQuery, 'system/wymeditor');
 	if (startsWith($hyphaQuery, 'system/bowser')) serveFile($hyphaQuery, 'system/bowser');
 	if (startsWith($hyphaQuery, 'system/assets')) serveFile($hyphaQuery, 'system/assets');
+	if (startsWith($hyphaQuery, 'system/mdeditor/')) hypha_mdeditorServe($hyphaQuery);
 
 	// jump to installation procedure when hypha.xml is missing
 	if (!is_file('data/hypha.xml')) header('Location: ' . $hyphaUrl . 'hypha.php');

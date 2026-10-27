@@ -703,6 +703,8 @@ EOF;
 		if ($includePrivate !== true) {
 			$pageFilters .= "[@private='off']";
 		}
+		// A retracted article leaves the overviews (BR-86).
+		$pageFilters .= "[not(@retracted='on')]";
 
 		// TODO: skip and limit might not be useful
 		// without sorting, but xpath 1.0 does not seem

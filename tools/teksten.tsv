@@ -1,0 +1,47 @@
+# key	Dutch (B2)	English
+mde-loading	De editor wordt geladen…	Loading the editor…
+mde-error-title	Geef het artikel een titel.	Give the article a title.
+mde-error-section	Kies een rubriek uit de lijst.	Choose a section from the list.
+mde-error-interactive-description	Geef elk interactief blok een beschrijving: zet %% beschrijving: … %% direct erboven.	Give every interactive block a description: put %% beschrijving: … %% right above it.
+mde-error-author-approves	Je kunt je eigen artikel niet goedkeuren. Drie collega's keuren het goed.	You cannot approve your own article. Three colleagues approve it.
+mde-error-statute	Bevestig eerst alle punten van het redactiestatuut.	First confirm every point of the editorial statute.
+mde-error-only-author	Alleen de auteur van het artikel kan dit doen.	Only the author of the article can do this.
+mde-error-only-author-or-admin	Alleen de auteur of een beheerder kan dit doen.	Only the author or an administrator can do this.
+mde-error-reason	Schrijf op waarom het artikel wordt teruggetrokken. Lezers zien die reden.	Write down why the article is withdrawn. Readers see this reason.
+mde-error-language-published	De taal ligt vast na publicatie.	The language is fixed after publication.
+mde-error-language	Deze taal heeft de site niet.	The site does not have this language.
+mde-reedit	opnieuw bewerken	edit again
+mde-approve-dialog	geef goedkeuring…	approve…
+mde-approve-title	Goedkeuren	Approve
+mde-approve-intro	Bevestig elk punt van het redactiestatuut. Pas daarna kun je goedkeuren.	Confirm every point of the editorial statute. Then you can approve.
+mde-approve-comment	Opmerking bij je goedkeuring (niet verplicht)	Comment with your approval (optional)
+mde-approve-why-disabled	Vink eerst alle punten van het redactiestatuut aan.	First tick every point of the editorial statute.
+mde-retract	trek terug	retract
+mde-retract-confirm	Het artikel gaat terug naar schets en de goedkeuringen vervallen. De opmerkingen blijven staan. Doorgaan?	The article goes back to draft and the approvals lapse. The comments stay. Continue?
+mde-retracted-to-draft	Het artikel is weer een schets.	The article is a draft again.
+mde-withdraw-dialog	trek terug…	withdraw…
+mde-withdraw	trek terug	withdraw
+mde-withdraw-title	Gepubliceerd artikel terugtrekken	Withdraw a published article
+mde-withdraw-intro	Het artikel verdwijnt uit de overzichten. Het webadres blijft werken en toont de titel met jouw reden.	The article leaves the overviews. Its address keeps working and shows the title with your reason.
+mde-withdraw-reason	Reden voor lezers	Reason for readers
+mde-withdrawn	Het artikel is teruggetrokken.	The article has been withdrawn.
+mde-retracted-on	Dit artikel is teruggetrokken op [[date]].	This article was withdrawn on [[date]].
+mde-renamed	Het webadres past nu bij de titel.	The address now matches the title.
+mde-html-footnotes	Voetnoten	Footnotes
+mde-html-footnote-back	Terug naar de tekst	Back to the text
+mde-html-toc	Inhoud	Contents
+mde-html-diagram-source	Tekst van het diagram	Text of the diagram
+mde-html-diagram	diagram	diagram
+mde-html-callout-info	Kader	Box
+mde-html-callout-tip	Tip	Tip
+mde-html-callout-warning	Let op	Note
+mde-html-callout-note	Opmerking	Remark
+art-check-has-title-passed	Heeft een titel	Has a title
+art-check-has-title-failed	Een titel is verplicht	A title is required
+art-check-has-title-recommended	Een titel wordt aangeraden	A title is recommended
+art-check-has-section-passed	Heeft een rubriek	Has a section
+art-check-has-section-failed	Een rubriek is verplicht	A section is required
+art-check-has-section-recommended	Een rubriek wordt aangeraden	A section is recommended
+art-check-known-tags-passed	Alle tags staan in de lijst van de site	All tags are in the list of the site
+art-check-known-tags-failed	Deze tags staan niet in de lijst van de site: [[tags]]. Een beheerder maakt nieuwe tags.	These tags are not in the list of the site: [[tags]]. An administrator makes new tags.
+art-check-known-tags-recommended	Gebruik alleen tags uit de lijst van de site	Use only tags from the list of the site
