@@ -180,13 +180,13 @@
 			}
 			else $pos++;
 			if ($copy) {
-				if (strlen(implode(' ', $insert))) { $diff .= '@@+' . implode(' ', $insert); $insert = []; }
+				if (strlen(implode(' ', $insert))) { $diff .= '@@+' . str_replace('@', '@@*', implode(' ', $insert)); $insert = []; }
 				$diff .= '@@=' . $copy['offset'] . ',' . $copy['length'];
 				for ($i = 0; $i < $copy['length']; $i++) array_shift($t);
 				$copy = [];
 			}
 			else $insert[] = array_shift($t);
 		}
-		if ($insert) $diff .= '@@+' . implode(' ', $insert);
+		if ($insert) $diff .= '@@+' . str_replace('@', '@@*', implode(' ', $insert));
 		return $diff;
 	}

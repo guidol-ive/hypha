@@ -166,6 +166,7 @@ Bugs in existing code found while building, testing and documenting the editor o
 | #559 | - | warnings | PHP warnings on incomplete tag index and mailing list addresses |
 | #560 | #561 | concurrency | Saving a page that another request renamed or deleted at the same moment ends in a TypeError (HTTP 500) |
 | #569 | #570 | concurrency | Publishing an article twice at the same moment publishes it twice and sends the status mail twice |
+| #571 | #572 | versions | Older versions of a page lose text that contains @@ |
 
 Also from the concurrency test: three saves of a WYMeditor text page in the same second give a duplicate `xml:id` within one language, the same cause as #528 (comment added there; PR #534 fixes it).
 

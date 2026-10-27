@@ -105,6 +105,22 @@ def rename_and_private_through_the_editor(base):
 
 
 @test
+def an_older_version_with_at_signs_comes_back_whole(base):
+    #
+    # The diff of versions splits on @@ (PlanBCode/hypha#571): text with @@ in it must survive as an older version.
+    #
+    sanne = Client(base).login("sanne")
+    sanne.post("nl/Start", "newPage", "Diff in de tekst", {"newPageType": "textpage", "newPageLanguage": "nl"})
+    first = "Schrijf @@=2,3 niet zo, en typ @@+tekst ook niet; a@@b blijft heel. Mail redactie@eemstad.example.\n\n```diff\n@@ -1,3 +1,4 @@\n regel\n```\n"
+    for text in (first, "Een heel andere tekst.\n"):
+        assert save(sanne, "nl/Diff_in_de_tekst", "edit", {"title": "Diff in de tekst", "text": text, "private": False})["ok"]
+    versions = sorted(v.get(XMLID) for v in page_xml("Diff_in_de_tekst").find("language").findall("version"))
+    sanne.get("nl/Diff_in_de_tekst")
+    sanne.post("nl/Diff_in_de_tekst/revert", "revert", "", {"version": versions[0]})
+    assert config(sanne, "nl/Diff_in_de_tekst/edit")["fields"]["text"] == first
+
+
+@test
 def old_text_page_stays_in_wymeditor_and_unchanged(base):
     beheer = Client(base).login("beheer")
     before = open(os.path.join(WORK, "data/pages/home00000001"), encoding="utf-8").read()

@@ -254,7 +254,8 @@ Fouten in bestaande code die bij de bouw zijn gevonden, staan als issue met een 
 11. #543: `validatePagename()` laat letters buiten ASCII weg (geen pull request: hangt af van #541 en #516);
 12. #544 / PR #545: een lang onderwerp van een e-mail wordt één te lang gecodeerd woord.
 13. #548–#559 met PR #562–#568: twaalf fouten in de oudere paginatypes (festival, mailinglijst, index, tagindex, instellingen), gevonden door een subagent die elk scherm als bezoeker, lid en beheerder doorliep op PHP 8.2, 8.4 en 8.5; onder andere een fatale fout bij aanmelden voor een festival (#548), HTML uit aanmeldingen in het programma (#549), een eindeloze doorverwijzing bij een ongeldige link van de mailinglijst (#551), niet-unieke gebruikersnamen (#554) en ontbrekende vertalingen (#557). Overzicht in `ai/reference/GITHUB_ISSUES_FILED_2026W44.md`;
-14. #560 / PR #561 en #569 / PR #570: fouten bij gelijktijdig werken (zie „Gelijktijdig werken”).
+14. #560 / PR #561 en #569 / PR #570: fouten bij gelijktijdig werken (zie „Gelijktijdig werken”);
+15. #571 / PR #572: een oudere versie van een pagina verliest tekst met `@@` (ook in deze branch opgenomen, zie Afwijkingen 16).
 
 Alle issues hebben passende labels (type, niveau, impact, paginatype, onderdeel, waarde); de pull requests het label *Status: Needs review*.
 
@@ -287,3 +288,4 @@ Bewuste afwijkingen van het ontwerp, met de reden. Het ontwerp is op deze punten
 13. **Fork Awesome zit bij de editor** (`system/mdeditor/vendor/fork-awesome-1.2.0.*`, uit het standaardthema), want niet elk thema laadt het (§2 nam aan dat het thema van De Stadsbron dat doet).
 14. **Naast elkaar alleen met ruimte**: ook de kolom van het thema moet minstens 900 px breed zijn; in het thema van De Stadsbron (720 px) toont de knop het voorbeeld.
 15. **Een titel of kop in een ander schrift dan Latijn** geeft het adres `pagina` en het anker `kop-zonder-naam`, zolang paginanamen buiten ASCII in Hypha niet werken.
+16. **`system/core/database.php` gewijzigd** (19 regels): `diff()` schrijft een `@` in ingevoegde tekst als `@@*`, zodat een oudere versie met `@@` in de tekst heel blijft, en leest niet meer voorbij het einde van de bron. Dezelfde wijziging als upstream PR #572 (issue #571); hier opgenomen omdat de Markdown-versies van tekstpagina's dezelfde diff gebruiken (een codeblok met een diff heeft `@@`). Oude diffs blijven leesbaar. Test: `an_older_version_with_at_signs_comes_back_whole`.
