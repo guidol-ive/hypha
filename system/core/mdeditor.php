@@ -231,6 +231,21 @@
 		by its old address. Prefers the language the editor asks from.
 	*/
 	registerCommandCallback('mdLocate', 'hypha_mdeditorLocate');
+
+	/*
+		Function: hypha_mdeditorNewName
+		Command mdNewName (AJAX): the page name a new article with this title gets, with -2, -3, … when the address
+		exists (design step 1, point 2), as mdNewArticle makes it. The argument is the title; newPageLanguage the language.
+	*/
+	registerCommandCallback('mdNewName', 'hypha_mdeditorNewName');
+	function hypha_mdeditorNewName($argument) {
+		global $O_O;
+		if (!isUser()) hypha_mdeditorJson(['ok' => false]);
+		hypha_markdownLoad();
+		$language = hypha_markdownClean($O_O->getRequest()->getPostValue('newPageLanguage') ?: $O_O->getContentLanguage());
+		$title = hypha_markdownClean((string)$argument);
+		hypha_mdeditorJson(['ok' => true, 'name' => trim($title) === '' ? '' : hypha_markdownPageName($title, fn ($n) => (bool)hypha_getPage($language, $n))]);
+	}
 	function hypha_mdeditorLocate($argument) {
 		global $O_O;
 		if (!isUser()) hypha_mdeditorJson(['ok' => false]);
@@ -366,6 +381,14 @@
 					var s = slug(name.value);
 					address.textContent = s ? texts.address.replace('[[address]]', s) : '';
 					submit.disabled = !s;
+					// The name the server gives, with -2 when the address exists, a moment after typing stops.
+					clearTimeout(update.timer);
+					if (s) update.timer = setTimeout(function () {
+						var body = new URLSearchParams({ command: 'mdNewName', argument: name.value, csrfToken: (document.querySelector('input[name=csrfToken]') || {}).value || '', newPageLanguage: (document.getElementById('newPageLanguage') || {}).value || '' });
+						fetch(location.pathname, { method: 'POST', body: body, credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (r) {
+							if (r.ok && r.name && slug(name.value) === s) address.textContent = texts.address.replace('[[address]]', r.name);
+						}).catch(function () {});
+					}, 300);
 					submit.onclick = function () {
 						hypha(<?=json_encode($O_O->getContentLanguage())?> + '/' + (slug(name.value) || 'nieuw'), 'mdNewArticle', name.value, $(this).closest('form'));
 						return false;

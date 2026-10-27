@@ -199,6 +199,14 @@ export default async function (t) {
 		assert(/bevestigd door 0 van 3/.test(await page.textContent('#mdeStatute')), await page.textContent('#mdeStatute'));
 	});
 
+	t.test('the popup new page shows -2 when the address of the title exists', async () => {
+		await page.goto(base + 'nl/Start');
+		await page.evaluate(() => newPage());
+		await page.selectOption('#newPageType', 'peer_reviewed_article');
+		await page.fill('#newPagename', slug.replace(/-/g, ' '));
+		await page.waitForFunction(s => document.querySelector('.mde-address')?.textContent.includes(s + '-2'), slug, { timeout: 5000 });
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();
