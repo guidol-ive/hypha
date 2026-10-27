@@ -589,3 +589,4 @@
 #mdeSave.dirty::after { content: ' •'; }
 @media (prefers-reduced-motion: reduce) { .mdeditor * { transition: none !important; } }
 .mdeditor .toolbar { flex-wrap: nowrap; overflow: hidden; }
+@media (pointer: coarse) { .mdeditor .modes button, .mdeditor .editmode button, .mdeditor .gobtn, .mdeditor .dlg-close { min-width: 44px; min-height: 44px; justify-content: center; } }

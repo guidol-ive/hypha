@@ -142,6 +142,12 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 
 1. Gebouwd: in `system/core/mdeditor.php` een script dat `newPage()` van `pages.php` omwikkelt: bij het type *artikel met review* vraagt de popup de titel, toont het webadres eronder, en vraagt eenmalig *Opmaak* of *Markdown* met „onthoud mijn keuze” (BR-25, besluit 22); andere types houden de paginanaam. `pages.php` zelf is niet gewijzigd.
 
+### T15 Handleiding (2026-10-27)
+
+1. Gebouwd: de twaalf ontbrekende pagina's van §17.4 in `docs/handleiding/` (gebruik 01, 02, 03, 06, 07, 08, 09; techniek 03 tot en met 07), geschreven door een subagent op B1 met Frontmatter en de Mermaid-diagrammen van de tabel; `index.md` bijgewerkt; `techniek/01-architectuur.md` beschrijft nu de trait in plaats van een apart paginatype.
+2. Tests en uitkomsten: alle 26 Mermaid-blokken tekenen met Pele 1.10.1 (controle van de subagent, met een opzettelijk kapot blok als tegenproef); eigen controle: 17 pagina's, alle met Frontmatter, geen ongenummerde lijsten buiten codeblokken, alle relatieve links bestaan.
+3. Bevindingen van de subagent voor later: het standaardthema heeft geen opmaak voor kaders, plaatsing van figuren, codekleuren en de diagramkleuren in de leesweergave; een paar knoppen van Hypha hebben geen Nederlandse tekst („reincarnate”, „theme”).
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.

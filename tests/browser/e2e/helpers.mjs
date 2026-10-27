@@ -4,8 +4,8 @@
 //
 export const PASSWORD = 'proef-wachtwoord-520';
 
-export async function login(browser, base, username, viewport = { width: 1280, height: 900 }) {
-	const context = await browser.newContext({ viewport, locale: 'nl-NL' });
+export async function login(browser, base, username, viewport = { width: 1280, height: 900 }, extra = {}) {
+	const context = await browser.newContext(Object.assign({ viewport, locale: 'nl-NL' }, extra));
 	const page = await context.newPage();
 	page.errors = [];
 	page.on('pageerror', e => page.errors.push(String(e)));

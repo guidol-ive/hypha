@@ -981,6 +981,7 @@
 		"mde-new-markdown-help" => "met tekens als ### en **",
 		"mde-new-remember" => "onthoud mijn keuze",
 		"mde-new-pagename" => "paginanaam",
+		"mde-suggestions" => "suggesties",
 		// End of the Markdown editor
 	);
 

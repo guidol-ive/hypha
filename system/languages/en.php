@@ -986,6 +986,7 @@
 		"mde-new-markdown-help" => "with characters such as ### and **",
 		"mde-new-remember" => "remember my choice",
 		"mde-new-pagename" => "page name",
+		"mde-suggestions" => "suggestions",
 		// End of the Markdown editor
 	);
 

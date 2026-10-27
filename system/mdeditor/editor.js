@@ -180,7 +180,7 @@ export class Editor {
 				<details class="card" id="mdeOutlineBox"><summary><i class="fa fa-caret-right" aria-hidden="true"></i><h2>${t('outline')}</h2></summary><nav class="outline" id="mdeOutline" aria-label="${t('outline')}"></nav></details>
 			</aside>
 		</div>
-		<div class="popup" id="mdePopup" hidden role="listbox"></div>
+		<div class="popup" id="mdePopup" hidden role="listbox" aria-label="${t('suggestions')}"></div>
 		<div class="menu" id="mdeTableMenu" role="menu" aria-label="${t('tb-table')}" hidden></div>
 		<div class="menu" id="mdeMoreMenu" role="menu" aria-label="${t('tb-more')}" hidden></div>
 		<div class="toast" id="mdeToast" role="status" aria-live="polite"></div>

@@ -90,7 +90,6 @@ classDiagram
     HyphaDatatypePage <|-- peer_reviewed_article
     HyphaDatatypePage <|-- mailinglist
     HyphaDatatypePage <|-- festivalpage
-    HyphaDatatypePage <|-- peer_reviewed_article_md
     class textpage {
         versies
         vertalen
@@ -100,14 +99,16 @@ classDiagram
         goedkeuringen
         discussies
     }
-    class peer_reviewed_article_md {
+    class MarkdownArticle {
+        <<trait>>
         Markdown-bron
         nieuwe tekst-editor
     }
+    peer_reviewed_article ..> MarkdownArticle : use
 ```
 
 1. Een nieuw paginatype is een nieuw bestand in `system/datatypes/`; Hypha vindt het vanzelf en toont het bij **nieuwe pagina**.
-2. Het artikel met Markdown-bron (`peer_reviewed_article_md`) komt **naast** het bestaande artikeltype, zodat bestaande artikelen ongewijzigd blijven. Dit type is in ontwikkeling.
+2. Een artikel met Markdown-bron is hetzelfde paginatype `peer_reviewed_article`, met `format="markdown"` in de XML. De nieuwe editor zit in de trait `MarkdownArticle` in `system/core/markdown_article.php` (en `MarkdownPage` voor tekstpagina's); bestaande artikelen zonder dat signaal blijven ongewijzigd en openen in de oude editor.
 
 ## Opslag
 
