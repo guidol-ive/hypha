@@ -36,7 +36,7 @@ export default async function (t) {
 		await page.keyboard.press('Escape');
 	});
 	t.test('axe: side by side with preview', async () => { await page.click('[data-mode="side"]'); await page.waitForTimeout(800); await check('naast-elkaar'); await page.click('[data-mode="write"]'); });
-	for (const [name, open] of [['beeld', () => window.hyphaMdeditor.editor.dialogs.openImage({})], ['diagram', () => window.hyphaMdeditor.editor.dialogs.openDiagram({})], ['spiekbriefje', () => window.hyphaMdeditor.editor.dialogs.open('mdeHelpDlg')]]) {
+	for (const [name, open] of [['beeld', () => window.hyphaMdeditor.editor.dialogs.openImage({})], ['diagram', () => window.hyphaMdeditor.editor.dialogs.openDiagram({})], ['spiekbriefje', () => window.hyphaMdeditor.editor.dialogs.open('mdeHelpDlg')], ['interactief blok', () => window.hyphaMdeditor.editor.dialogs.openInteractive({})]]) {
 		t.test(`axe: dialog ${name}`, async () => {
 			await page.evaluate(open);
 			await page.waitForTimeout(600);

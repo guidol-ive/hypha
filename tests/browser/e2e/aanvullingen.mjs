@@ -98,6 +98,40 @@ export default async function (t) {
 		await page.click('[data-mode="write"]');
 	});
 
+	t.test('interactive block: the slash menu opens the dialog; code, description and height become Markdown', async () => {
+		await setText('Eerste alinea.\n\n');
+		await page.evaluate(() => { const e = window.hyphaMdeditor.editor; e.cm.dispatch({ selection: { anchor: e.cm.state.doc.length } }); e.cm.focus(); });
+		await page.keyboard.type('/interactief');
+		await page.waitForSelector('#mdePopup:not([hidden])');
+		await page.keyboard.press('Enter');
+		await page.waitForSelector('#mdeIaDlg[open]');
+		await page.waitForFunction(() => (document.getElementById('mdeIaView').srcdoc || '').includes('knop'));
+		await page.fill('#mdeIaSrc', '<p id="uit">Proef</p>');
+		await page.fill('#mdeIaHeight', '240');
+		await page.click('#mdeIaOk');
+		assert(await page.evaluate(() => document.getElementById('mdeIaDlg').open), 'closed without a description');
+		await page.fill('#mdeIaAlt', 'Een verzonnen proef');
+		await page.click('#mdeIaOk');
+		await page.waitForTimeout(150);
+		const text = (await ed()).text;
+		assert(text.includes('%% beschrijving: Een verzonnen proef %%\n```html interactief {hoogte=240}\n<p id="uit">Proef</p>\n```'), 'markdown: ' + text);
+	});
+
+	t.test('interactive block: edit in the visual view keeps one description and other attributes', async () => {
+		await setText('%% beschrijving: Oud %%\n```html interactief {hoogte=300 .breed}\n<p>Oud</p>\n```\n');
+		await setMode('visual');
+		await page.click('#mdeVisual .raw-interactive .figedit');
+		await page.waitForSelector('#mdeIaDlg[open]');
+		assert(await page.inputValue('#mdeIaAlt') === 'Oud' && await page.inputValue('#mdeIaHeight') === '300', 'dialog filled');
+		await page.fill('#mdeIaAlt', 'Nieuw');
+		await page.fill('#mdeIaSrc', '<p>Nieuw</p>');
+		await page.click('#mdeIaOk');
+		await page.waitForTimeout(150);
+		const text = (await ed()).text;
+		assert(/^%% beschrijving: Nieuw %%\n+```html interactief \{hoogte=300 \.breed\}\n<p>Nieuw<\/p>\n```$/.test(text.trim()) && text.split('beschrijving').length === 2, 'markdown: ' + text);
+		await setMode('markdown');
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

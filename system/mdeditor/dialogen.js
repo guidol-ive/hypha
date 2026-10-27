@@ -58,6 +58,16 @@ export class Dialogs {
 			</div>
 			<div class="dlg-actions"><button type="button" class="btn outline danger" id="mdeDiagramDel" hidden>${t('delete')}</button><button type="button" class="btn grey" value="cancel">${t('cancel')}</button><button type="submit" class="btn primary" id="mdeDiagramOk">${t('insert')}</button></div>
 		</form></dialog>
+		<dialog id="mdeIaDlg" aria-labelledby="mdeIaTitle"><form method="dialog">
+			<h2><span id="mdeIaTitle"><i class="fa fa-puzzle-piece" aria-hidden="true"></i> ${t('ia-title')}</span>${close}</h2>
+			<div class="dlg-grid">
+				<div><label class="small" for="mdeIaSrc"><b>${t('ia-code')}</b></label><textarea id="mdeIaSrc" class="code" spellcheck="false" title="${t('ia-code-help')}"></textarea>
+					<div class="field" style="margin-top:10px"><label for="mdeIaAlt">${t('ia-alt')} <span class="req" aria-hidden="true">*</span></label><input type="text" id="mdeIaAlt" required aria-required="true" aria-describedby="mdeIaAltHelp"><div class="help" id="mdeIaAltHelp">${t('ia-alt-help')}</div></div>
+					<div class="field"><label for="mdeIaHeight">${t('ia-height')}</label><input type="number" id="mdeIaHeight" min="50" max="4000" step="10" inputmode="numeric"></div></div>
+				<div><div class="small"><b>${t('ia-preview')}</b></div><iframe id="mdeIaView" class="ia-view" sandbox="allow-scripts" referrerpolicy="no-referrer" title="${t('ia-preview')}"></iframe><p class="small" id="mdeIaHosts"></p></div>
+			</div>
+			<div class="dlg-actions"><button type="button" class="btn outline danger" id="mdeIaDel" hidden>${t('delete')}</button><button type="button" class="btn grey" value="cancel">${t('cancel')}</button><button type="submit" class="btn primary" id="mdeIaOk">${t('insert')}</button></div>
+		</form></dialog>
 		<dialog id="mdeMathDlg" aria-labelledby="mdeMathTitle"><form method="dialog">
 			<h2><span id="mdeMathTitle">${t('math-title')}</span>${close}</h2>
 			<div class="field"><label for="mdeMathSrc">${t('math-tex')}</label><textarea id="mdeMathSrc" rows="3" spellcheck="false"></textarea><div class="help">${t('math-help')}</div></div>
@@ -200,7 +210,10 @@ export class Dialogs {
 	}
 
 	removeTarget(target) {
-		if (target.node && target.view) target.view.dispatch(target.view.state.tr.delete(target.pos, target.pos + target.node.nodeSize));
+		//
+		// The description before a diagram or an interactive block goes with it.
+		//
+		if (target.node && target.view) target.view.dispatch(target.view.state.tr.delete(target.noteFrom ?? target.pos, target.pos + target.node.nodeSize));
 		else if (target.from !== undefined) this.ed.cm.dispatch({ changes: { from: target.from, to: target.to, insert: '' } });
 		this.ed.toast(this.t('deleted'), this.t('undo'), () => this.ed.editMode === 'visual' ? PM.history.undo(target.view.state, target.view.dispatch) : this.ed.undoMarkdown());
 	}
@@ -233,6 +246,7 @@ export class Dialogs {
 	editNode(view, pos, node) {
 		if (node.type === schema.nodes.figure) { this.openImage({ view, pos, node }); return true; }
 		if (node.type === schema.nodes.diagram) { this.openDiagram({ view, pos, node }); return true; }
+		if (node.type === schema.nodes.interactive && this.ed.markdownOptions(false).level >= 2) { this.openInteractive({ view, pos, node }); return true; }
 		if (node.type === schema.nodes.math_block || node.type === schema.nodes.math_inline) { this.editMath(view, pos); return true; }
 		return false;
 	}
@@ -243,14 +257,7 @@ export class Dialogs {
 		const editing = !!(target.node || target.text !== undefined);
 		let text = target.node ? target.node.attrs.text : target.text;
 		let info = target.node ? target.node.attrs.info : target.info || '';
-		let description = target.description || '';
-		if (target.node && target.view) {
-			const before = target.pos > 0 ? target.view.state.doc.resolve(target.pos).nodeBefore : null;
-			if (before?.type === schema.nodes.note_block) {
-				const m = /^%%\s*beschrijving:\s*([\s\S]*?)\s*%%$/.exec(before.attrs.source.trim());
-				if (m) { description = m[1]; target.noteFrom = target.pos - before.nodeSize; }
-			}
-		}
+		const description = target.node && target.view ? this.noteBefore(target) : target.description || '';
 		const placement = (/\{\.([\w-]+)\}/.exec(info) || [])[1] || 'breed';
 		src.value = (text || DIAGRAMS[0].s + '\n').replace(/\n$/, '');
 		alt.value = description;
@@ -313,6 +320,82 @@ export class Dialogs {
 			if (target.node && target.noteFrom !== undefined) { target.node = target.view.state.doc.nodeAt(target.pos); const size = target.view.state.doc.nodeAt(target.noteFrom).nodeSize; target.view.dispatch(target.view.state.tr.delete(target.noteFrom, target.noteFrom + size)); target.pos -= size; }
 			this.replaceTarget(target, md);
 		};
+		setTimeout(() => src.focus(), 0);
+	}
+
+	//
+	// The description of a diagram or an interactive block: a note %% beschrijving: … %% right before it.
+	//
+	noteBefore(target) {
+		const before = target.pos > 0 ? target.view.state.doc.resolve(target.pos).nodeBefore : null;
+		const m = before?.type === schema.nodes.note_block ? /^%%\s*beschrijving:\s*([\s\S]*?)\s*%%$/.exec(before.attrs.source.trim()) : null;
+		if (m) target.noteFrom = target.pos - before.nodeSize;
+		return m ? m[1] : '';
+	}
+
+	//
+	// Interactive block of level 2 (design section 10.1, step 9c): code left, the working block right, as the reader
+	// gets it (sandbox, Content-Security-Policy), a description (BR-07) and a height.
+	//
+	currentInteractive() {
+		if (this.ed.editMode === 'visual') {
+			const v = this.ed.activePm(), sel = v.state.selection;
+			return sel.node?.type === schema.nodes.interactive ? { view: v, pos: sel.from, node: sel.node } : {};
+		}
+		const text = this.ed.cm.state.doc.toString(), head = this.ed.cm.state.selection.main.head;
+		const re = /^```(html\s+(?:interactief|interactive)\b[^\n]*)\n([\s\S]*?)^```[ \t]*$/gm;
+		let m;
+		while ((m = re.exec(text))) if (m.index <= head && head <= m.index + m[0].length) {
+			const note = /%%\s*beschrijving:\s*([^\n]*?)\s*%%\s*\n$/.exec(text.slice(0, m.index));
+			return { from: note ? m.index - note[0].length : m.index, to: m.index + m[0].length, text: m[2], info: m[1], description: note ? note[1] : '' };
+		}
+		return {};
+	}
+
+	openInteractive(target = {}) {
+		const d = this.open('mdeIaDlg');
+		const src = $('#mdeIaSrc', d), alt = $('#mdeIaAlt', d), height = $('#mdeIaHeight', d), view = $('#mdeIaView', d);
+		const editing = !!(target.node || target.text !== undefined);
+		const info = target.node ? target.node.attrs.info : target.info || 'html interactief';
+		const description = target.node && target.view ? this.noteBefore(target) : target.description || '';
+		const attributes = /\{([^}]*)\}\s*$/.exec(info)?.[1] || '';
+		const word = /^html\s+(interactive)\b/i.test(info) ? 'interactive' : 'interactief';
+		src.value = (target.node ? target.node.attrs.text : target.text ?? `<button id="knop">${this.t('ia-sample-button')}</button>\n<p id="uit"></p>\n<script>\n  let n = 0;\n  knop.onclick = () => uit.textContent = ++n;\n</script>\n`).replace(/\n$/, '');
+		alt.value = description;
+		height.value = (/(?:hoogte|height)=(\d+)/.exec(attributes) || [])[1] || '';
+		const hosts = this.ed.cfg.settings?.scriptHosts || [];
+		$('#mdeIaHosts', d).textContent = hosts.length ? this.t('ia-hosts', { hosts: hosts.join(', ') }) : this.t('ia-hosts-none');
+		$('#mdeIaTitle', d).innerHTML = `<i class="fa fa-puzzle-piece" aria-hidden="true"></i> ${esc(this.t(editing ? 'ia-edit' : 'ia-title'))}`;
+		$('#mdeIaOk', d).textContent = this.t(editing ? 'update' : 'insert');
+		$('#mdeIaDel', d).hidden = !editing;
+		let timer;
+		const draw = () => {
+			clearTimeout(timer);
+			timer = setTimeout(() => {
+				view.style.height = Math.min(Math.max(+height.value || 400, 50), 600) + 'px';
+				view.srcdoc = this.ed.srcdoc(src.value);
+			}, 400);
+		};
+		src.oninput = draw;
+		height.oninput = draw;
+		draw();
+		$('#mdeIaDel', d).onclick = () => { d.close(); this.removeTarget(target); };
+		d.querySelector('form').onsubmit = e => {
+			e.preventDefault();
+			if (!alt.value.trim()) { alt.focus(); return; }
+			d.close();
+			view.srcdoc = '';
+			//
+			// The height replaces hoogte= or height= in the attributes; other attributes stay as they were.
+			//
+			let rest = attributes.replace(/\s*(?:hoogte|height)=\d+/g, '').trim();
+			if (+height.value > 0) rest = (`hoogte=${Math.round(+height.value)} ` + rest).trim();
+			const fence = '`'.repeat(Math.max(3, ...(src.value.match(/`{3,}/g) || []).map(x => x.length + 1)));
+			const md = `%% beschrijving: ${alt.value.trim().replace(/%%/g, '%').replace(/\s+/g, ' ')} %%\n${fence}html ${word}${rest ? ` {${rest}}` : ''}\n${src.value.replace(/\n*$/, '\n')}${fence}`;
+			if (target.node && target.noteFrom !== undefined) { const size = target.view.state.doc.nodeAt(target.noteFrom).nodeSize; target.view.dispatch(target.view.state.tr.delete(target.noteFrom, target.noteFrom + size)); target.pos -= size; target.node = target.view.state.doc.nodeAt(target.pos); }
+			this.replaceTarget(target, md);
+		};
+		d.addEventListener('close', () => { view.srcdoc = ''; }, { once: true });
 		setTimeout(() => src.focus(), 0);
 	}
 
@@ -504,6 +587,7 @@ export class Dialogs {
 			['heading', 'header', '### '], ['subheading', 'header', '#### '], ['quote', 'quote-left', '> [!quote]'], ['callout', 'square-o', '> [!info]'], ['warning', 'exclamation-triangle', '> [!warning]'],
 			['list', 'list-ul', '- '], ['footnote', 'superscript', '[^1]'], ['table', 'table', '| … |'], ['image', 'picture-o', '![…](…)'], ['diagram', 'sitemap', '```mermaid'],
 			['math', 'calculator', '$$ … $$'], ['code', 'code', '```php'], ['rule', 'minus', '---'],
+			...(this.ed.markdownOptions(false).level >= 2 ? [['interactive', 'puzzle-piece', '```html interactief']] : []),
 		].map(([k, icon, md]) => ({ key: k, icon, md, label: this.t('slash-' + k) }));
 	}
 
@@ -604,6 +688,7 @@ export class Dialogs {
 		}
 		cm.dispatch({ changes: { from: p.from, to: p.to, insert: '' } });
 		const samples = { heading: '### ', subheading: '#### ', list: '- ', rule: '---\n', footnote: null, code: '```php\n\n```' };
+		if (item.key === 'interactive') return this.openInteractive(this.currentInteractive());
 		if (['image', 'diagram', 'table'].includes(item.key)) return item.key === 'table' ? this.tableOp('new', 3) : this.ed.action(item.key);
 		if (item.key === 'quote' || item.key === 'callout') return this.ed.markdownAction(item.key);
 		if (item.key === 'warning') return this.ed.insertBlock('> [!warning] ' + this.t('warning-sample-title') + '\n> ' + this.t('callout-sample'));

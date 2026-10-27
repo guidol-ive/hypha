@@ -408,7 +408,14 @@ export class Editor {
 			html_block: node => this.rawView(node, 'raw-html'),
 			raw: node => this.rawView(node, 'raw-markdown'),
 			note_block: node => this.rawView(node, 'raw-note'),
-			interactive: node => this.rawView(Object.assign({}, node, { attrs: { source: node.attrs.text } }), 'raw-interactive'),
+			interactive: (node, view, getPos) => {
+				const v = this.rawView(Object.assign({}, node, { attrs: { source: node.attrs.text } }), 'raw-interactive');
+				//
+				// At level 2 the block opens in its dialog (design section 10.1, rule 5); otherwise it is only shown.
+				//
+				if (this.markdownOptions(false).level >= 2) removable(v.dom, view, getPos, () => this.dialogs.openInteractive({ view, pos: getPos(), node: view.state.doc.nodeAt(getPos()) }));
+				return Object.assign(v, { stopEvent: e => e.type === 'mousedown' && e.target.closest('button') });
+			},
 			toc: () => this.rawView({ attrs: { source: '[TOC]' } }, 'raw-toc'),
 			embed: node => this.rawView({ attrs: { source: node.attrs.url } }, 'raw-embed'),
 			note_inline: node => { const s = document.createElement('span'); s.className = 'note-inline'; s.title = node.attrs.source; s.textContent = '%%'; return { dom: s }; },
