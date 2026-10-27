@@ -244,3 +244,27 @@
 		$ms = (microtime(true) - $t) * 1000;
 		check($ms < 1000, "took $ms ms");
 	});
+
+	test('markdown: ::: box inside a block quote closes', function () {
+		$out = md("> :::info\n> inside\n> :::\n> after");
+		contains('<p>inside</p>', $out);
+		check(strpos($out, 'after') > strpos($out, '</aside>'), $out);
+	});
+
+	test('markdown: an unclosed note ends at the first blank line, with a message', function () {
+		$out = md("%% open note\n\n### Kop\n\nnog hier");
+		contains('<h3 id="kop-kop">Kop</h3>', $out);
+		contains('nog hier', $out);
+		same(['note-not-closed'], mdMessages("%% open\n\nx"));
+	});
+
+	test('markdown: callout with markup in its title; unknown callout type stays a quote', function () {
+		$out = md("> [!note] Titel met *nadruk*\n> body\n\n> [!onzin] x");
+		contains('<aside class="callout note" aria-label="Titel met nadruk">', $out);
+		contains('<blockquote>', $out);
+	});
+
+	test('markdown: an author cannot trigger an interactive block with the placeholder class', function () {
+		$source = "<div class=\"hypha-interactief-0\"></div>\n\n%% beschrijving: x %%\n```html interactief\n<b>x</b>\n```\n";
+		same(1, substr_count(md($source), '<iframe'));
+	});

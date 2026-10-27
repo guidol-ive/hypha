@@ -239,6 +239,13 @@
 		public function tryContinue(Cursor $cursor, BlockContinueParserInterface $activeBlockParser): ?BlockContinue {
 			if ($this->closed) return BlockContinue::none();
 			$line = $cursor->getRemainder();
+			//
+			// A note that is not closed ends at the first blank line, so it never hides the rest of the article.
+			//
+			if (trim($line) === '') {
+				$this->block->data->set('hypha/unclosed', true);
+				return BlockContinue::none();
+			}
 			$this->lines[] = $line;
 			if (strpos($line, '%%') !== false) $this->closed = true;
 			$cursor->advanceToEnd();
@@ -324,7 +331,7 @@
 
 		public function tryContinue(Cursor $cursor, BlockContinueParserInterface $activeBlockParser): ?BlockContinue {
 			if ($this->finished) return BlockContinue::none();
-			if (!$cursor->isIndented() && preg_match('/^[ \t]*:::[ \t]*$/', $cursor->getLine())) {
+			if (!$cursor->isIndented() && preg_match('/^:::[ \t]*$/', substr($cursor->getLine(), $cursor->getNextNonSpacePosition()))) {
 				$cursor->advanceToEnd();
 				return BlockContinue::finished();
 			}
@@ -349,7 +356,10 @@
 				elseif ($node instanceof Heading) $headings[] = $node;
 			}
 			foreach ($quotes as $quote) $this->callout($quote);
-			foreach ($notes as $note) $this->description($note);
+			foreach ($notes as $note) {
+				if ($note->data->get('hypha/unclosed', false)) $this->markdown->message('note-not-closed', $note->text);
+				$this->description($note);
+			}
 			$ids = [];
 			$toc = [];
 			foreach ($headings as $heading) {
@@ -377,11 +387,19 @@
 			$nodes = [];
 			foreach ($first->children() as $child) {
 				if ($child instanceof Newline) break;
-				if (!$child instanceof Text) return;
-				$line .= $child->getLiteral();
+				$line .= $child instanceof Text ? $child->getLiteral() : HyphaMarkdown::plainText($child);
 				$nodes[] = $child;
 			}
-			if (!preg_match('/^\[!([A-Za-z][\w-]*)\][ \t]*(.*)$/', $line, $m)) return;
+			if (!preg_match('/^\[!(' . implode('|', HyphaMarkdown::CALLOUTS) . ')\][ \t]*(.*)$/i', $line, $m)) return;
+			//
+			// The marker itself must be plain text, not part of a link or emphasis.
+			//
+			$plain = '';
+			foreach ($nodes as $node) {
+				if (!$node instanceof Text) break;
+				$plain .= $node->getLiteral();
+			}
+			if (!preg_match('/^\[![A-Za-z]+\]/', $plain)) return;
 			foreach ($nodes as $node) $node->detach();
 			if ($first->firstChild() instanceof Newline) $first->firstChild()->detach();
 			if ($first->firstChild() === null) $first->detach();

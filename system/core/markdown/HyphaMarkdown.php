@@ -46,6 +46,7 @@
 	class HyphaMarkdown {
 		const PROFILE = 'hypha-1.0';
 		const PLACEMENTS = ['breed', 'in-de-tekst', 'klein-rechts'];
+		const CALLOUTS = ['info', 'tip', 'note', 'warning', 'important', 'caution', 'quote'];
 		const HIGHLIGHT_LANGUAGES = ['php' => 'php', 'javascript' => 'javascript', 'js' => 'javascript', 'sql' => 'sql', 'python' => 'python', 'py' => 'python',
 			'html' => 'xml', 'xml' => 'xml', 'svg' => 'xml', 'css' => 'css', 'json' => 'json', 'yaml' => 'yaml', 'yml' => 'yaml', 'bash' => 'bash', 'sh' => 'bash', 'shell' => 'bash'];
 
@@ -55,6 +56,7 @@
 		private array $options;
 		private array $renders = [];
 		private array $interactive = [];
+		private string $token = '';
 		private ?MarkdownConverter $converter = null;
 		private ?\Highlight\Highlighter $highlighter = null;
 
@@ -82,6 +84,7 @@
 			$this->messages = [];
 			$this->renders = $renders + ['svg' => [], 'math' => [], 'mathBlock' => []];
 			$this->interactive = [];
+			$this->token = bin2hex(random_bytes(6));
 			$html = $this->toHtml($markdown);
 			$filter = new HyphaFilter($this->options['level'] >= 2 ? $this->frameHosts() : []);
 			$fragment = $filter->sanitize($html);
@@ -223,7 +226,7 @@
 			if ($language === 'html' && preg_match('/^html\s+(interactief|interactive)\b/i', $info)) {
 				if ($this->options['level'] >= 2 && $description !== '') {
 					$this->interactive[] = ['code' => $literal, 'height' => (int)($attributes['hoogte'] ?? $attributes['height'] ?? 0), 'description' => $description];
-					return '<div class="hypha-interactief-' . (count($this->interactive) - 1) . '"></div>';
+					return '<div class="hypha-interactief-' . $this->token . '-' . (count($this->interactive) - 1) . '"></div>';
 				}
 				$this->message($this->options['level'] >= 2 ? 'interactive-without-description' : 'interactive-not-allowed');
 			}
@@ -235,7 +238,9 @@
 					return '<pre class="code"><code class="hljs language-' . Xml::escape($language) . '">' . $result->value . '</code></pre>' . "\n";
 				}
 				catch (Throwable $e) {
+					//
 					// Fall through to plain code: highlighting is decoration.
+					//
 				}
 			}
 			return '<pre class="code"><code' . ($language !== '' ? ' class="language-' . Xml::escape($language) . '"' : '') . '>' . Xml::escape($literal) . '</code></pre>' . "\n";
@@ -333,7 +338,7 @@
 				foreach ($node->childNodes as $child) {
 					if (!$child instanceof DOMElement) continue;
 					if ($child->localName === 'figure' && preg_match('/\bdiagram\b/', $child->getAttribute('class'))) $figures[] = $child;
-					elseif ($child->localName === 'div' && str_starts_with($child->getAttribute('class'), 'hypha-interactief-')) $placeholders[] = $child;
+					elseif ($child->localName === 'div' && $this->token !== '' && str_starts_with($child->getAttribute('class'), 'hypha-interactief-' . $this->token . '-')) $placeholders[] = $child;
 					else $walk($child);
 				}
 			};
@@ -349,7 +354,7 @@
 				$svg->setAttribute('aria-label', $caption ? trim($caption->textContent) : $this->text('diagram', 'diagram'));
 			}
 			foreach ($placeholders as $placeholder) {
-				$index = (int)substr($placeholder->getAttribute('class'), strlen('hypha-interactief-'));
+				$index = (int)substr($placeholder->getAttribute('class'), strlen('hypha-interactief-' . $this->token . '-'));
 				$block = $this->interactive[$index] ?? null;
 				if (!$block) continue;
 				$document = $placeholder->ownerDocument;

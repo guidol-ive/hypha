@@ -80,3 +80,33 @@
 		lacks('script:', $out);
 		lacks('data:', $out);
 	});
+
+	//
+	// Findings of the review of 2026-10-27.
+	//
+	foreach (['<svg><![CDATA[</svg><img src=x onerror=alert(1)>]]></svg>', '<math><mi><![CDATA[</math><img src=x onerror=alert(1)>]]></mi></math>', '<svg><desc><![CDATA[</desc><script>alert(1)</script>]]></desc></svg>'] as $i => $payload) {
+		test("filter: CDATA in svg or math stays text ($i)", function () use ($payload) {
+			$out = filterForTest()->filter($payload);
+			lacks('CDATA', $out);
+			$html = new DOMDocument();
+			$previous = libxml_use_internal_errors(true);
+			$html->loadHTML('<?xml encoding="utf-8"?><body>' . $out . '</body>');
+			libxml_clear_errors();
+			libxml_use_internal_errors($previous);
+			same(0, $html->getElementsByTagName('img')->length + $html->getElementsByTagName('script')->length, $out);
+		});
+	}
+
+	test('filter: an iframe to a host of the list must have the path of its player; allow is fixed', function () {
+		$out = filterForTest()->filter('<iframe src="https://www.google.com/url?q=https://evil.example/"></iframe><iframe src="https://archive.org/download/x/a.html"></iframe><iframe src="https://player.vimeo.com/video/1" allow="camera *; microphone *"></iframe>');
+		lacks('evil.example', $out);
+		lacks('download', $out);
+		contains('allow="fullscreen; picture-in-picture"', $out);
+		lacks('camera', $out);
+	});
+
+	test('filter: \\\\host link is external; image-set in svg style is refused', function () {
+		$out = filterForTest()->filter('<a href="\\\\evil.example">a</a><svg><rect style="background:image-set(\'https://evil/x\' 1x)"/></svg>');
+		contains('rel="noopener nofollow"', $out);
+		lacks('image-set', $out);
+	});

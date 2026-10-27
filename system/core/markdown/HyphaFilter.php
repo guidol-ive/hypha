@@ -40,6 +40,16 @@
 		const SVG_ATTR = ['class', 'id', 'd', 'x', 'y', 'x1', 'x2', 'y1', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'fx', 'fy', 'width', 'height', 'points', 'viewBox', 'transform', 'fill', 'fill-opacity', 'fill-rule', 'clip-rule', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'opacity', 'font-size', 'font-weight', 'font-family', 'font-style', 'text-anchor', 'dominant-baseline', 'alignment-baseline', 'baseline-shift', 'letter-spacing', 'text-decoration', 'style', 'role', 'aria-roledescription', 'aria-label', 'aria-hidden', 'data-id', 'xml:space', 'markerWidth', 'markerHeight', 'markerUnits', 'refX', 'refY', 'orient', 'offset', 'stop-color', 'stop-opacity', 'clip-path', 'mask', 'marker-end', 'marker-start', 'marker-mid', 'dx', 'dy', 'rotate', 'textLength', 'lengthAdjust', 'preserveAspectRatio', 'href', 'xlink:href', 'gradientUnits', 'gradientTransform', 'patternUnits', 'patternTransform', 'vector-effect', 'pathLength', 'startOffset', 'xmlns'];
 		const MATH = ['math', 'mrow', 'mi', 'mn', 'mo', 'ms', 'mtext', 'mspace', 'msup', 'msub', 'msubsup', 'mfrac', 'msqrt', 'mroot', 'mstyle', 'mtable', 'mtr', 'mtd', 'mlabeledtr', 'mover', 'munder', 'munderover', 'mmultiscripts', 'mprescripts', 'none', 'mpadded', 'menclose', 'semantics', 'annotation', 'mphantom', 'merror'];
 		const MATH_ATTR = ['display', 'class', 'style', 'mathvariant', 'movablelimits', 'width', 'displaystyle', 'scriptlevel', 'stretchy', 'fence', 'separator', 'lspace', 'rspace', 'accent', 'accentunder', 'columnalign', 'rowalign', 'rowspacing', 'columnspacing', 'columnlines', 'rowlines', 'frame', 'notation', 'encoding', 'height', 'depth', 'voffset', 'largeop', 'symmetric', 'minsize', 'maxsize', 'form', 'xmlns', 'linethickness', 'numalign', 'denomalign', 'bevelled', 'mathcolor', 'mathbackground', 'mathsize', 'href'];
+		//
+		// The path an embedded player of a service must have; a host of the list that is not here (a PeerTube instance)
+		// only allows /videos/embed/. Without this, any page on a broad host (www.google.com/url?q=...) could be framed.
+		//
+		const FRAME_PATHS = [
+			'www.youtube-nocookie.com' => '/embed/', 'player.vimeo.com' => '/video/', 'www.openstreetmap.org' => '/export/embed.html',
+			'datawrapper.dwcdn.net' => '/', 'flo.uri.sh' => '/visualisation/', 'e.infogram.com' => '/', 'www.google.com' => '/maps/embed',
+			'open.spotify.com' => '/embed/', 'w.soundcloud.com' => '/player/', 'player-widget.mixcloud.com' => '/widget/iframe/',
+			'archive.org' => '/embed/', 'bandcamp.com' => '/EmbeddedPlayer/', 'www.scribd.com' => '/embeds/', 'embed.documentcloud.org' => '/documents/',
+		];
 		const DROP_WITH_CONTENT = ['script', 'style', 'iframe', 'object', 'embed', 'template', 'noscript', 'textarea', 'select', 'form', 'macro', 'frame', 'frameset', 'applet', 'base', 'link', 'meta', 'title', 'head', 'button', 'svg:foreignObject'];
 
 		private HTML5 $parser;
@@ -81,6 +91,14 @@
 
 		private function walk(DOMNode $node, string $space): void {
 			foreach (iterator_to_array($node->childNodes) as $child) {
+				//
+				// CDATA (which the HTML5 parser makes inside svg and math) would be written raw by saveXML and become
+				// markup when Hypha parses the XHTML again as HTML: keep only its text.
+				//
+				if ($child instanceof DOMCdataSection) {
+					$node->replaceChild($node->ownerDocument->createTextNode($child->data), $child);
+					continue;
+				}
 				if ($child instanceof DOMText) continue;
 				if (!$child instanceof DOMElement) {
 					$node->removeChild($child);
@@ -117,7 +135,7 @@
 					if ($keep && in_array($attributeName, ['href', 'src', 'xlink:href'], true))
 						$keep = $inner === 'html' ? $this->safeUrl($attribute->value, $name === 'iframe') : str_starts_with(trim($attribute->value), '#');
 					if ($keep && $attributeName === 'style')
-						$keep = !preg_match('/url\s*\(|expression|@import|javascript:|behavior|-moz-binding|\\\\/i', $attribute->value);
+						$keep = !preg_match('/url\s*\(|image-set|image\s*\(|cross-fade|src\s*\(|expression|@import|javascript:|behavior|-moz-binding|\\\\/i', $attribute->value);
 					if (!$keep) $child->removeAttributeNode($attribute);
 				}
 				if ($name === 'iframe' && $inner === 'html') {
@@ -128,9 +146,10 @@
 					$child->setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation');
 					$child->setAttribute('loading', 'lazy');
 					$child->setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+					$child->setAttribute('allow', 'fullscreen; picture-in-picture');
 					if (!$child->hasAttribute('title')) $child->setAttribute('title', parse_url($child->getAttribute('src'), PHP_URL_HOST));
 				}
-				if ($name === 'a' && $inner === 'html' && preg_match('~^(https?:)?//~i', trim($child->getAttribute('href')))) $child->setAttribute('rel', 'noopener nofollow');
+				if ($name === 'a' && $inner === 'html' && preg_match('~^(https?:)?[/\\\\]{2}~i', trim($child->getAttribute('href')))) $child->setAttribute('rel', 'noopener nofollow');
 				$this->walk($child, $inner);
 			}
 		}
@@ -141,7 +160,11 @@
 		private function safeUrl(string $url, bool $frame): bool {
 			$u = trim(html_entity_decode($url, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 			$u = preg_replace('/[\x00-\x20\x7f]+/', '', $u);
-			if ($frame) return (bool)preg_match('~^https://([^/?#]+)[/?#]~i', $u . '/', $m) && in_array(strtolower($m[1]), $this->frameHosts, true);
+			if ($frame) {
+				if (!preg_match('~^https://([^/?#\\\\]+)([/?#][^\\\\]*)?$~i', $u, $m) || !in_array(strtolower($m[1]), $this->frameHosts, true)) return false;
+				$prefix = self::FRAME_PATHS[strtolower($m[1])] ?? '/videos/embed/';
+				return str_starts_with($m[2] ?? '/', $prefix);
+			}
 			if (preg_match('~^[a-z][a-z0-9+.-]*:~i', $u)) return (bool)preg_match('~^(https?|mailto):~i', $u);
 			return true;
 		}

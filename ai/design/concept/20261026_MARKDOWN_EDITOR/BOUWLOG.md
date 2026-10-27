@@ -54,6 +54,19 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 1. Gebouwd: ingesloten inhoud voor YouTube (via `youtube-nocookie.com`), Vimeo, OpenStreetMap, Datawrapper, Flourish, Infogram, Google Maps, Spotify, SoundCloud, Mixcloud, Internet Archive, Bandcamp, Scribd, DocumentCloud en PeerTube-instanties van de lijst; het interactieve blok als `<iframe sandbox="allow-scripts" srcdoc>` met een Content-Security-Policy in de `srcdoc`; HedgeDoc `:::`, `[TOC]`, `++`, `^`, `~`, `=200x150`, `{%youtube %}`, definitielijsten.
 2. Tests en uitkomsten: `tests/markdown/Level2Test.php`, 24 tests (elke dienst, onbekende host, niveau 1, interactief blok met en zonder beschrijving, eigen `<iframe>` van de auteur, niveau per rol); totaal 89 van 89 op PHP 8.2.35 en 8.4.27.
 
+### Review van T02 en T03 (2026-10-27)
+
+1. Een subagent beoordeelde de servercode met 52 eigen aanvalsinvoeren. Verwerkt:
+   1. **kritiek**: CDATA in `<svg>` of `<math>` ging ongefilterd door en werd markup zodra Hypha de XHTML als HTML inleest; nu wordt CDATA tekst;
+   2. een `<iframe>` naar een host van de lijst moest alleen de host kloppen (`www.google.com/url?q=…`); nu ook het pad van de speler per dienst, en `allow` krijgt een vaste waarde;
+   3. `\\host` als externe link, `image-set()` en verwanten in een SVG-stijl;
+   4. een `:::`-kader in een citaat sloot niet; een niet gesloten notitie verborg de rest van het artikel (nu: einde bij de eerste lege regel, met een melding);
+   5. een kader met opmaak in de titel werd niet herkend; onbekende kadersoorten blijven een citaat (`info`, `tip`, `note`, `warning`, `important`, `caution`, `quote`);
+   6. een auteur kon met de klasse van de plaatshouder een interactief blok verdubbelen; de plaatshouder heeft nu per keer een willekeurig teken.
+2. Niet verwerkt, met reden: de Nederlandse standaardteksten in `HyphaMarkdown::text()` zijn alleen een terugval voor de tests; in Hypha komen ze uit `system/languages/` (`mdHtmlTexts()`). Geneste `:::`-kaders sluiten bij de eerste `:::`, net als markdown-it-container.
+3. Tests: 9 nieuwe; 98 van 98 op PHP 8.2.35 en 8.4.27.
+4. Bevinding over de opstelling: Docker Desktop toont een net geschreven bestand soms half aan een container (twee keer een parse-fout die bij de volgende run weg was); bij een onverwachte parse-fout eerst opnieuw draaien.
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.
@@ -61,3 +74,4 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 3. **Kop-id's beginnen met `kop-`** (`kop-de-eerste-zetels`), omdat Hypha elementen als `main` en `menu` op id zoekt en een tussenkop „Menu” anders botst.
 4. **`system/vendor/` is 2,7 MB** in plaats van de geschatte 1,3 MB (§13.12): vooral league/commonmark zelf (1,4 MB met alle extensies).
 5. **Temml 0.14.0** zoals in het prototype; highlight.php kent HTML als `xml`, dus tien talen met negen definities.
+6. **Ingesloten inhoud krijgt `sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"`**: de spelers van YouTube en Vimeo werken niet zonder hun eigen herkomst. Een `<iframe>` mag alleen naar het pad van de speler van een dienst (§13.5 noemde alleen de host).
