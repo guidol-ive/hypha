@@ -1027,6 +1027,19 @@
 		"mde-fact-level-help" => "Niveau 1: tekst, opmaak, beeld en diagrammen. Niveau 2: ook ingesloten video en kaarten en interactieve blokken.",
 		"mde-statute" => "Redactiestatuut",
 		"mde-statute-confirmed" => "bevestigd door [[n]] van [[of]]",
+		"mde-settings" => "Tekst-editor",
+		"mde-settings-mdSections" => "Rubrieken",
+		"mde-settings-mdStatute" => "Redactiestatuut",
+		"mde-settings-mdFrameHosts" => "Diensten om in te sluiten (niveau 2)",
+		"mde-settings-mdPeertubeHosts" => "PeerTube-servers (niveau 2)",
+		"mde-settings-mdScriptHosts" => "Scripts en stijlen in interactieve blokken van",
+		"mde-settings-one-per-line" => "Eén per regel. Leeg: de standaardlijst.",
+		"mde-settings-hosts-help" => "Eén hostnaam per regel, zoals player.vimeo.com. Leeg: de standaardlijst.",
+		"mde-settings-level" => "Vrijheidsniveau 2",
+		"mde-settings-level2" => "ingesloten inhoud en interactieve blokken aan",
+		"mde-settings-level2-user" => "voor leden",
+		"mde-settings-level2-admin" => "voor beheerders",
+		"mde-settings-saved" => "De instellingen van de tekst-editor zijn opgeslagen.",
 		// End of the Markdown editor
 	);
 

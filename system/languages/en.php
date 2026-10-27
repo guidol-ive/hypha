@@ -1032,6 +1032,19 @@
 		"mde-fact-level-help" => "Level 1: text, layout, images and diagrams. Level 2: also embedded video and maps, and interactive blocks.",
 		"mde-statute" => "Editorial statute",
 		"mde-statute-confirmed" => "confirmed by [[n]] of [[of]]",
+		"mde-settings" => "Text editor",
+		"mde-settings-mdSections" => "Sections",
+		"mde-settings-mdStatute" => "Editorial statute",
+		"mde-settings-mdFrameHosts" => "Services to embed (level 2)",
+		"mde-settings-mdPeertubeHosts" => "PeerTube servers (level 2)",
+		"mde-settings-mdScriptHosts" => "Scripts and styles in interactive blocks from",
+		"mde-settings-one-per-line" => "One per line. Empty: the default list.",
+		"mde-settings-hosts-help" => "One host name per line, such as player.vimeo.com. Empty: the default list.",
+		"mde-settings-level" => "Freedom level 2",
+		"mde-settings-level2" => "embedded content and interactive blocks on",
+		"mde-settings-level2-user" => "for members",
+		"mde-settings-level2-admin" => "for administrators",
+		"mde-settings-saved" => "The settings of the text editor are saved.",
 		// End of the Markdown editor
 	);
 

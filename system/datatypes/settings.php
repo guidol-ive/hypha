@@ -46,6 +46,7 @@
 				case 'styles': $this->editStyles(); break;
 				case 'elements': $this->editSiteElements(); break;
 				case 'menu': $this->editMenu(); break;
+				case 'editor': hypha_mdeditorSettingsView($this->html); break;
 				default: $this->showSettings();
 			}
 		}
@@ -625,6 +626,7 @@
 				$this->html->writeToElement('pageCommands', makeButton(__('styles'), makeAction('settings/styles', '', '')));
 				$this->html->writeToElement('pageCommands', makeButton(__('site-elements'), makeAction('settings/elements', '', '')));
 				$this->html->writeToElement('pageCommands', makeButton(__('menu'), makeAction('settings/menu', '', '')));
+				$this->html->writeToElement('pageCommands', makeButton(__('mde-settings'), makeAction('settings/editor', '', '')));
 			}
 			ob_start();
 ?>

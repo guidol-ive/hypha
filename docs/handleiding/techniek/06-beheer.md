@@ -85,7 +85,7 @@ timeline
 
 ## Instellingen van de tekst-editor
 
-De tekst-editor heeft nog geen eigen scherm voor instellingen. Ze staan in het element `mdeditor` in `data/hypha.xml`. Zonder dat element gelden de standaardwaarden uit `hypha_mdeditorDefaults()` in `system/core/markdown.php`.
+Een beheerder past de instellingen van de tekst-editor aan via **Instellingen → Tekst-editor** (`/settings/editor`): de rubrieken, het redactiestatuut, vrijheidsniveau 2 per rol, en de diensten en scripts die zijn toegestaan. Eén per regel; een leeg vak geeft de standaardlijst. De instellingen staan in het element `mdeditor` in `data/hypha.xml`, zoals hieronder; zonder dat element gelden de standaardwaarden uit `hypha_mdeditorDefaults()` in `system/core/markdown.php`.
 
 ![Het scherm projectinstellingen met de standaardtaal, de startpagina en het type van nieuwe pagina's](../afbeeldingen/instellingen-hypha.png)
 
@@ -105,7 +105,7 @@ De tekst-editor heeft nog geen eigen scherm voor instellingen. Ze staan in het e
 4. `scriptHost`: de enige plekken waar een interactief blok scripts en stijlen vandaan mag halen.
 5. `level2="off"` zet ingesloten inhoud en interactieve blokken uit voor de hele site. Met `level2Off="user"` zet je ze alleen uit voor gewone leden, met `level2Off="user,admin"` voor iedereen.
 
-Een lijst die je invult, vervangt de standaardlijst helemaal. Pas `hypha.xml` aan als het rustig is op de site, en maak eerst een [back-up](#back-up).
+Een lijst die je invult, vervangt de standaardlijst helemaal. Pas je `hypha.xml` toch met de hand aan, doe dat dan als het rustig is op de site, en maak eerst een [back-up](#back-up).
 
 ## PHP-versies
 

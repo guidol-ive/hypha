@@ -1170,6 +1170,8 @@ Randvoorwaarde: zo weinig mogelijk wijzigingen aan de bestaande PHP-code. Dat ka
 | `.htaccess` | **geen** |
 | `index.php` | **1 regel** (bouw): `system/mdeditor/` serveren met lange cache |
 | `system/core/pages.php` | **2 regels** (bouw): teruggetrokken artikelen uit de overzichten (BR-86) |
+| `system/datatypes/index.php` | **2 regels** (bouw): teruggetrokken artikelen ook niet in de index (BR-86) |
+| `system/datatypes/settings.php` | **2 regels** (bouw): het scherm *Tekst-editor* onder de instellingen (BR-47); het scherm zelf staat in `system/core/mdeditor.php` |
 | `system/core/database.php` | **26 regels** (bouw): `diff()` en `patch()` houden tekst met `@@` heel in oudere versies (upstream #571 / PR #572); `serveFile()` laat Apache comprimeren (upstream #573 / PR #574) |
 
 Het **paginatype blijft** `peer_reviewed_article` (en `textpage`); het **signaal** is `format="markdown"` met het bron-element in de XML ([§12.5](#125-opslag-oude-artikelen-blijven-html-signaal-voor-markdown)). Een nieuw type zou de opmaak breken: Hypha zet het type als klasse `type_peer_reviewed_article` op de pagina. Het standaardthema gebruikt die klasse op 11 plekken, en de macro `pagelist` filtert op het type ([§13.13](#1313-paginatype-en-opslag)).

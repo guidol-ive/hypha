@@ -501,3 +501,16 @@ mde-fact-level	vrijheidsniveau [[n]]	freedom level [[n]]
 mde-fact-level-help	Niveau 1: tekst, opmaak, beeld en diagrammen. Niveau 2: ook ingesloten video en kaarten en interactieve blokken.	Level 1: text, layout, images and diagrams. Level 2: also embedded video and maps, and interactive blocks.
 mde-statute	Redactiestatuut	Editorial statute
 mde-statute-confirmed	bevestigd door [[n]] van [[of]]	confirmed by [[n]] of [[of]]
+mde-settings	Tekst-editor	Text editor
+mde-settings-mdSections	Rubrieken	Sections
+mde-settings-mdStatute	Redactiestatuut	Editorial statute
+mde-settings-mdFrameHosts	Diensten om in te sluiten (niveau 2)	Services to embed (level 2)
+mde-settings-mdPeertubeHosts	PeerTube-servers (niveau 2)	PeerTube servers (level 2)
+mde-settings-mdScriptHosts	Scripts en stijlen in interactieve blokken van	Scripts and styles in interactive blocks from
+mde-settings-one-per-line	Eén per regel. Leeg: de standaardlijst.	One per line. Empty: the default list.
+mde-settings-hosts-help	Eén hostnaam per regel, zoals player.vimeo.com. Leeg: de standaardlijst.	One host name per line, such as player.vimeo.com. Empty: the default list.
+mde-settings-level	Vrijheidsniveau 2	Freedom level 2
+mde-settings-level2	ingesloten inhoud en interactieve blokken aan	embedded content and interactive blocks on
+mde-settings-level2-user	voor leden	for members
+mde-settings-level2-admin	voor beheerders	for administrators
+mde-settings-saved	De instellingen van de tekst-editor zijn opgeslagen.	The settings of the text editor are saved.

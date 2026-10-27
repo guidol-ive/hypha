@@ -225,6 +225,59 @@
 	registerCommandCallback('mdPreferences', 'hypha_mdeditorSetPreferences');
 
 	/*
+		Function: hypha_mdeditorSettingsView
+		The settings of the editor for an administrator (BR-47, design section 10.1), at /settings/editor: the sections,
+		the editorial statute, the services that may be embedded, the hosts of scripts in interactive blocks, one per
+		line, and level 2 per role. An empty list means the default list. Stored in the element mdeditor of hypha.xml.
+	*/
+	function hypha_mdeditorSettingsView($html) {
+		if (!isAdmin()) return;
+		$settings = hypha_mdeditorSettings();
+		$html->writeToElement('pagename', __('mde-settings'));
+		$area = fn ($name, $list, $help) => '<tr><th><label for="' . $name . '">' . htmlspecialchars(__('mde-settings-' . $name)) . '</label></th><td><textarea name="' . $name . '" id="' . $name . '" rows="' . max(4, min(14, count($list) + 1)) . '" cols="60" aria-describedby="' . $name . 'Help">' . htmlspecialchars(implode("\n", $list)) . '</textarea><div class="help" id="' . $name . 'Help">' . htmlspecialchars(__($help)) . '</div></td></tr>';
+		$check = fn ($name, $on) => '<input type="checkbox" name="' . $name . '" id="' . $name . '" value="on"' . ($on ? ' checked="checked"' : '') . '/>';
+		$level = '<tr><th>' . htmlspecialchars(__('mde-settings-level')) . '</th><td><label>' . $check('mdLevel2', $settings['level2']) . ' ' . htmlspecialchars(__('mde-settings-level2')) . '</label><br/>'
+			. '<label>' . $check('mdLevel2User', !in_array('user', $settings['level2Off'], true)) . ' ' . htmlspecialchars(__('mde-settings-level2-user')) . '</label><br/>'
+			. '<label>' . $check('mdLevel2Admin', !in_array('admin', $settings['level2Off'], true)) . ' ' . htmlspecialchars(__('mde-settings-level2-admin')) . '</label></td></tr>';
+		$form = $html->createForm('<table class="section">'
+			. $area('mdSections', $settings['sections'], 'mde-settings-one-per-line')
+			. $area('mdStatute', $settings['statute'], 'mde-settings-one-per-line')
+			. $level
+			. $area('mdFrameHosts', $settings['frameHosts'], 'mde-settings-hosts-help')
+			. $area('mdPeertubeHosts', $settings['peertubeHosts'], 'mde-settings-hosts-help')
+			. $area('mdScriptHosts', $settings['scriptHosts'], 'mde-settings-hosts-help')
+			. '</table>');
+		$form->appendTo($html->getElementById('main'));
+		$html->writeToElement('pageCommands', makeButton(__('cancel'), makeAction('settings', '', '')));
+		$html->writeToElement('pageCommands', makeButton(__('save'), makeAction('settings/editor', 'mdSaveSettings', '', $form)));
+	}
+
+	/*
+		Function: hypha_mdeditorSaveSettings
+		Command mdSaveSettings: stores the settings of hypha_mdeditorSettingsView() in hypha.xml. Host names that are no
+		host name are left out; texts go through hypha_markdownClean().
+	*/
+	registerCommandCallback('mdSaveSettings', 'hypha_mdeditorSaveSettings');
+	function hypha_mdeditorSaveSettings($argument) {
+		global $hyphaXml, $O_O;
+		if (!isAdmin()) return 'reload';
+		$request = $O_O->getRequest();
+		$lines = fn ($name) => array_values(array_unique(array_filter(array_map(fn ($l) => trim(hypha_markdownClean($l)), preg_split('/\R/u', (string)$request->getPostValue($name, '')) ?: []), 'strlen')));
+		$hosts = fn ($name) => array_values(array_filter(array_map('strtolower', $lines($name)), fn ($h) => preg_match('/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/', $h)));
+		$lists = ['section' => $lines('mdSections'), 'statute' => $lines('mdStatute'), 'frameHost' => $hosts('mdFrameHosts'), 'peertubeHost' => $hosts('mdPeertubeHosts'), 'scriptHost' => $hosts('mdScriptHosts')];
+		$off = array_merge($request->getPostValue('mdLevel2User') === 'on' ? [] : ['user'], $request->getPostValue('mdLevel2Admin') === 'on' ? [] : ['admin']);
+		$hyphaXml->lockAndReload();
+		foreach (iterator_to_array($hyphaXml->findXPath('/hypha/mdeditor')) as $old) $old->parentNode->removeChild($old);
+		$node = $hyphaXml->documentElement->createChild('mdeditor');
+		$node->setAttribute('level2', $request->getPostValue('mdLevel2') === 'on' ? 'on' : 'off');
+		$node->setAttribute('level2Off', implode(',', $off));
+		foreach ($lists as $tag => $values) foreach ($values as $value) $node->createChild($tag)->setText($value);
+		$hyphaXml->saveAndUnlock();
+		notify('success', __('mde-settings-saved'));
+		return 'reload';
+	}
+
+	/*
 		Function: hypha_mdeditorLocate
 		Command mdLocate (AJAX): the current language and name of a page, by its id, for an editor whose page was renamed
 		or moved to another language by someone else meanwhile. A global command, so it runs before the page is looked up
