@@ -83,7 +83,9 @@ Use a copy of real data only locally. It contains personal data
 
 **Concurrent requests on a macOS bind mount.** With `data/` on a Docker Desktop or OrbStack bind mount,
 many requests at once sometimes see a file as missing for a moment while another request replaces it
-with `rename()`: `Cannot lock file data/hypha.xml, open failed: … No such file or directory`. On Linux,
+with `rename()`: `Cannot lock file data/hypha.xml, open failed: … No such file or directory`, or, when
+`hypha.xml` is read without a lock, `file_get_contents(data/hypha.xml): Failed to open stream` followed by
+a fatal error in `base.php`. On Linux,
 and with `data/` on a Docker volume or tmpfs, this does not happen (0 errors in 4,924 requests at 8
 clients, measured 2026-10-27), so `tests/integratie/bekende-meldingen.txt` lists it and
 `test_gelijktijdig.py` does not count a round with a failed request. Files on the host may also lag

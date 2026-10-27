@@ -143,6 +143,19 @@ export default async function (t) {
 		await page.keyboard.press('Escape');
 	});
 
+	t.test('over plain http (no crypto.subtle) an article with a diagram is saved with its drawing', async () => {
+		const p2 = await login(browser, base, 'sanne');
+		await p2.addInitScript(() => Object.defineProperty(globalThis.crypto, 'subtle', { get: () => undefined }));
+		await newArticle(p2, base, 'Diagram over http');
+		await p2.evaluate(() => { const e = window.hyphaMdeditor.editor; e.fields.text = '%% beschrijving: zetels %%\n```mermaid\npie title Zetels\n  "A" : 3\n  "B" : 2\n```\n'; e.loadVisual(); e.changed(); });
+		await p2.waitForFunction(() => document.querySelector('#mdeVisual figure.diagram svg'), null, { timeout: 15000 });
+		assert(await p2.evaluate(() => window.hyphaMdeditor.editor.save()), 'not saved: ' + await p2.textContent('#mdeToast'));
+		const slug2 = p2.url().replace(/^.*\/nl\/([^/]+)\/edit.*$/, '$1');
+		const html = await (await p2.request.get(base + 'nl/' + slug2)).text();
+		assert(/<figure class="diagram[^>]*><svg/.test(html), 'no drawing in the stored page');
+		await p2.context().close();
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

@@ -27,6 +27,37 @@ export const load = name => lazy[name] ||= import(name).then(m => m.default || m
 let CM = null;
 
 //
+// SHA-256 for a page over plain http: browsers offer crypto.subtle only in a secure context (https or localhost), and
+// the drawings of diagrams and formulas are matched on the server by the SHA-256 of their source (found on an iPhone
+// on the local network: no article with a diagram could be saved).
+//
+export function sha256(bytes) {
+	const k = new Uint32Array([0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]);
+	const h = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+	const length = bytes.length, padded = new Uint8Array(((length + 9 + 63) >> 6) << 6);
+	padded.set(bytes);
+	padded[length] = 0x80;
+	const view = new DataView(padded.buffer);
+	view.setUint32(padded.length - 8, Math.floor(length / 0x20000000));
+	view.setUint32(padded.length - 4, (length << 3) >>> 0);
+	const w = new Uint32Array(64), r = (x, n) => (x >>> n) | (x << (32 - n));
+	for (let off = 0; off < padded.length; off += 64) {
+		for (let i = 0; i < 16; i++) w[i] = view.getUint32(off + i * 4);
+		for (let i = 16; i < 64; i++) w[i] = (w[i - 16] + (r(w[i - 15], 7) ^ r(w[i - 15], 18) ^ (w[i - 15] >>> 3)) + w[i - 7] + (r(w[i - 2], 17) ^ r(w[i - 2], 19) ^ (w[i - 2] >>> 10))) >>> 0;
+		let [a, b, c, d, e, f, g, hh] = h;
+		for (let i = 0; i < 64; i++) {
+			const t1 = (hh + (r(e, 6) ^ r(e, 11) ^ r(e, 25)) + ((e & f) ^ (~e & g)) + k[i] + w[i]) >>> 0;
+			const t2 = ((r(a, 2) ^ r(a, 13) ^ r(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
+			[hh, g, f, e, d, c, b, a] = [g, f, e, (d + t1) >>> 0, c, b, a, (t1 + t2) >>> 0];
+		}
+		[a, b, c, d, e, f, g, hh].forEach((x, i) => { h[i] = (h[i] + x) >>> 0; });
+	}
+	const out = new Uint8Array(32);
+	h.forEach((x, i) => new DataView(out.buffer).setUint32(i * 4, x));
+	return out;
+}
+
+//
 // Page names are compared without regard to case only for A to Z, as hypha_getPage() on the server does (strtolower).
 //
 const asciiLower = s => String(s).replace(/[A-Z]+/g, c => c.toLowerCase());
@@ -412,9 +443,12 @@ export class Editor {
 					d.innerHTML = svg ? DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true } }) : `<pre class="diagram-src">${esc(n.attrs.text)}</pre>`;
 					dom.prepend(d);
 				};
+				let current = node;
+				const redraw = () => draw(current);
 				draw(node);
+				this.atoms.add(redraw);
 				removable(dom, view, getPos, () => this.dialogs.openDiagram({ view, pos: getPos(), node: view.state.doc.nodeAt(getPos()) }));
-				return { dom, update: n => n.type === node.type && (draw(n), true), ignoreMutation: () => true, stopEvent: e => e.type === 'mousedown' && e.target.closest('button') };
+				return { dom, update: n => n.type === node.type && (current = n, draw(n), true), destroy: () => this.atoms.delete(redraw), ignoreMutation: () => true, stopEvent: e => e.type === 'mousedown' && e.target.closest('button') };
 			},
 			figure: (node, view, getPos) => {
 				const dom = document.createElement('figure');
@@ -503,9 +537,12 @@ export class Editor {
 		dom.className = block ? 'math math-block' : 'math';
 		dom.contentEditable = 'false';
 		const draw = n => { dom.innerHTML = this.mathml(n.attrs.tex, block) ?? `<code class="math-tex">${esc(n.attrs.tex)}</code>`; dom.title = this.mathErrors.has(n.attrs.tex) ? this.t('math-error') : this.t('math-edit'); dom.classList.toggle('math-err', this.mathErrors.has(n.attrs.tex)); };
+		let current = node;
+		const redraw = () => draw(current);
 		draw(node);
+		this.atoms.add(redraw);
 		dom.addEventListener('dblclick', () => this.dialogs.editMath(view, getPos()));
-		return { dom, update: n => n.type === node.type && (draw(n), true), ignoreMutation: () => true };
+		return { dom, update: n => n.type === node.type && (current = n, draw(n), true), destroy: () => this.atoms.delete(redraw), ignoreMutation: () => true };
 	}
 
 	rawView(node, cls) {
@@ -863,19 +900,34 @@ export class Editor {
 	// Pele, Temml and highlight.js only when the article has a diagram, a formula or code (requirement 4).
 	//
 	ensureLibraries(text) {
-		const wait = [];
-		if (/```mermaid/.test(text) && !lazy.peleLoaded) wait.push(load('pele').then(m => { lazy.peleLoaded = m; }));
-		if (/\$/.test(text) && !lazy.temmlLoaded) wait.push(load('temml').then(m => { lazy.temmlLoaded = m; }));
-		if (/```\w/.test(text) && !lazy.hljsLoaded) wait.push(load('highlight').then(m => { lazy.hljsLoaded = m; }));
-		if (wait.length) Promise.all(wait).then(() => { this.diagrams.clear(); this.refresh(); for (const v of this.pmViews) v.dispatch(v.state.tr.setMeta('redraw', true)); this.redrawAtoms(); });
+		//
+		// Not before the browser is idle after opening: on a phone these 400 kB would compete with the editor itself; the
+		// diagrams and formulas show their source until then. Each library is asked for once, and everything is drawn
+		// again once: dozens of diagrams and formulas each ask while the libraries are on their way.
+		//
+		const wanted = [['pele', 'peleLoaded', /```mermaid/], ['temml', 'temmlLoaded', /\$/], ['highlight', 'hljsLoaded', /```\w/]]
+			.filter(([name, key, pattern]) => pattern.test(text) && !lazy[key] && !this.libraries.has(name));
+		if (!wanted.length) return;
+		for (const [name] of wanted) this.libraries.add(name);
+		this.idle ||= new Promise(done => (window.requestIdleCallback || (f => setTimeout(f, 200)))(done, { timeout: 1500 }));
+		Promise.all(wanted.map(([name, key]) => this.idle.then(() => load(name)).then(m => { lazy[key] = m; }))).then(() => {
+			this.diagrams.clear();
+			this.refresh();
+			this.redrawAtoms();
+		});
 	}
 
+	//
+	// Diagrams and formulas in Opmaak drawn again once their library is there. Every view of such a node registers
+	// itself in this.atoms: ProseMirror does not call update() for a node with the same attributes, so a new node with
+	// the same attributes would not redraw (found when the libraries came to load after the first drawing).
+	//
+	atoms = new Set();
+
+	libraries = new Set();
+
 	redrawAtoms() {
-		for (const v of this.pmViews) {
-			const tr = v.state.tr;
-			v.state.doc.descendants((n, pos) => { if (['diagram', 'math_block', 'math_inline'].includes(n.type.name)) tr.setNodeMarkup(pos, null, Object.assign({}, n.attrs)); });
-			if (tr.docChanged || tr.steps.length) v.updateState(v.state.apply(tr));
-		}
+		for (const redraw of this.atoms) redraw();
 	}
 
 	diagramSvg(text, description) {
@@ -1268,7 +1320,7 @@ export class Editor {
 		const all = [this.fields.text, this.fields.method, this.fields.sources, this.fields.excerpt].join('\n\n');
 		const tokens = this.markdown.hyphaParse(all, {});
 		const svg = {}, math = {}, mathBlock = {};
-		const sha = async s => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, '0')).join('');
+		const sha = async s => [...(globalThis.crypto?.subtle ? new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))) : sha256(new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, '0')).join('');
 		await Promise.all([/```mermaid/.test(all) && load('pele').then(m => { lazy.peleLoaded = m; }), /\$/.test(all) && load('temml').then(m => { lazy.temmlLoaded = m; })].filter(Boolean));
 		const walk = async list => {
 			for (const t of list) {

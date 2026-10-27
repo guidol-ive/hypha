@@ -78,9 +78,12 @@
 		$viewport = $html->findOneXPath('head/meta[@name="viewport"]');
 		if ($viewport) $viewport->setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
 		//
-		// The icons of the toolbar: Fork Awesome comes with the editor, because not every theme loads it.
+		// The icons of the toolbar: Fork Awesome comes with the editor, because not every theme loads it; a theme that
+		// does (the default theme) is not given a second copy.
 		//
-		foreach (glob(__DIR__ . '/../mdeditor/vendor/fork-awesome-*.css') ?: [] as $path) $html->linkStyle('system/mdeditor/vendor/' . basename($path) . '?v=1');
+		global $O_O;
+		$themeCss = @file_get_contents('data/themes/' . basename($O_O->getThemeName()) . '/hypha.css') ?: '';
+		if (!preg_match('/fork-?awesome/i', $themeCss)) foreach (glob(__DIR__ . '/../mdeditor/vendor/fork-awesome-*.css') ?: [] as $path) $html->linkStyle('system/mdeditor/vendor/' . basename($path) . '?v=1');
 		$html->linkStyle('system/mdeditor/mdeditor.css?v=' . $version);
 		global $hyphaUrl;
 		//

@@ -180,6 +180,17 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
    8. Lighthouse op de editor (ingelogd, zonder SEO): computer 96 / 95 / 100, telefoon 69 / 95 / 100. Op de telefoon rekent Lighthouse met traag 4G: de ruim 400 kB code van de editor haalt 95 daar niet. De eis „95 voor de editor” is op de telefoon dus niet gehaald.
 3. Gevonden in de testopstelling: een reeks ontbrekende afbeeldingen (404-pagina's van Hypha) houdt de twee Apache-werkers bezet en vertraagt de volgende pagina met seconden; voor de meting is de voorbeeldfoto uit het lange artikel gehaald.
 
+### Telefoon en http (2026-10-27, nacht)
+
+1. **Lighthouse op de telefoon** (editor, ingelogd, traag 4G): van 69–77 naar 85–88 voor prestaties (toegankelijkheid 95, goede werkwijzen 100, CLS 0); op de computer 99 / 95 / 100. Wat gedaan is:
+   1. **compressie**: `serveFile()` van Hypha stuurde altijd `Content-Range`, waardoor Apache thema-css en jQuery nooit comprimeerde (jQuery 94 → 33 kB, thema-css 20 → 4,9 kB); upstream #573 / PR #574, in deze branch opgenomen (Afwijkingen 17);
+   2. **Fork Awesome** van de editor alleen als het thema het niet zelf laadt;
+   3. **Pele, Temml en highlight.js** pas als de browser na het openen rust heeft; diagrammen en formules tonen tot dan hun bron.
+   Wat niet lukte: css van de editor zonder blokkeren laden (gaf verspringen, CLS 0,3; teruggedraaid). Wat de 95 nog tegenhoudt: jQuery, `help.js`, `bowser` en de css van Hypha en het thema in de kop van elke pagina.
+2. **Gevonden en hersteld**: na het laden van de bibliotheken werden diagrammen en formules in Opmaak niet opnieuw getekend (`redrawAtoms()` maakte een knooppunt met dezelfde eigenschappen, en ProseMirror roept dan `update()` niet aan); de weergaven melden zich nu aan in `this.atoms`. Op een trage verbinding bestond die fout al. Daarnaast vroegen tientallen diagrammen elk de bibliotheken aan en tekende elk verzoek alles opnieuw; nu één keer per bibliotheek.
+3. **Over http geen artikel met diagram of formule op te slaan** (gevonden door de gebruiker op een iPhone via het LAN): `crypto.subtle` bestaat alleen op https of localhost. Nu een eigen SHA-256 als terugval (gelijk aan die van Node op lege, lange, emoji- en blokgrensteksten). Test: `aanvullingen.mjs`, opslaan zonder `crypto.subtle`.
+4. **Oudere versies met `@@`** verloren tekst: upstream #571 / PR #572, in deze branch opgenomen (Afwijkingen 16).
+
 ### Gelijktijdig werken (2026-10-27, avond)
 
 Een subagent liet tot 32 verzoeken tegelijk los op een proefsite (Docker-volume, zodat `flock` werkt als op Linux) en opende hetzelfde artikel in twee tabbladen. Bron en XHTML liepen nooit uit elkaar en er was geen deadlock, maar in de editorcode zaten acht fouten. Hersteld:
@@ -220,19 +231,19 @@ Alle tests zijn opnieuw gedraaid op PHP 8.2.35, 8.3.36, 8.4.27 en 8.5.12 (`sh te
 | `HyphaRequestTest.php` (bestaand) | 84 | 84 | 84 | 84 |
 | unit (`tests/markdown/`): filter, Markdown, niveau 2, 500 gouden items | 102 van 102 | 102 van 102 | 102 van 102 | 102 van 102 |
 | gouden manifest, alle 10.000 items | 10.000 | 10.000 | 10.000 | 10.000 |
-| integratie over HTTP: proefsite, artikel en reviewstroom, tekstpagina, gelijktijdig werken | 44 van 44 | 44 van 44 | 44 van 44 | 44 van 44 |
-| browser: unit-pagina's en end-to-end (zie hieronder) | 160 van 160 | 160 van 160 | 160 van 160 | 160 van 160 |
+| integratie over HTTP: proefsite, artikel en reviewstroom, tekstpagina, gelijktijdig werken | 45 van 45 | 45 van 45 | 45 van 45 | 45 van 45 |
+| browser: unit-pagina's en end-to-end (zie hieronder) | 161 van 161 | 161 van 161 | 161 van 161 | 161 van 161 |
 | packaging: `hypha.php` bouwen en installeren | 11 van 11 | 11 van 11 | 11 van 11 | 11 van 11 |
 | gouden dataset als site, 10.000 pagina's | 0 fouten | 0 fouten | 0 fouten | 0 fouten |
 | nieuwe PHP-meldingen in het logboek | geen | geen | geen | geen (na `mail()`, zie hieronder) |
 
-De browsertests: bibliotheken 7, pariteit met league/commonmark 19, Opmaak heen en terug 42, plaktest 28, editor 14, aanvullingen 12, gelijktijdig 5, plakken in de editor 9, nieuwe pagina 4, toegankelijkheid 13 (axe 0 overtredingen in 10 toestanden, aanraakvlakken ≥ 44 pt, werkbalk boven het toetsenbord), prestaties 6; samen 160 (inclusief de runner-proef). Laatste ronde op alle vier versies na de avondwijzigingen (zie „Verder gebouwd”).
+De browsertests: bibliotheken 7, pariteit met league/commonmark 19, Opmaak heen en terug 42, plaktest 28, editor 14, aanvullingen 13, gelijktijdig 5, plakken in de editor 9, nieuwe pagina 4, toegankelijkheid 13 (axe 0 overtredingen in 10 toestanden, aanraakvlakken ≥ 44 pt, werkbalk boven het toetsenbord), prestaties 6; samen 161 (inclusief de runner-proef). Laatste ronde op alle vier versies na de avondwijzigingen (zie „Verder gebouwd”).
 
 Gebouwd volgens het ontwerp, per onderdeel van §18.2: 4 (server en filter), 5 (Markdown-weergave op CodeMirror 6), 6 (Opmaak op ProseMirror met eigen schema en serializer, verliesvrij wisselen), 7, 7a, 7b, 7c (artikelscherm, vaste velden, cursor bij wisselen, tabellen), 8 (beelddialoog met upload, `[[`-suggesties), 9 (diagrammen met 36 sjablonen), 9a–9e (niveau 1 en 2, HedgeDoc, interactief blok in de server, reviewstroom met redactiestatuut, terugtrekken), 10 (import en export van `.md`), 11 (regressie met oude artikelen en tekstpagina's), 12 (WCAG met axe, HIG-aanraakvlakken, teksten in nl en en), 13 en 19 (`hypha.php`, Docker), 14 en 15 (codemarkering en wiskunde), 16 (handleiding, 17 pagina's), 17 en 18 (gouden dataset, unit- en integratietests), 20 (plakken), 21 (prestaties en Lighthouse), 22 (tekstpagina's met versies, vertalen en terugzetten).
 
 ### Wat niet af is, en waarom
 
-1. **Lighthouse ≥ 95 overal**: een gepubliceerd artikel haalt met het standaardthema 96–100 / 94 / 100 / 91; met het advies `#0B7285` voor links (en `#5F656A` voor knoppen) en een `robots.txt` van de site 97–100 / 98 / 100 / 100. Beide zijn keuzes van het thema en de site, niet van de editor (standaardkeuze a). De editor op de telefoon haalt 69 voor prestaties (traag 4G met ruim 400 kB code); op de computer 96.
+1. **Lighthouse ≥ 95 overal** (bijgewerkt: de editor op de telefoon haalt nu 85–88, zie „Telefoon en http”): een gepubliceerd artikel haalt met het standaardthema 96–100 / 94 / 100 / 91; met het advies `#0B7285` voor links (en `#5F656A` voor knoppen) en een `robots.txt` van de site 97–100 / 98 / 100 / 100. Beide zijn keuzes van het thema en de site, niet van de editor (standaardkeuze a). De editor op de telefoon haalt 69 voor prestaties (traag 4G met ruim 400 kB code); op de computer 96.
 2. Punten 2 tot en met 5 van de eerste versie van deze lijst (interactief blok, reviewpunten, gouden site op 8.3 en 8.5, documentatie) zijn af; zie „Verder gebouwd”.
 3. **Twee schrijvers tegelijk** in de oude editor en de andere schermen: daar wint nog de laatste die opslaat; de nieuwe editor waarschuwt (zie „Gelijktijdig werken”). Publiceren tegelijk met goedkeuren of terugtrekken hangt ook af van upstream #570 (`updateToNewStatus()` controleert vóór het slot).
 4. **Bestaande problemen gevonden, niet opgelost** (buiten deze issue): `hypha.php` installeert niet zonder map `data/` en pakt het standaardthema niet in; een nieuw artikel via de oude popup zonder titel gaf een fatale fout (nu opgelost door de titel als tekst te schrijven); `strftime()` en enkele HTML-fouten in de sjablonen van Hypha (`bekende-meldingen.txt`); op PHP 8.5 meldt `mail()` een fout als de container geen sendmail heeft.
@@ -255,7 +266,8 @@ Fouten in bestaande code die bij de bouw zijn gevonden, staan als issue met een 
 12. #544 / PR #545: een lang onderwerp van een e-mail wordt één te lang gecodeerd woord.
 13. #548–#559 met PR #562–#568: twaalf fouten in de oudere paginatypes (festival, mailinglijst, index, tagindex, instellingen), gevonden door een subagent die elk scherm als bezoeker, lid en beheerder doorliep op PHP 8.2, 8.4 en 8.5; onder andere een fatale fout bij aanmelden voor een festival (#548), HTML uit aanmeldingen in het programma (#549), een eindeloze doorverwijzing bij een ongeldige link van de mailinglijst (#551), niet-unieke gebruikersnamen (#554) en ontbrekende vertalingen (#557). Overzicht in `ai/reference/GITHUB_ISSUES_FILED_2026W44.md`;
 14. #560 / PR #561 en #569 / PR #570: fouten bij gelijktijdig werken (zie „Gelijktijdig werken”);
-15. #571 / PR #572: een oudere versie van een pagina verliest tekst met `@@` (ook in deze branch opgenomen, zie Afwijkingen 16).
+15. #571 / PR #572: een oudere versie van een pagina verliest tekst met `@@` (ook in deze branch opgenomen, zie Afwijkingen 16);
+16. #573 / PR #574: bestanden van Hypha en het thema werden nooit gecomprimeerd (ook in deze branch opgenomen, zie Afwijkingen 17).
 
 Alle issues hebben passende labels (type, niveau, impact, paginatype, onderdeel, waarde); de pull requests het label *Status: Needs review*.
 
@@ -289,3 +301,4 @@ Bewuste afwijkingen van het ontwerp, met de reden. Het ontwerp is op deze punten
 14. **Naast elkaar alleen met ruimte**: ook de kolom van het thema moet minstens 900 px breed zijn; in het thema van De Stadsbron (720 px) toont de knop het voorbeeld.
 15. **Een titel of kop in een ander schrift dan Latijn** geeft het adres `pagina` en het anker `kop-zonder-naam`, zolang paginanamen buiten ASCII in Hypha niet werken.
 16. **`system/core/database.php` gewijzigd** (19 regels): `diff()` schrijft een `@` in ingevoegde tekst als `@@*`, zodat een oudere versie met `@@` in de tekst heel blijft, en leest niet meer voorbij het einde van de bron. Dezelfde wijziging als upstream PR #572 (issue #571); hier opgenomen omdat de Markdown-versies van tekstpagina's dezelfde diff gebruiken (een codeblok met een diff heeft `@@`). Oude diffs blijven leesbaar. Test: `an_older_version_with_at_signs_comes_back_whole`.
+17. **`serveFile()` in `system/core/database.php`** stuurt `Content-Range` alleen nog bij een `Range`-verzoek, zodat Apache de bestanden van Hypha en het thema comprimeert (upstream #573 / PR #574).

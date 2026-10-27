@@ -34,6 +34,12 @@ export default async function (t) {
 		await newArticle(page, base, 'Lang artikel voor de snelheid');
 		await page.evaluate(src => { const e = window.hyphaMdeditor.editor; e.fields.text = src; e.loadVisual(); e.refresh(); }, long);
 		out.words = await page.evaluate(() => window.hyphaMdeditor.editor.fields.text.split(/\s+/).length);
+		//
+		// Diagrams and formulas are drawn once their libraries have loaded, when the browser is idle after opening;
+		// typing is measured after that one-time drawing.
+		//
+		await page.waitForFunction(() => document.querySelector('#mdeVisual figure.diagram svg') && document.querySelector('#mdeVisual .math math'), null, { timeout: 15000 });
+		await page.waitForTimeout(500);
 	});
 	t.test('typing in Opmaak: every key within 100 ms', () => typing('opmaak', '#mdeVisual .ProseMirror p'));
 	t.test('typing in Markdown: every key within 100 ms', async () => { await page.click('[data-edit="markdown"]'); await page.waitForTimeout(500); await typing('markdown', '#mdeText .cm-content'); });
