@@ -1,6 +1,6 @@
 ---
 title: "Mailinglijst en festival"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -33,6 +33,8 @@ flowchart TD
 ```
 
 ### De mailinglijst instellen
+
+![Een nieuwe mailinglijst met titel, naam en e-mailadres van de afzender en een omschrijving](../afbeeldingen/mailinglijst.png)
 
 1. Maak een nieuwe pagina van het type **mailinglist**, bijvoorbeeld `Nieuwsbrief`.
 2. Kies **bewerken** en vul in:
@@ -69,6 +71,8 @@ Verstuurde nieuwsbrieven staan in het **archief** op de pagina. Bezoekers kunnen
 ## Festivalpagina
 
 Een festivalpagina helpt bij het organiseren van een evenement: deelnemers schrijven zich in, betalen eventueel, en geven een bijdrage op, zoals een optreden of een workshop. In de lijst met paginatypes heet ze **festival pagina**.
+
+![De instellingen van een nieuwe festivalpagina](../afbeeldingen/festival.png)
 
 Het diagram laat zien hoe een deelnemer zich inschrijft en een bijdrage opgeeft.
 

@@ -1,6 +1,6 @@
 ---
 title: "Een tekstpagina maken en bewerken"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -32,6 +32,8 @@ flowchart LR
 
 ## Een nieuwe tekstpagina maken
 
+![Het venster nieuwe pagina met het type tekstpagina en de keuze hoe je schrijft](../afbeeldingen/nieuwe-tekstpagina.png)
+
 1. Klik rechtsboven op **nieuwe pagina**.
 2. Kies als paginatype **webpagina**.
 3. Typ de **paginanaam**, bijvoorbeeld `Over ons`. De naam is ook de titel van de pagina.
@@ -47,6 +49,8 @@ Het webadres volgt uit de paginanaam. Spaties worden liggende streepjes: *Over o
 ## De tekst schrijven
 
 In de nieuwe tekst-editor:
+
+![Een tekstpagina in de nieuwe tekst-editor](../afbeeldingen/tekstpagina-editor.png)
 
 1. Bovenaan staan de **titel** (de paginanaam) en het vinkje **privé**.
 2. Schrijf de tekst. Een lege regel begint een nieuwe alinea.
@@ -70,6 +74,8 @@ Hoe de editor verder werkt, met Opmaak en Markdown, het voorbeeld en plakken uit
 
 Hypha bewaart elke versie van een tekstpagina, per taal.
 
+![Een opgeslagen tekstpagina met rechtsonder de keuzelijst met versies](../afbeeldingen/tekstpagina.png)
+
 1. Onder de pagina staat een lijst **versie**, met de datum, de tijd en wie de versie heeft opgeslagen. Alleen leden zien die lijst.
 2. Kies een oudere versie. Hypha toont de pagina zoals ze toen was.
 3. Is dat de tekst die je wilt, kies dan **terugdraaien**. De oude tekst wordt de nieuwste versie. De versies daartussen blijven bewaard.
@@ -92,6 +98,8 @@ Alleen een **beheerder** kan een pagina verwijderen, met de knop **verwijderen**
 ## Oudere tekstpagina's
 
 Tekstpagina's die bestonden vóór de nieuwe tekst-editor, zijn opgeslagen als HTML. Ze openen in de oude **opmaakeditor** (WYMeditor), met een veld voor de titel en het vinkje privépagina. Ze worden niet omgezet. Versies, terugdraaien en vertalen werken op dezelfde manier.
+
+![Een oudere tekstpagina in de oude opmaakeditor (WYMeditor)](../afbeeldingen/tekstpagina-wymeditor.png)
 
 ## Veelgestelde vragen
 

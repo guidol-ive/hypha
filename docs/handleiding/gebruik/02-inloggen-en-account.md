@@ -1,6 +1,6 @@
 ---
 title: "Inloggen en je account"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -30,6 +30,8 @@ sequenceDiagram
 
 ### Iemand uitnodigen
 
+![Het scherm om iemand uit te nodigen](../afbeeldingen/uitnodigen.png)
+
 1. Log in en klik rechtsboven op **instellingen** (het tandwiel).
 2. Klik in de **projectledenlijst** op **uitnodigen**.
 3. Vul het **e-mailadres** in, bijvoorbeeld `sanne.devries@eemstad.example`. Meer adressen scheid je met een komma.
@@ -51,6 +53,10 @@ Zolang de genodigde zich niet heeft aangemeld, staat ze in de ledenlijst als gen
 
 ## Inloggen en uitloggen
 
+![Het venster om in te loggen, met gebruikersnaam en wachtwoord](../afbeeldingen/inloggen.png)
+
+![De startpagina na het inloggen, met rechtsboven de knoppen voor leden en „ingelogd als”](../afbeeldingen/start-lid.png)
+
 1. Klik rechtsboven op het pictogram om in te loggen.
 2. Vul je **gebruikersnaam** en **wachtwoord** in en kies **inloggen**.
 3. Je blijft op dezelfde pagina. Je ziet nu knoppen als **bewerken**, **nieuwe pagina** en **instellingen**.
@@ -67,6 +73,8 @@ Zolang de genodigde zich niet heeft aangemeld, staat ze in de ledenlijst als gen
 > Kijk in je map met ongewenste e-mail. Staat de e-mail er niet, vraag dan een beheerder om hulp. Een beheerder kan in de ledenlijst je e-mailadres controleren.
 
 ## Je gegevens wijzigen
+
+![Het scherm instellingen met je eigen gegevens en de ledenlijst](../afbeeldingen/instellingen.png)
 
 1. Klik rechtsboven op **instellingen**.
 2. Onder **persoonlijke instellingen** zie je je gebruikersnaam, volledige naam, e-mailadres en bedieningstaal.

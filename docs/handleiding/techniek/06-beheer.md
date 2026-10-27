@@ -1,6 +1,6 @@
 ---
 title: "Beheer: back-up, logboeken, e-mail en updates"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -86,6 +86,8 @@ timeline
 ## Instellingen van de tekst-editor
 
 De tekst-editor heeft nog geen eigen scherm voor instellingen. Ze staan in het element `mdeditor` in `data/hypha.xml`. Zonder dat element gelden de standaardwaarden uit `hypha_mdeditorDefaults()` in `system/core/markdown.php`.
+
+![Het scherm projectinstellingen met de standaardtaal, de startpagina en het type van nieuwe pagina's](../afbeeldingen/instellingen-hypha.png)
 
 ```xml
 <mdeditor level2="on" level2Off="user">

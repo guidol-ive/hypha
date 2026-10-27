@@ -1,6 +1,6 @@
 ---
 title: "Menu en navigatie"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -57,6 +57,8 @@ Het menu staat op elke pagina en is voor de hele site hetzelfde. Het bevat links
 
 ### Het menu aanpassen (beheerder)
 
+![Het scherm om het menu aan te passen](../afbeeldingen/instellingen-menu.png)
+
 1. Klik rechtsboven op **instellingen**.
 2. Kies **menu**.
 3. Het menu opent in de opmaakeditor. Zet elke link op een eigen regel.
@@ -93,6 +95,8 @@ Rechtsboven staat de knop **index** (het lijstje). Die toont alle pagina's van d
 Onder elke pagina staan haar **tags**. Klik op een tag voor een lijst van alle pagina's met die tag. Zie [Beeld, links en tags](06-beeld-links-tags.md#tags).
 
 ## Kop en voet (beheerder)
+
+![Het scherm site-elementen met titel, kop en voet](../afbeeldingen/instellingen-elementen.png)
 
 1. Klik op **instellingen** en kies **site elementen**.
 2. Vul de **titel** van de site in. Die staat in de titelbalk van de browser.

@@ -1,6 +1,6 @@
 ---
 title: "Thema's"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -46,6 +46,8 @@ Daarnaast vult Hypha elk element met de klasse `hyphaCommands` met de knoppen re
 ## Een thema kiezen en aanpassen
 
 Alleen een **beheerder** kan dit. Het thema `default` kun je niet wijzigen; maak er eerst een kopie van.
+
+![Het scherm om een thema te kiezen](../afbeeldingen/instellingen-thema.png)
 
 1. Klik op **instellingen** en kies **theme**.
 2. Kies onder **kopieer thema** het thema `default`, typ een **naam van nieuwe thema**, bijvoorbeeld `eemstad`, en kies **kopieer thema en activeer het**.

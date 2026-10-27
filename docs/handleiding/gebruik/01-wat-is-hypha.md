@@ -1,6 +1,6 @@
 ---
 title: "Wat is Hypha?"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -37,6 +37,8 @@ Zelf een account aanmaken kan niet. Je wordt lid via een uitnodiging van een and
 ## Pagina's
 
 Alles op een Hypha-site is een **pagina**. Elke pagina heeft een **type**, dat je kiest als je de pagina maakt. Het type ligt daarna vast.
+
+![De startpagina van de verzonnen proefsite Eemstad, zoals een bezoeker haar ziet, in het thema van De Stadsbron](../afbeeldingen/start-bezoeker.png)
 
 | Type in Hypha | Waarvoor |
 |---|---|
@@ -85,6 +87,8 @@ Een **tag** is een onderwerp, zoals *Raadsnieuws* of *Verkeer*. Onder een pagina
 Hypha stuurt de leden regelmatig een **samenvatting** (*digest*) van wat er is veranderd: nieuwe en gewijzigde pagina's, met de verschillen gemarkeerd, en nieuwe leden. Hoe vaak, stelt een beheerder in. Zo blijft iedereen op de hoogte zonder elke dag te kijken.
 
 ## Nieuw met de tekst-editor
+
+![De nieuwe tekst-editor met een verzonnen artikel in de weergave Opmaak](../afbeeldingen/artikel-opmaak.png)
 
 > [!info] Nieuw met de tekst-editor
 > Hypha krijgt een **nieuwe tekst-editor** (issue [#520](https://github.com/PlanBCode/hypha/issues/520)). Daarin schrijf je in **Opmaak**, zoals in Word, of in **Markdown**, met eenvoudige tekens. Nieuwe artikelen en nieuwe tekstpagina's openen in de nieuwe editor. Pagina's en artikelen die al bestaan, openen in de vertrouwde opmaakeditor.

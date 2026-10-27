@@ -1,6 +1,6 @@
 ---
 title: "Een artikel beoordelen en publiceren"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -33,11 +33,13 @@ stateDiagram-v2
 | teruggetrokken | het artikel is van de site gehaald; lezers zien een melding met de reden | iedereen ziet de melding |
 
 > [!info] Nieuw met de tekst-editor
-> **Terugtrekken** (naar schets, en van een gepubliceerd artikel), het **redactiestatuut** bij goedkeuren en een **opmerking bij je goedkeuring** komen met de nieuwe tekst-editor (issue [#520](https://github.com/PlanBCode/hypha/issues/520)). Hypha kent de status *teruggetrokken* al, maar kan er nu nog niet naartoe.
+> **Terugtrekken** (naar schets, en van een gepubliceerd artikel), het **redactiestatuut** bij goedkeuren en een **opmerking bij je goedkeuring** zijn er voor artikelen uit de nieuwe tekst-editor (issue [#520](https://github.com/PlanBCode/hypha/issues/520)). Voor oudere artikelen werkt het zoals vroeger.
 
 ## Voor de auteur
 
 ### De beoordeling starten
+
+![Een artikel in de status schets, met de knop start beoordeling](../afbeeldingen/artikel-schets.png)
 
 1. Zorg dat de verplichte controles in de checklist in orde zijn: artikelinhoud, uittreksel, bijsluiter en tags.
 2. Kies **start beoordeling**. Is er nog iets niet in orde, dan meldt Hypha: „Artikel is niet compleet, beoordeling kan nog niet gestart worden.”
@@ -61,6 +63,12 @@ Wil je het artikel nog grondig aanpassen, dan trek je het terug:
 
 ### Publiceren
 
+![Een goedgekeurd artikel, klaar om te publiceren](../afbeeldingen/artikel-goedgekeurd.png)
+
+![Het gepubliceerde artikel zoals een lezer het ziet](../afbeeldingen/artikel-lezer.png)
+
+![Hetzelfde artikel op een telefoon](../afbeeldingen/artikel-lezer-telefoon.png)
+
 1. Is het artikel *goedgekeurd*, dan kies je **publiceer**. Dat kan de auteur of een beheerder.
 2. Het artikel wordt openbaar en krijgt de publicatiedatum van dat moment.
 3. Bezoekers kunnen er nu op reageren.
@@ -68,6 +76,8 @@ Wil je het artikel nog grondig aanpassen, dan trek je het terug:
 ## Voor wie beoordeelt
 
 Het diagram laat zien hoe een beoordeling met drie collega's verloopt.
+
+![Een artikel in beoordeling, zoals een collega het ziet, met de checklist](../afbeeldingen/artikel-in-beoordeling.png)
 
 ```mermaid
 sequenceDiagram
@@ -97,6 +107,8 @@ sequenceDiagram
 
 ### Goedkeuren
 
+![Het venster goedkeuren met de punten van het redactiestatuut](../afbeeldingen/goedkeuren.png)
+
 1. Kies **geef goedkeuring…**. Er opent een venster met de punten uit het **redactiestatuut** van de site, bijvoorbeeld: feiten zijn gecontroleerd, wie aan het woord komt, heeft kunnen reageren, bronnen zijn genoemd.
 2. Vink elk punt aan dat je hebt gecontroleerd. De knop werkt pas als alle punten zijn aangevinkt.
 3. Schrijf eventueel een **opmerking bij je goedkeuring**. Die komt bij de beoordelingsopmerkingen.
@@ -106,6 +118,10 @@ sequenceDiagram
 > De auteur van een artikel kan geen van de drie goedkeuringen geven. De drie goedkeuringen komen van drie andere leden. Wie het artikel maakte, ziet de knop **geef goedkeuring…** niet.
 
 ## Na publicatie
+
+![Het venster om een gepubliceerd artikel terug te trekken, met de reden voor lezers](../afbeeldingen/terugtrekken.png)
+
+![Een teruggetrokken artikel: de lezer ziet alleen de titel en de melding met de reden](../afbeeldingen/artikel-teruggetrokken.png)
 
 1. **Reacties van bezoekers.** Een bezoeker geeft naam en e-mailadres en bevestigt de reactie via een link in een e-mail. Pas dan verschijnt ze.
 2. **Modereren.** Leden kunnen een reactie verbergen of verwijderen, met een reden (bijvoorbeeld *ongepast taalgebruik* of *spam*), en dat weer ongedaan maken.

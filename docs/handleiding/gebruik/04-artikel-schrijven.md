@@ -1,6 +1,6 @@
 ---
 title: "Een artikel schrijven"
-revision: 3
+revision: 4
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -37,6 +37,8 @@ flowchart LR
 
 ### 1. Een nieuw artikel maken
 
+![Het venster nieuwe pagina voor een artikel: titel, webadres en de keuze hoe je schrijft](../afbeeldingen/nieuw-artikel.png)
+
 1. Klik op **nieuwe pagina**.
 2. Kies als type **artikel met review**.
 3. Typ de **titel** van het artikel. Het webadres volgt er vanzelf uit: de woorden in kleine letters, met streepjes ertussen en zonder accenten, bijvoorbeeld `/nl/vertrekkend-raadslid-bram-hoekstra-twintig-jaar-strijd-voor-open-bestuur`. Je ziet het adres meteen onder de titel. Bestaat het al, dan komt er `-2` achter.
@@ -47,10 +49,12 @@ flowchart LR
 
 Boven het tekstkader staat de schakelaar **Bewerken als**:
 
+![Hetzelfde artikel in de weergave Markdown, met bovenaan de vaste velden als Frontmatter](../afbeeldingen/artikel-markdown.png)
+
 1. **Opmaak**: je schrijft zoals in Word. Vet is vet, een tussenkop is groot, een foto zie je meteen.
 2. **Markdown**: je schrijft met eenvoudige tekens, zoals `###` voor een tussenkop en `**vet**` voor vet. De tekens staan grijs, zodat ze niet afleiden. De knop **(?)** opent een spiekbriefje.
 
-Je kunt altijd wisselen; er gaat niets verloren en de cursor blijft op dezelfde plek. De editor begint in **Opmaak**. Je keuze wordt onthouden.
+Je kunt altijd wisselen; er gaat niets verloren en de cursor blijft op dezelfde plek. De editor begint in **Opmaak**. Je keuze wordt onthouden. Naast elkaar kan alleen als er genoeg ruimte is: een scherm van minstens 1024 pixels breed, en een thema dat de pagina breed genoeg maakt. Het thema van De Stadsbron heeft een smalle kolom; daar toont deze knop het voorbeeld in plaats van de tekst.
 
 Rechts in de werkbalk kies je wat je ziet:
 
@@ -61,6 +65,8 @@ Rechts in de werkbalk kies je wat je ziet:
 ### 3. De artikelkop invullen
 
 Bovenaan staat de **artikelkop** met vaste velden. Ze horen bij elk artikel:
+
+![De artikelkop in Opmaak: titel, auteur, foto bovenaan en uittreksel](../afbeeldingen/artikel-opmaak.png)
 
 | Veld | Wat je invult | Verplicht |
 |---|---|---|
@@ -93,6 +99,10 @@ fotograaf: Foto (naam fotograaf)
 
 ### 4. De tekst schrijven
 
+![Het menu dat opent als je / typt aan het begin van een regel](../afbeeldingen/menu-slash.png)
+
+![Het spiekbriefje met de Markdown-tekens](../afbeeldingen/spiekbriefje.png)
+
 1. Schrijf gewoon. Een lege regel begint een nieuwe alinea.
 2. Een **tussenkop** maak je met de knop **Tussenkop**, of in Markdown met `### ` aan het begin van de regel.
 3. Typ aan het begin van een lege regel een **/** voor een lijst met alles wat je kunt invoegen: tabel, citaat, kader, diagram, beeld, formule, code.
@@ -103,6 +113,16 @@ fotograaf: Foto (naam fotograaf)
 > Plak gerust tekst uit Word, Google Docs of LibreOffice. De editor neemt vet, schuin, koppen, tabellen, formules, lijsten en links over en laat de rest weg, zodat de opmaak niet verspringt. Kop 1 wordt een tussenkop. Foto's gaan niet altijd mee: voeg ze dan toe met **Beeld…**; de checklist herinnert je eraan. Wil je alleen de tekst, zonder opmaak? Plak dan met ⌘⇧V (Ctrl+Shift+V).
 
 ### 5. Beeld, citaat, kader, tabel en diagram toevoegen
+
+![Het venster om een diagram te maken, met links de tekst en rechts het diagram zoals de lezer het ziet](../afbeeldingen/dialoog-diagram.png)
+
+![De lijst met meer soorten diagrammen](../afbeeldingen/dialoog-diagram-soorten.png)
+
+![Het venster om een formule te maken](../afbeeldingen/dialoog-formule.png)
+
+![Het menu van de tabel](../afbeeldingen/menu-tabel.png)
+
+![Het venster van een interactief blok: links de code, rechts het werkende blok](../afbeeldingen/dialoog-interactief.png)
 
 | Wat | Knop | Waarvoor |
 |---|---|---|
@@ -143,6 +163,10 @@ In Markdown staan ze in de Frontmatter, als `bijsluiter:` en `bronnen:`.
 
 Rechts staat de **beoordelingschecklist**. Ze toont alleen wat nog aandacht vraagt; met **toon alles** zie je ook wat in orde is.
 
+![De beoordelingschecklist naast de editor](../afbeeldingen/checklist.png)
+
+![Het voorbeeld van het artikel zoals de lezer het straks ziet](../afbeeldingen/artikel-voorbeeld.png)
+
 | Controle | Soort |
 |---|---|
 | heeft artikelinhoud | verplicht |
@@ -164,6 +188,8 @@ Zo lang een verplichte controle niet in orde is, kun je de beoordeling niet star
 Verder lezen: [Een artikel beoordelen en publiceren](05-beoordelen-en-publiceren.md).
 
 ## Op iPhone en iPad
+
+![De editor op een iPhone, met de werkbalk onderaan](../afbeeldingen/artikel-telefoon.png)
 
 1. De werkbalk staat boven het toetsenbord; elke knop is groot genoeg om met een vinger te raken.
 2. Autocorrectie, woordsuggesties en dicteren werken, in Opmaak en in Markdown.

@@ -1,6 +1,6 @@
 ---
 title: "Beeld, links en tags"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -28,6 +28,8 @@ flowchart LR
 ```
 
 ### In de nieuwe tekst-editor
+
+![Het venster om een foto toe te voegen: bestand, beschrijving, bijschrift, maker en plaatsing](../afbeeldingen/dialoog-beeld.png)
 
 1. Zet de cursor waar de foto moet komen.
 2. Kies **Beeld…** in de werkbalk, of typ **/** aan het begin van een lege regel en kies *beeld*.
@@ -60,6 +62,8 @@ Bij oudere pagina's en artikelen gebruik je de knop voor een afbeelding in de we
 ## Een link naar een andere pagina
 
 ### In de nieuwe tekst-editor
+
+![Na [[ stelt de editor bestaande pagina's voor](../afbeeldingen/suggesties-paginas.png)
 
 1. Typ `[[` en de eerste letters van de pagina. De editor stelt pagina's van de site voor.
 2. Kies de pagina. De link staat er nu als `[[Over ons]]`.
