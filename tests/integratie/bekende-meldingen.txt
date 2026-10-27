@@ -17,7 +17,6 @@ Passing null to parameter #2 ($value) of type string is deprecated in /var/www/h
 Passing null to parameter #1 ($data) of type string is deprecated in /var/www/html/system/core/database.php on line 488
 DOMDocument::loadHTML(): error parsing attribute name in Entity
 mail(): Sendmail exited with non-zero exit code 127
-Failed to open stream: No such file or directory in /var/www/html/system/core/database.php on line 918
-Failed to open stream: No such file or directory in /var/www/html/system/core/database.php:920
-file_get_contents(data/hypha.xml): Failed to open stream: No such file or directory in /var/www/html/system/core/database.php on line 991
 Call to a member function getElementsByTagName() on null in /var/www/html/system/core/base.php:392
+Failed to open stream: No such file or directory in /var/www/html/system/core/database.php
+open failed: fopen(data/

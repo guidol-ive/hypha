@@ -519,7 +519,7 @@
 	.mdeditor .ed textarea, .mdeditor .ed .hl { font-size: 18px; padding: 16px 16px 40px; }
 	.mdeditor .toolbar { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 30; border-left: 0; border-right: 0; justify-content: space-between; flex-wrap: nowrap; overflow-x: auto; padding: 2px 4px calc(2px + env(safe-area-inset-bottom)); }
 	.mdeditor .toolbar .tb { min-width: 44px; min-height: 44px; justify-content: center; }
-	.mdeditor .toolbar .tb span.lbl, .mdeditor .toolbar .sep, .mdeditor .toolbar .tbmore { display: none; }
+	.mdeditor .toolbar .tb span.lbl, .mdeditor .toolbar .sep { display: none; }
 	.mdeditor .toolbar { overflow-x: auto; }
 	.mdeditor .editmodebar { padding: 4px 10px; }
 	.mdeditor .editbar { padding-top: 6px; }
@@ -633,3 +633,41 @@
 .mdeditor .field input[type=text], .mdeditor .field input[type=number], .mdeditor .field textarea { box-sizing: border-box; }
 .mdeditor .field input[type=number] { width: 9em; border: 1px solid #9AA1A6; border-radius: 3px; padding: 7px 9px; }
 .mdeditor .popup { max-height: min(60vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
+/*
+// Placement: a small picture per choice (text lines in grey, the image in the colour of the editor) and a line that
+// says what the chosen one does.
+*/
+.mdeditor .place label { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mdeditor .pic { display: block; width: 40px; height: 30px; border-radius: 2px; background-repeat: no-repeat; background-color: #fff;
+	--pic-line: linear-gradient(#C3C8CC, #C3C8CC); --pic-img: linear-gradient(var(--bluegreen), var(--bluegreen)); }
+.mdeditor .pic-breed { background-image: var(--pic-line), var(--pic-img), var(--pic-line); background-size: 36px 3px, 36px 12px, 36px 3px; background-position: 2px 3px, 2px 9px, 2px 24px; }
+.mdeditor .pic-in-de-tekst { background-image: var(--pic-line), var(--pic-img), var(--pic-line); background-size: 36px 3px, 22px 12px, 36px 3px; background-position: 2px 3px, 9px 9px, 2px 24px; }
+.mdeditor .pic-klein-rechts { background-image: var(--pic-img), var(--pic-line), var(--pic-line), var(--pic-line), var(--pic-line); background-size: 13px 11px, 21px 3px, 21px 3px, 21px 3px, 36px 3px; background-position: 25px 3px, 2px 3px, 2px 9px, 2px 15px, 2px 24px; }
+.mdeditor .pic-bovenaan { background-image: var(--pic-img), var(--pic-line), var(--pic-line), var(--pic-line); background-size: 36px 12px, 36px 3px, 36px 3px, 28px 3px; background-position: 2px 2px, 2px 17px, 2px 22px, 2px 27px; }
+.mdeditor .place-help { margin: 6px 0 0; font-size: 13px; color: var(--darkgrey); min-height: 1.4em; }
+/*
+// Section and tags: a label stays with its field; on a narrow screen the pairs go below each other (found on an iPhone).
+*/
+.mdeditor .tags .pair { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.mdeditor .tags .pair > .wh-key { white-space: nowrap; }
+@container mde (max-width: 700px) { .mdeditor .tags .pair { flex: 1 1 100%; } }
+/*
+// Phone, preview: the formatting buttons do nothing there, so they make room for 'Schrijven' and 'Voorbeeld' with their
+// words; with only a pencil there was no visible way back to writing (found on an iPhone).
+*/
+@media (max-width: 700px) {
+	.mdeditor.mode-preview .toolbar .tb, .mdeditor.mode-preview .toolbar .sep { display: none; }
+	.mdeditor.mode-preview .toolbar .modes span { display: inline; margin-left: 6px; }
+	.mdeditor.mode-preview .toolbar .modes button { padding: 0 14px; }
+	.mdeditor.mode-preview .toolbar { justify-content: center; }
+}
+/*
+// The menu 'Meer' also on a phone: the buttons that do not fit go there (it was hidden, so link, image, diagram, formula,
+// table and box could not be reached; found on an iPhone). On a wide screen it shows its word, on a phone three dots.
+*/
+.mdeditor .toolbar .tbmore .more-icon { display: none; }
+@media (max-width: 700px) {
+	.mdeditor .toolbar .tbmore .more-icon { display: inline; }
+	.mdeditor .toolbar .tbmore { margin-left: 0; }
+	.mdeditor .toolbar { overflow-x: visible; }
+}

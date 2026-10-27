@@ -61,6 +61,21 @@ export default async function (t) {
 		assert(overflow <= 0, 'horizontal scroll of ' + overflow + ' px at 393 pt');
 		await tp.context().close();
 	});
+	t.test('iPhone: every action can be reached through Meer, and the preview shows the way back to writing', async () => {
+		const tp = await login(browser, base, 'sanne', { width: 393, height: 852 }, { isMobile: true, hasTouch: true, deviceScaleFactor: 3 });
+		await newArticle(tp, base, 'Telefoon meer');
+		assert(await tp.isVisible('#mdeMore'), 'no Meer on a phone');
+		await tp.click('#mdeMore');
+		const items = await tp.evaluate(() => [...document.querySelectorAll('#mdeMoreMenu [data-proxy]')].map(b => b.dataset.proxy));
+		for (const act of ['link', 'image', 'diagram', 'math', 'table']) assert(items.includes(act), `${act} not in Meer: ${items}`);
+		const menu = await tp.locator('#mdeMoreMenu').boundingBox();
+		assert(menu.y + menu.height <= 852, 'menu below the screen');
+		await tp.keyboard.press('Escape');
+		await tp.click('[data-mode="preview"]');
+		assert(await tp.isVisible('[data-mode="write"] span') && (await tp.textContent('[data-mode="write"] span')).trim().length > 0, 'no word on the way back');
+		assert(!(await tp.isVisible('.toolbar [data-act="bold"]')), 'formatting buttons in the preview');
+		await tp.context().close();
+	});
 	t.test('iPhone: the toolbar moves along with the on-screen keyboard and back (design section 12.12)', async () => {
 		//
 		// A browser without a real keyboard: a visual viewport of 852 pt that becomes 516 pt, as with the keyboard of iOS.

@@ -194,7 +194,7 @@ export class Editor {
 						<div class="count" id="mdeExcerptCount" aria-live="polite"></div>
 					</div>
 				</div>
-				<div class="tags" id="mdeTagBox"><label class="wh-key" for="mdeSection">${t('field-section')}</label><select id="mdeSection" title="${t('field-section-help')}"></select><span class="wh-key">${t('field-tags')}</span><span id="mdeTagList"></span><select id="mdeTagAdd" aria-label="${t('field-tag-add')}" title="${t('field-tag-add-help')}"></select></div>
+				<div class="tags" id="mdeTagBox"><span class="pair"><label class="wh-key" for="mdeSection">${t('field-section')}</label><select id="mdeSection" title="${t('field-section-help')}"></select></span><span class="pair"><span class="wh-key">${t('field-tags')}</span><span id="mdeTagList"></span><select id="mdeTagAdd" aria-label="${t('field-tag-add')}" title="${t('field-tag-add-help')}"></select></span></div>
 			</details>` : `
 			<div class="wh-row mde-pagehead">${this.cfg.translate ? `<label class="wh-key" for="mdeLanguage">${t('field-language')}</label><select id="mdeLanguage"></select>` : ''}<label class="wh-key" for="mdeTitle">${t('field-pagename')}</label><input type="text" id="mdeTitle" title="${t('field-pagename-help')}">${this.cfg.translate ? '' : `<label><input type="checkbox" id="mdePrivate"> ${t('field-private')}</label>`}</div>`;
 		const foot = this.article ? `
@@ -216,7 +216,7 @@ export class Editor {
 					${tb('slash', 'ellipsis-h', '', 'tb-blocks', 'data-md-only="1"').replace('class="tb"', 'class="tb md-only"')}<span class="sep"></span>
 					${this.article ? tb('download', 'download', 'tb-download', 'tb-download-help') + tb('openmd', 'file-text-o', '', 'tb-open') : ''}
 					${tb('help', 'question-circle', '', 'tb-help', 'data-md-only="1" aria-haspopup="dialog"').replace('class="tb"', 'class="tb md-only"')}
-					<button class="tb tbmore" id="mdeMore" type="button" title="${t('tb-more-help')}" aria-haspopup="menu" aria-expanded="false" hidden><span class="lbl">${t('tb-more')}</span> <i class="fa fa-caret-down" aria-hidden="true"></i></button>
+					<button class="tb tbmore" id="mdeMore" type="button" title="${t('tb-more-help')}" aria-haspopup="menu" aria-expanded="false" aria-label="${t('tb-more')}" hidden><i class="fa fa-ellipsis-h more-icon" aria-hidden="true"></i><span class="lbl">${t('tb-more')}</span> <i class="fa fa-caret-down" aria-hidden="true"></i></button>
 					<div class="modes" role="group" aria-label="${t('view')}">
 						<button type="button" data-mode="write" aria-pressed="true" title="${t('view-write-help')}"><i class="fa fa-pencil" aria-hidden="true"></i><span>${t('view-write')}</span></button>
 						<button type="button" data-mode="preview" aria-pressed="false" title="${t('view-preview-help')}"><i class="fa fa-eye" aria-hidden="true"></i><span>${t('view-preview')}</span></button>
@@ -831,6 +831,7 @@ export class Editor {
 		const panes = $('#mdePanes', this.root);
 		panes.className = 'panes ' + { write: 'write-only', preview: 'preview-only', side: 'side' }[mode];
 		this.root.classList.toggle('mode-side', mode === 'side');
+		this.root.classList.toggle('mode-preview', mode === 'preview');
 		for (const b of this.root.querySelectorAll('[data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
 		if (mode !== 'write') this.renderPreview();
 	}
@@ -1059,11 +1060,17 @@ export class Editor {
 		if (!vv) return;
 		const bar = $('.toolbar', this.root);
 		const phone = window.matchMedia('(max-width: 700px)');
+		//
+		// Measured from the top of the layout viewport (offsetTop + height of the visual viewport), not from the bottom of
+		// the window: Safari on iOS changes window.innerHeight when it hides its own bars, which put the toolbar far above
+		// the keyboard (found on an iPhone).
+		//
 		const place = () => {
-			const covered = Math.round(window.innerHeight - vv.height - vv.offsetTop);
-			const on = phone.matches && vv.scale < 1.01 && covered > 0;
-			bar.style.transform = on ? `translateY(${-covered}px)` : '';
+			const on = phone.matches && vv.scale < 1.01 && vv.height < window.innerHeight - 60;
 			bar.classList.toggle('above-keyboard', on);
+			bar.style.transform = '';
+			bar.style.top = on ? Math.round(vv.offsetTop + vv.height - bar.offsetHeight) + 'px' : '';
+			bar.style.bottom = on ? 'auto' : '';
 		};
 		vv.addEventListener('resize', place);
 		vv.addEventListener('scroll', place);

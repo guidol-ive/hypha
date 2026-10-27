@@ -23,8 +23,12 @@ export class Dialogs {
 
 	template() {
 		const t = k => esc(this.t(k));
-		const place = (name, top) => `<div class="place" role="radiogroup" aria-label="${t('placement')}">` + [...PLACEMENTS, ...(top && this.ed.article ? ['bovenaan'] : [])].map((p, i) =>
-			`<label title="${t('placement-' + p + '-help')}"><input type="radio" name="${name}" value="${p}"${i === 0 ? ' checked' : ''}><span class="pic pic-${p}" aria-hidden="true"></span>${t('placement-' + p)}</label>`).join('') + '</div>';
+		//
+		// Every choice with a small picture, and below them what the chosen one does: a tooltip alone is not seen on a
+		// touch screen (found on an iPhone).
+		//
+		const place = (name, top) => `<div class="place" role="radiogroup" aria-label="${t('placement')}" aria-describedby="${name}Help">` + [...PLACEMENTS, ...(top && this.ed.article ? ['bovenaan'] : [])].map((p, i) =>
+			`<label title="${t('placement-' + p + '-help')}"><input type="radio" name="${name}" value="${p}"${i === 0 ? ' checked' : ''}><span class="pic pic-${p}" aria-hidden="true"></span>${t('placement-' + p)}</label>`).join('') + `</div><p class="place-help" id="${name}Help" aria-live="polite"></p>`;
 		const close = `<button type="button" class="dlg-close" value="cancel" aria-label="${t('close')}" title="${t('close')}">✕</button>`;
 		return `
 		<dialog id="mdeImageDlg" aria-labelledby="mdeImageTitle"><form method="dialog">
@@ -82,8 +86,17 @@ export class Dialogs {
 		</form></dialog>`;
 	}
 
+	placeHelp(d) {
+		for (const help of d.querySelectorAll('.place-help')) {
+			const checked = d.querySelector(`[name=${help.id.replace(/Help$/, '')}]:checked`);
+			help.textContent = checked ? this.t('placement-' + checked.value + '-help') : '';
+		}
+	}
+
 	open(id) {
 		const d = $('#' + id, this.root);
+		if (!d.placeBound) { d.placeBound = true; d.addEventListener('change', e => { if (e.target.matches('.place input')) this.placeHelp(d); }); }
+		setTimeout(() => this.placeHelp(d), 0);
 		for (const b of d.querySelectorAll('[value="cancel"]')) b.onclick = () => d.close('cancel');
 		d.showModal();
 		return d;
@@ -568,11 +581,15 @@ export class Dialogs {
 	toggleMore(button) {
 		const menu = $('#mdeMoreMenu', this.root);
 		if (!menu.hidden) return this.closeMenu(menu, button);
-		menu.innerHTML = (this.ed.moved || []).map(b => `<button type="button" role="menuitem" data-proxy="${b.dataset.act}">${b.innerHTML}<span class="lbl">${esc(b.title)}</span></button>`).join('');
+		menu.innerHTML = (this.ed.moved || []).map(b => `<button type="button" role="menuitem" data-proxy="${b.dataset.act}">${b.querySelector('i')?.outerHTML || ''}<span class="lbl">${esc(b.title)}</span></button>`).join('');
 		const r = button.getBoundingClientRect();
 		menu.style.left = Math.max(8, r.right - 260) + 'px';
 		menu.style.top = r.bottom + 4 + 'px';
 		menu.hidden = false;
+		//
+		// Above the button when there is no room below, as with the toolbar at the bottom of a phone.
+		//
+		if (r.bottom + 4 + menu.offsetHeight > window.innerHeight) menu.style.top = Math.max(8, r.top - 4 - menu.offsetHeight) + 'px';
 		button.setAttribute('aria-expanded', 'true');
 		menu.onclick = e => { const b = e.target.closest('[data-proxy]'); if (b) { this.closeMenu(menu, button, false); this.ed.action(b.dataset.proxy, button); } };
 		menu.onkeydown = e => this.menuKeys(e, menu, button);
