@@ -233,7 +233,7 @@
 				'translate' => $translate,
 				'fields' => ['title' => showPagename($this->pagename), 'text' => $this->mdSource($this->language), 'private' => $this->privateFlag, 'language' => $translate ? '' : $this->language],
 				'page' => ['language' => $this->language, 'name' => $this->pagename, 'private' => $this->privateFlag, 'role' => isAdmin() ? 'admin' : 'author'],
-				'settings' => ['level' => hypha_mdeditorLevel($this->O_O->getUser(), hypha_mdeditorSettings())],
+				'settings' => ['level' => hypha_mdeditorLevel($this->O_O->getUser(), hypha_mdeditorSettings()), 'frameHosts' => hypha_mdeditorSettings()['frameHosts'], 'peertubeHosts' => hypha_mdeditorSettings()['peertubeHosts']],
 				'languages' => array_values(array_diff(hypha_mdeditorLanguages(), $translate ? [$this->language] : [])),
 				'commands' => ['save' => self::MD_CMD_SAVE, 'view' => $translate ? self::PATH_TRANSLATE : self::PATH_EDIT],
 			];

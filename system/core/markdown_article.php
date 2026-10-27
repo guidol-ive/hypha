@@ -623,7 +623,7 @@
 				'page' => ['language' => $this->language, 'name' => $this->pagename, 'private' => $this->privateFlag, 'status' => $this->getStatus(), 'approves' => $approves, 'approvesNeeded' => self::APPROVES_NEEDED, 'role' => $this->mdRole(), 'published' => $this->getStatus() === self::STATUS_PUBLISHED],
 				'checks' => array_map(fn ($c) => ['status' => $c['status'], 'label' => $c['label']], $checks),
 				'checkStatus' => $checkStatus,
-				'settings' => ['sections' => $settings['sections'], 'statute' => $settings['statute'], 'level' => hypha_mdeditorLevel($this->O_O->getUser(), $settings), 'scriptHosts' => $settings['scriptHosts']],
+				'settings' => ['sections' => $settings['sections'], 'statute' => $settings['statute'], 'level' => hypha_mdeditorLevel($this->O_O->getUser(), $settings), 'scriptHosts' => $settings['scriptHosts'], 'frameHosts' => $settings['frameHosts'], 'peertubeHosts' => $settings['peertubeHosts']],
 				'tags' => hypha_mdeditorTagLabels($this->language),
 				'languages' => hypha_mdeditorLanguages(),
 				'commands' => ['save' => self::MD_CMD_SAVE, 'retract' => self::MD_CMD_RETRACT, 'language' => self::MD_CMD_LANGUAGE, 'rename' => self::MD_CMD_RENAME],

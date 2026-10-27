@@ -65,8 +65,12 @@
 		$viewport = $html->findOneXPath('head/meta[@name="viewport"]');
 		if ($viewport) $viewport->setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
 		$html->linkStyle('system/mdeditor/mdeditor.css?v=' . $version);
+		global $hyphaUrl;
+		//
+		// The addresses of an import map must be absolute or start with /, ./ or ../; a bare path is refused.
+		//
 		$imports = [];
-		foreach (hypha_mdeditorVendorFiles() as $name => $file) $imports[$name] = 'system/mdeditor/vendor/' . $file;
+		foreach (hypha_mdeditorVendorFiles() as $name => $file) $imports[$name] = $hyphaUrl . 'system/mdeditor/vendor/' . $file;
 		$map = $head->createChild('script');
 		$map->setAttribute('type', 'importmap');
 		$map->appendText(json_encode(['imports' => $imports], JSON_UNESCAPED_SLASHES));

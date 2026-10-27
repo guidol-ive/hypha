@@ -1,0 +1,591 @@
+/*
+//
+// Style of the Markdown editor (issue #520), from the prototype (design section 16), scoped to .mdeditor so it does not
+// change the theme of the site. Colours are CSS variables, so a theme can set its own; the defaults are the house
+// style of the design (section 2.5) with the accessible shades of WCAG 2.1 AA.
+//
+*/
+.mdeditor {
+	/*
+	// Colours of the 'destadsbron' theme.
+	*/
+	--black: #1d2021; --orange: #fe9900; --bluegreen: #0c8599; --formheaderback: #226765; --red: #be0709;
+	--grey: #505458; --darkgrey: #666; --lightgrey: #ddd;
+	--bluegreen-light: #E3F3F5; --orange-light: #FFF1DB; --yellow: #FFFFD6; --work: #F5F5F3; --ok: #237A35; --dim: #6E7781;
+	/*
+	// Accessible shades (WCAG 2.1 AA, contrast >= 4.5:1 on white): the brand blue-green #0c8599 reaches 4.3:1 only.
+	*/
+	--action: #0B7285; --greybtn: #5F656A;
+	/*
+	// Diagram colours for Pele: a calm sub-palette around blue-green and orange, all at about the same lightness,
+	// validated for colour blindness (adjacent pairs dE >= 8) and >= 4.5:1 for white text. Pele reads these variables.
+	*/
+	--pele-series-1: #007A8F; --pele-series-2: #9C6410; --pele-series-3: #3A5FA8; --pele-series-4: #3B7F34;
+	--pele-series-5: #9E4C76; --pele-series-6: #7D641E; --pele-series-7: #5F656A; --pele-series-8: #8A9096;
+	--pele-accent: #0B7285; --pele-fg: #1d2021; --pele-line: #505458; --pele-muted: #5F656A; --pele-border: #9AA1A6;
+	--pele-surface: #F2F6F7; --pele-surface-alt: #E3EDEF; --pele-error: #be0709;
+	--serif: Lora, Georgia, 'Times New Roman', serif; --sans: Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	--mono: Menlo, Consolas, monospace;
+	--line: #D5D8DA; --card: #fff;
+}
+.mdeditor * { box-sizing: border-box; }
+.mdeditor, .mdeditor { margin: 0; background: var(--work); color: var(--black); font-family: var(--sans); font-size: 15px; }
+.mdeditor button, .mdeditor input, .mdeditor select, .mdeditor textarea { font: inherit; color: inherit; }
+.mdeditor button { cursor: pointer; }
+.mdeditor .fa { width: 1.1em; text-align: center; }
+
+/*
+// Site header.
+*/
+.mdeditor .site { background: #fff; border-bottom: 1px solid var(--lightgrey); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 24px; flex-wrap: wrap; }
+.mdeditor .site img { height: 60px; display: block; }
+.mdeditor .site nav { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.mdeditor .site nav span { background: var(--orange); padding: 6px 9px; font-size: 13px; letter-spacing: .4px; }
+.mdeditor .site .user { font-size: 12px; color: var(--grey); width: 100%; text-align: right; margin-bottom: -4px; }
+
+.mdeditor main { max-width: 1240px; margin: 0 auto; padding: 16px 24px 80px; }
+.mdeditor .titlebar { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.mdeditor .titlebar h1 { font-family: var(--serif); font-size: 26px; line-height: 1.25; margin: 0; flex: 1 1 520px; }
+.mdeditor .buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.mdeditor .btn { border: 0; border-radius: 3px; padding: 9px 16px; min-height: 38px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; font-size: 13px; }
+.mdeditor .btn.primary { background: var(--action); color: #fff; }
+.mdeditor .btn.grey { background: var(--greybtn); color: #fff; }
+.mdeditor .btn.outline { background: #fff; border: 1px solid #9AA1A6; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 14px; }
+.mdeditor .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/*
+// Status steps of the review workflow.
+*/
+.mdeditor .steps { display: flex; background: #fff; border: 1px solid var(--line); border-radius: 4px; margin: 12px 0; padding: 10px 16px; gap: 8px; align-items: center; flex-wrap: wrap; }
+.mdeditor .step { display: flex; align-items: center; gap: 8px; color: var(--darkgrey); font-size: 14px; }
+.mdeditor .step .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #6E7781; display: grid; place-items: center; font-size: 12px; color: var(--grey); }
+.mdeditor .step.done .dot, .mdeditor .step.now .dot { color: #fff; }
+.mdeditor .step.done .dot { background: var(--ok); border-color: var(--ok); }
+.mdeditor .step.now { color: var(--black); font-weight: 700; }
+.mdeditor .step.now .dot { background: var(--action); border-color: var(--action); }
+.mdeditor .step.partial .dot { border-color: var(--ok); color: var(--black); }
+.mdeditor .step.retracted .dot { background: var(--red); border-color: var(--red); color: #fff; }
+.mdeditor .step.retracted .t { color: var(--red); }
+.mdeditor details.card > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
+.mdeditor details.card > summary::-webkit-details-marker { display: none; }
+.mdeditor details.card > summary h2 { margin: 0 !important; }
+.mdeditor details.card > summary .fa { transition: transform .15s; color: var(--grey); }
+.mdeditor details.card[open] > summary { margin-bottom: 10px; }
+.mdeditor details.card[open] > summary .fa { transform: rotate(90deg); }
+.mdeditor .art .retracted { background: #FDECEC; border-left: 4px solid var(--red); padding: 10px 14px; font-family: var(--sans); font-size: 14px; margin: 0 0 14px; }
+.mdeditor .steps .sep { flex: 1 1 20px; height: 3px; background: var(--lightgrey); min-width: 16px; }
+.mdeditor .steps .action { margin-left: auto; display: flex; gap: 8px; }
+
+.mdeditor .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; }
+.mdeditor .card { background: var(--card); border: 1px solid var(--line); border-radius: 4px; }
+
+/*
+// Article properties.
+*/
+.mdeditor .meta { padding: 12px 20px 14px; }
+.mdeditor .metahead { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.mdeditor .metahead .hint { font-weight: 400; color: var(--darkgrey); font-size: 12px; }
+/*
+// Article head in visual mode: fixed fields shown as a clearly framed block above the text.
+*/
+.mdeditor .wyshead { display: none; margin: 16px 36px 0; padding: 10px 14px 12px; border: 1px solid var(--line); border-left: 4px solid var(--action); background: #F7FAFB; border-radius: 4px; }
+.mdeditor .editorpane.visual.head-on .wyshead { display: block; }
+.mdeditor .wh-label { font-size: 11px; font-weight: 700; color: var(--grey); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 6px; }
+.mdeditor .wyshead input, .mdeditor .wyshead textarea, .mdeditor .wf-field { width: 100%; border: 1px dashed #8A9096; border-radius: 3px; background: #fff; padding: 3px 6px; }
+/*
+// Fixed fields look editable even without the cursor in them: a white box with a dashed line, solid on hover.
+*/
+.mdeditor .wyshead input:hover, .mdeditor .wyshead textarea:hover, .mdeditor .wf-field:hover { border-style: solid; border-color: var(--action); }
+.mdeditor .wyshead input:focus, .mdeditor .wyshead textarea:focus, .mdeditor .wf-field:focus { border: 1px solid var(--action); box-shadow: 0 0 0 2px var(--bluegreen-light); outline: none; }
+.mdeditor .wh-label .hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.mdeditor .wysfoot { display: none; margin: 8px 36px 24px; }
+.mdeditor .fbox { padding: 10px 14px 12px; border: 1px solid var(--line); border-left: 4px solid var(--action); background: #F7FAFB; border-radius: 4px; margin-bottom: 10px; }
+/*
+// Article head, bijsluiter and bronnen fold open and closed; closed, the summary shows a short preview.
+*/
+.mdeditor summary.wh-label { cursor: pointer; list-style: none; display: flex; gap: 6px; align-items: baseline; }
+.mdeditor summary.wh-label::-webkit-details-marker { display: none; }
+.mdeditor summary.wh-label .tw { transition: transform .15s; }
+.mdeditor details[open] > summary.wh-label .tw { transform: rotate(90deg); }
+.mdeditor details:not([open]) > summary.wh-label { margin-bottom: 0; }
+.mdeditor .sumtext { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--black); font-family: var(--serif); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+.mdeditor details[open] > summary .sumtext { display: none; }
+.mdeditor .toolbar .modes.compact span { display: none; }
+/*
+// In the narrow column of 'Naast elkaar' the fixed blocks are more compact.
+*/
+.mdeditor .panes.side .wyshead { margin: 12px 14px 0; }
+.mdeditor .panes.side .wysfoot { margin: 8px 14px 16px; }
+.mdeditor .panes.side .wh-label .hint { display: none; }
+.mdeditor .panes.side .wh-media { flex-direction: column; }
+.mdeditor .panes.side .wh-img { flex-basis: auto; width: 100%; }
+.mdeditor .wh-imgfields .wh-row .linkbtn { flex: none; }
+.mdeditor .editorpane.visual .wysfoot { display: block; }
+.mdeditor .wh-sub { font-size: 12px; font-weight: 700; color: var(--grey); margin: 8px 0 4px; }
+.mdeditor .wf-field { min-height: 2.6em; font-family: var(--serif); font-size: 15px; line-height: 1.5; }
+.mdeditor .wf-field:empty::before { content: attr(data-ph); color: #8A9096; }
+.mdeditor .wf-field p { margin: 0 0 6px; }
+.mdeditor .wf-field ul { margin: 0 0 6px; padding-left: 20px; }
+.mdeditor .wyshead select { font: inherit; font-size: 13px; border: 1px dashed #8A9096; border-radius: 11px; background: #fff; padding: 1px 6px; color: var(--grey); }
+.mdeditor .wh-title { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 1.25; resize: none; overflow: hidden; }
+.mdeditor .wh-row { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--grey); }
+.mdeditor .wh-row input { flex: 1; font-size: 13px; }
+.mdeditor .wh-key { font-size: 12px; color: var(--grey); flex: none; }
+.mdeditor .wh-excerpt { font-family: var(--serif); font-weight: 700; font-size: 17px; line-height: 1.45; resize: none; overflow: hidden; }
+.mdeditor .wyshead .tags { border: 0; background: transparent; padding: 2px 6px; }
+.mdeditor .cardhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.mdeditor .cardhead h2 { margin: 0 !important; }
+.mdeditor .cardhead .switch { margin: 0; font-size: 12px; color: var(--grey); }
+.mdeditor .hl .fm { color: var(--grey); }
+.mdeditor .hl .fmkey { color: var(--dim); }
+/*
+// Delete button on images and diagrams in visual mode.
+*/
+.mdeditor .wys figure { position: relative; }
+.mdeditor .figdel { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(29,32,33,.75); color: #fff; font-size: 15px; display: grid; place-items: center; cursor: pointer; }
+.mdeditor .figdel:hover, .mdeditor .figdel:focus-visible { background: var(--red); }
+.mdeditor .figedit { position: absolute; top: 6px; right: 44px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(29,32,33,.75); color: #fff; font-size: 14px; display: grid; place-items: center; cursor: pointer; z-index: 1; }
+.mdeditor .figedit:hover, .mdeditor .figedit:focus-visible { background: var(--action); }
+.mdeditor .figdel { z-index: 1; }
+.mdeditor .wys figure:not(.diagram) img, .mdeditor .wys figure.diagram svg { cursor: pointer; }
+@media (pointer: coarse) { .mdeditor .figdel, .mdeditor .figedit { width: 44px; height: 44px; } .mdeditor .figedit { right: 56px; } }
+.mdeditor details.meta summary { cursor: pointer; font-weight: 700; padding: 14px 0; list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+.mdeditor details.meta summary::-webkit-details-marker { display: none; }
+.mdeditor details.meta summary .hint { font-weight: 400; color: var(--darkgrey); font-size: 12px; }
+.mdeditor details.meta .metatitle { font-family: var(--serif); font-weight: 700; margin-left: 6px; }
+.mdeditor details.meta[open] .metatitle { display: none; }
+.mdeditor details.meta:not([open]) summary .hint { display: none; }
+.mdeditor details.meta[open] summary .fa-caret-right { transform: rotate(90deg); }
+.mdeditor .grid { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 10px 14px; align-items: start; padding-bottom: 18px; }
+.mdeditor .grid label { font-weight: 700; padding-top: 7px; }
+.mdeditor .grid label small { display: block; font-weight: 400; color: var(--darkgrey); font-size: 11px; }
+.mdeditor .grid input[type=text], .mdeditor .grid textarea { width: 100%; border: 1px solid #9AA1A6; border-radius: 3px; padding: 6px 9px; background: #fff; }
+.mdeditor .grid textarea { font-family: var(--serif); resize: vertical; min-height: 66px; line-height: 1.5; }
+.mdeditor .grid input:focus, .mdeditor .grid textarea:focus { outline: 2px solid var(--bluegreen); outline-offset: -1px; }
+.mdeditor .titlefield { font-family: var(--serif); font-weight: 700; }
+.mdeditor .count { font-size: 12px; color: var(--ok); }
+.mdeditor .count.warn { color: #8A4B00; }
+.mdeditor .tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mdeditor .tag { background: var(--orange-light); border: 1px solid var(--orange); border-radius: 11px; padding: 1px 4px 1px 10px; font-size: 13px; display: inline-flex; align-items: center; gap: 2px; }
+.mdeditor .tag button { border: 0; background: none; padding: 0 4px; font-size: 13px; }
+.mdeditor .tags input { border: 0 !important; flex: 1 1 100px; padding: 3px !important; outline: none; }
+.mdeditor .count { padding-left: 6px; }
+/*
+// Image with the excerpt, part of the fixed article head.
+*/
+.mdeditor .wh-media { display: flex; gap: 16px; align-items: flex-start; margin: 8px 0 6px; }
+.mdeditor .wh-img { flex: 0 0 240px; display: flex; flex-direction: column; gap: 4px; }
+.mdeditor .wh-ex { flex: 1; min-width: 0; }
+.mdeditor .wh-thumb { flex: none; border: 1px solid var(--line); background: #fff; border-radius: 3px; padding: 3px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--action); }
+.mdeditor .wh-thumb img { width: 230px; height: 128px; object-fit: cover; background: #CFD8DA; border-radius: 2px; display: block; }
+.mdeditor .wh-thumb:hover { border-color: var(--action); }
+.mdeditor .wh-imgfields { display: flex; flex-direction: column; gap: 2px; }
+.mdeditor .wh-imgfields .wh-key, .mdeditor .wh-ex .wh-key { display: block; margin-top: 2px; }
+.mdeditor .wh-imgfields input { font-size: 13px; }
+@media (max-width: 700px) { .mdeditor .wh-media { flex-direction: column; } .mdeditor .wh-img { flex-basis: auto; width: 100%; } }
+/*
+// Small pictogram of where an image or diagram ends up in the article.
+*/
+.mdeditor .placeicon { display: block; margin: 0 auto 4px; }
+.mdeditor .placeicon .pg { fill: #fff; stroke: #9AA1A6; }
+.mdeditor .placeicon .ln { fill: #C4C9CC; }
+.mdeditor .placeicon .bl { fill: var(--black); }
+/*
+// Tables: menu below the 'Tabel' button and the context menu on a table cell.
+*/
+.mdeditor .menu { position: absolute; z-index: 25; background: #fff; border: 1px solid #9AA1A6; border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,.15); padding: 6px; min-width: 230px; font-size: 14px; }
+.mdeditor .menu .mh { font-size: 11px; font-weight: 700; color: var(--darkgrey); letter-spacing: .3px; padding: 6px 8px 4px; text-transform: uppercase; }
+.mdeditor .menu [role=menuitem] { display: flex; gap: 8px; align-items: center; width: 100%; border: 0; background: none; text-align: left; padding: 6px 8px; border-radius: 4px; min-height: 32px; }
+.mdeditor .menu [role=menuitem]:hover, .mdeditor .menu [role=menuitem]:focus { background: var(--bluegreen-light); outline: none; }
+.mdeditor .menu [role=menuitem][aria-disabled=true] { color: #8A9096; cursor: not-allowed; background: none; }
+.mdeditor .menu .cols { display: flex; gap: 4px; padding: 2px 4px 6px; }
+.mdeditor .menu .cols [role=menuitem] { flex-direction: column; gap: 2px; width: auto; padding: 4px 6px; font-size: 12px; }
+.mdeditor .menu .cols svg rect { fill: #fff; stroke: #6E7781; }
+.mdeditor .menu .cols svg rect.th { fill: var(--bluegreen-light); }
+.mdeditor .menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+@media (pointer: coarse) { .mdeditor .menu [role=menuitem] { min-height: 44px; } }
+.mdeditor .art table { margin: 16px 0; }
+.mdeditor .wys table td, .mdeditor .wys table th { min-width: 60px; height: 2em; }
+.mdeditor .wys table th { background: #F7FAFB; }
+.mdeditor .linkbtn { background: none; border: 0; color: var(--action); padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+/*
+// Visible focus on everything reachable with the keyboard (WCAG 2.4.7).
+*/
+.mdeditor :focus-visible { outline: 3px solid var(--action); outline-offset: 2px; }
+.mdeditor .ed textarea:focus-visible { outline: none; }
+.mdeditor .ed:focus-within { box-shadow: inset 0 0 0 2px var(--action); }
+.mdeditor .skip { position: absolute; left: 8px; top: -60px; background: #fff; color: var(--action); padding: 8px 12px; border: 2px solid var(--action); z-index: 100; }
+.mdeditor .skip:focus { top: 8px; }
+.mdeditor .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/*
+// Button in the checklist: clearly an action, not just a word.
+*/
+.mdeditor .gobtn { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--action); color: var(--action); background: #fff; border-radius: 14px; padding: 2px 10px; font-size: 12px; font-weight: 700; min-height: 26px; }
+.mdeditor .gobtn:hover { background: var(--action); color: #fff; }
+@media (pointer: coarse) { .mdeditor .gobtn { min-height: 44px; padding: 4px 14px; } }
+/*
+// Windows high contrast mode: show the real text field instead of the styled layer.
+*/
+@media (forced-colors: active) { .mdeditor .ed .hl { display: none; } .mdeditor .ed textarea { color: CanvasText; } }
+
+/*
+// Tabs and toolbar stay at the top of the viewport (sticky).
+*/
+.mdeditor .editbar { position: sticky; top: 0; z-index: 8; background: var(--work); padding-top: 12px; }
+/*
+// Visual cue for the new editor: a band in the brand colours above the toolbar.
+*/
+.mdeditor .toolbar { border-top: 4px solid transparent; border-image: linear-gradient(90deg, var(--orange) 0 50%, var(--bluegreen) 50% 100%) 1; }
+.mdeditor .toolbar { display: flex; align-items: center; gap: 2px; background: #fff; border: 1px solid var(--line); padding: 4px 6px; flex-wrap: nowrap; overflow: hidden; }
+/*
+// Buttons that do not fit on the one row of the toolbar move to the 'Meer' menu at its end.
+*/
+.mdeditor .toolbar .ovf { display: none !important; }
+.mdeditor .toolbar .tbmore { margin-left: auto; }
+.mdeditor .facts select { font: inherit; font-size: 12.5px; border: 1px solid var(--line); border-radius: 3px; padding: 1px 4px; background: #fff; color: var(--black); }
+.mdeditor .statute { border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px; margin: 0 0 12px; }
+.mdeditor .statute label { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; font-size: 14px; }
+.mdeditor .statute label small { display: block; color: var(--darkgrey); font-size: 12px; }
+.mdeditor .statute input { margin-top: 3px; width: 18px; height: 18px; flex: none; }
+@media (pointer: coarse) { .mdeditor .statute label { min-height: 44px; } }
+.mdeditor .reviews { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.mdeditor .reviews li { padding: 6px 0; border-top: 1px solid var(--line); }
+.mdeditor .reviews li:first-child { border-top: 0; }
+.mdeditor .reviews .void { color: var(--darkgrey); text-decoration: line-through; }
+.mdeditor .btn.outline.retract { color: var(--red); border-color: var(--red); }
+/*
+// Switch between visual editing and Markdown.
+*/
+.mdeditor .editmodebar { display: flex; gap: 8px; align-items: center; padding: 6px 16px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--grey); background: #fff; position: sticky; top: calc(var(--sticky-top, 120px) - 8px); z-index: 3; }
+.mdeditor .panes.side .editmodebar { top: 0; }
+.mdeditor .editmode { display: flex; background: #EEF0F1; border-radius: 4px; padding: 3px; }
+.mdeditor .editmode button { border: 0; background: none; padding: 5px 10px; border-radius: 3px; font-size: 12px; color: var(--grey); display: inline-flex; gap: 5px; align-items: center; min-height: 30px; }
+.mdeditor .editmode button[aria-pressed=true] { background: var(--action); color: #fff; font-weight: 700; }
+.mdeditor .toolbar .tb.md-only { }
+.mdeditor .toolbar.visual .md-only { display: none; }
+.mdeditor .toolbar .tb { border: 0; background: none; padding: 6px 8px; border-radius: 3px; min-height: 36px; display: inline-flex; gap: 5px; align-items: center; }
+.mdeditor .toolbar .tb:hover, .mdeditor .toolbar .tb:focus-visible { background: var(--bluegreen-light); outline: none; }
+.mdeditor .toolbar .sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; }
+.mdeditor .modes { display: flex; background: #EEF0F1; border-radius: 4px; padding: 3px; flex: none; }
+/*
+// The view switch sits at the right end of the toolbar, so no row above the toolbar is needed.
+*/
+.mdeditor .toolbar .modes { margin-left: auto; }
+.mdeditor .toolbar .tbmore:not([hidden]) + .modes { margin-left: 6px; }
+.mdeditor .modes button { border: 0; background: none; padding: 5px 10px; border-radius: 3px; font-size: 12px; color: var(--grey); display: inline-flex; gap: 5px; align-items: center; }
+.mdeditor .modes button[aria-pressed=true] { background: #fff; color: var(--black); font-weight: 700; box-shadow: 0 0 0 1px var(--line); }
+
+/*
+// Writing area: a text field above a styled layer with the same font, so Markdown characters
+// can be dimmed without shifting the text.
+*/
+.mdeditor .panes { display: grid; grid-template-columns: minmax(0, 1fr); border: 1px solid var(--line); border-top: 0; background: #fff; min-height: 460px; }
+.mdeditor .panes.side { grid-template-columns: minmax(0, var(--split, 50%)) 9px minmax(0, 1fr); height: calc(100vh - 130px); min-height: 420px; }
+.mdeditor .panes.side .editorpane, .mdeditor .panes.side .previewpane { overflow: auto; }
+/*
+// Side by side uses the full width of the screen; the checklist keeps its own column.
+*/
+.mdeditor .wide main { max-width: none; }
+/*
+// Divider between text and preview: drag it, or use the arrow keys when it has focus.
+*/
+.mdeditor .splitter { display: none; position: relative; cursor: col-resize; touch-action: none; background: #fff; }
+.mdeditor .panes.side .splitter { display: block; }
+.mdeditor .splitter::before { content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 1px; background: var(--line); }
+.mdeditor .splitter::after { content: ""; position: absolute; top: 50%; left: 2px; width: 5px; height: 36px; margin-top: -18px; border-radius: 3px; background: #9AA1A6; }
+.mdeditor .splitter:hover::before, .mdeditor .splitter.drag::before, .mdeditor .splitter:focus-visible::before { left: 3px; width: 3px; background: var(--action); }
+.mdeditor .splitter:hover::after, .mdeditor .splitter.drag::after, .mdeditor .splitter:focus-visible::after { background: var(--action); }
+.mdeditor .splitter:focus-visible { outline: none; }
+.mdeditor .splitting { cursor: col-resize; user-select: none; }
+.mdeditor .splitting iframe { pointer-events: none; }
+.mdeditor .editorpane { position: relative; }
+.mdeditor .panes.preview-only .editorpane, .mdeditor .panes.write-only .previewpane { display: none; }
+/*
+// Visual mode: editing like in a word processor.
+*/
+.mdeditor .wys { min-height: 460px; padding: 24px 36px 40px; outline: none; }
+.mdeditor .wys:focus-visible { box-shadow: inset 0 0 0 2px var(--action); }
+.mdeditor .editorpane .wys { display: none; }
+.mdeditor .editorpane.visual .wys { display: block; }
+.mdeditor .editorpane.visual .ed { display: none; }
+.mdeditor .wys figure.diagram { cursor: default; user-select: none; border: 1px dashed var(--line); padding: 6px; }
+.mdeditor .wys .wikilink { background: var(--bluegreen-light); border-radius: 3px; padding: 0 3px; text-decoration: underline; text-underline-offset: 2px; }
+.mdeditor .ed { position: relative; margin: 0; }
+.mdeditor .ed textarea, .mdeditor .ed .hl { font-family: var(--serif); font-size: 17px; line-height: 1.65; padding: 24px 36px 40px; margin: 0; border: 0; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; tab-size: 4; letter-spacing: 0; }
+.mdeditor .ed .hl { position: absolute; inset: 0; pointer-events: none; color: var(--black); }
+.mdeditor .ed textarea { position: relative; display: block; width: 100%; resize: none; background: transparent; color: transparent; caret-color: var(--black); outline: none; overflow: hidden; min-height: 460px; }
+.mdeditor .ed textarea::selection { background: rgba(12,133,153,.25); color: transparent; }
+.mdeditor .hl .mk { color: var(--dim); }
+.mdeditor .hl .h { color: var(--formheaderback); }
+.mdeditor .hl .strong { color: #000; text-shadow: .35px 0 0 #000; }
+.mdeditor .hl .em { font-style: italic; }
+.mdeditor .hl .link { color: var(--action); }
+.mdeditor .hl .bad { color: var(--red); text-decoration: underline wavy var(--red); }
+.mdeditor .hl .code { color: #5A4A8A; }
+.mdeditor .hl .callout { color: var(--formheaderback); }
+.mdeditor .hl .mark { background: #FFF3B0; }
+.mdeditor .hl .comment { color: var(--dim); font-style: italic; }
+
+
+/*
+// Preview in the style of the public article page.
+*/
+.mdeditor .previewpane { padding: 0; overflow: auto; background: #fff; }
+.mdeditor .devicebar { display: flex; gap: 8px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--grey); position: sticky; top: 0; background: #fff; z-index: 2; }
+.mdeditor .devicebar button { border: 1px solid var(--line); background: #fff; border-radius: 3px; padding: 4px 10px; }
+.mdeditor .devicebar button[aria-pressed=true] { border-color: var(--bluegreen); color: var(--action); font-weight: 700; }
+.mdeditor .frame { padding: 24px; }
+.mdeditor .frame.phone, .mdeditor .frame.phone-land { margin: 16px auto; border: 12px solid var(--black); border-radius: 36px; padding: 18px 16px; transform-origin: top left; }
+.mdeditor .frame.phone { width: 414px; }
+.mdeditor .frame.phone-land { width: 868px; border-width: 12px 24px; }
+.mdeditor .frame.phone .art, .mdeditor .frame.phone-land .art { font-size: 17px; }
+.mdeditor .art { max-width: 720px; margin: 0 auto; font-family: var(--serif); font-size: 17px; line-height: 1.65; }
+.mdeditor .art header p { margin: 0 0 8px; }
+.mdeditor .art .diagram-src { text-align: left; font-size: 13px; background: #F7F8F8; padding: 10px; white-space: pre-wrap; }
+.mdeditor .art figure.diagram figcaption { text-align: center; }
+.mdeditor .art .kicker { font-family: var(--sans); color: var(--action); font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+.mdeditor .art h1 { font-size: 32px; line-height: 1.25; margin: 6px 0 12px; }
+.mdeditor .art .intro { font-weight: 700; font-size: 18px; line-height: 1.45; }
+.mdeditor .art .byline { font-family: var(--sans); font-size: 13px; color: var(--grey); border-bottom: 1px solid var(--lightgrey); padding-bottom: 10px; margin-bottom: 16px; }
+.mdeditor .art figure { margin: 18px 0; }
+.mdeditor .art img { max-width: 100%; height: auto; }
+.mdeditor .art figure img { width: 100%; display: block; background: #CFD8DA; }
+.mdeditor .art figure.klein-rechts { float: right; width: 40%; margin: 4px 0 10px 18px; }
+.mdeditor .art figure.in-de-tekst { width: 75%; }
+.mdeditor .art figcaption { font-family: var(--sans); font-size: 13px; color: var(--grey); margin-top: 6px; }
+.mdeditor .art h3 { font-family: var(--sans); font-size: 20px; margin: 28px 0 8px; }
+.mdeditor .art h4 { font-family: var(--sans); font-size: 17px; margin: 22px 0 6px; }
+.mdeditor .art a { color: var(--action); }
+.mdeditor .art a.missing { color: var(--red); text-decoration: underline wavy var(--red); }
+.mdeditor .art a.ext::after { content: ' ↗'; font-size: .8em; }
+.mdeditor .art mark { background: #FFF3B0; }
+.mdeditor .art .callout { background: var(--bluegreen-light); border-left: 4px solid var(--bluegreen); padding: 12px 18px; margin: 18px 0; font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+.mdeditor .art .callout .ct { font-weight: 700; color: var(--formheaderback); margin-bottom: 4px; }
+.mdeditor .art .callout.warning, .mdeditor .art .callout.let-op { background: var(--orange-light); border-color: var(--orange); }
+.mdeditor .art .callout.quote { background: none; border: 0; border-top: 4px solid var(--orange); padding: 10px 0 0; font-family: var(--serif); font-style: italic; font-size: 22px; line-height: 1.4; max-width: 520px; }
+.mdeditor .art .callout.quote .ct { display: none; }
+.mdeditor .art .footnotes { font-size: 14px; border-top: 1px solid var(--lightgrey); margin-top: 24px; }
+.mdeditor .art .bijsluiter { font-family: var(--sans); font-size: 14px; border-top: 1px solid var(--lightgrey); margin-top: 28px; padding-top: 8px; }
+.mdeditor .art .bijsluiter h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; margin: 6px 0; }
+.mdeditor .art .support { background: var(--lightgrey); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; margin-top: 18px; gap: 12px; flex-wrap: wrap; }
+.mdeditor .art .support strong { font-family: var(--serif); }
+.mdeditor .art .diagram { margin: 20px 0; text-align: center; }
+.mdeditor .art .diagram svg { max-width: 100%; height: auto; }
+.mdeditor .art .diagram .diagerr { text-align: left; background: var(--orange-light); border: 1px solid var(--orange); padding: 10px 14px; font-family: var(--sans); font-size: 14px; }
+.mdeditor .art table { border-collapse: collapse; font-family: var(--sans); font-size: 14px; }
+/*
+// Formulas (MathML from Temml) and code with colours per language, in the colours of the house style
+// (contrast at least 4.5:1 on the light background).
+*/
+.mdeditor .art .math-block { display: block; margin: 14px 0; overflow-x: auto; text-align: center; }
+.mdeditor .art math { font-size: 1.05em; }
+.mdeditor .art .math-err { color: var(--red); font-family: var(--mono); font-size: 14px; }
+.mdeditor .wys .math, .mdeditor .wys .math-block { cursor: pointer; border-radius: 3px; }
+.mdeditor .wys .math:hover, .mdeditor .wys .math-block:hover { background: var(--bluegreen-light); }
+.mdeditor .art pre.code { background: #F7F8F8; border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; overflow-x: auto; font-size: 14px; line-height: 1.5; }
+.mdeditor .art pre.code code { font-family: var(--mono); }
+.mdeditor .hljs-keyword, .mdeditor .hljs-selector-tag, .mdeditor .hljs-built_in { color: #0B7285; font-weight: 700; }
+.mdeditor .hljs-string, .mdeditor .hljs-attr + .hljs-string { color: #237A35; }
+.mdeditor .hljs-number, .mdeditor .hljs-literal { color: #8A4B00; }
+.mdeditor .hljs-comment { color: #5F656A; font-style: italic; }
+.mdeditor .hljs-title, .mdeditor .hljs-function, .mdeditor .hljs-section { color: #226765; font-weight: 700; }
+.mdeditor .hljs-attr, .mdeditor .hljs-variable, .mdeditor .hljs-template-variable { color: #8A4B00; }
+.mdeditor .hljs-meta, .mdeditor .hljs-tag { color: #5F656A; }
+.mdeditor .art th, .mdeditor .art td { border: 1px solid var(--lightgrey); padding: 6px 10px; }
+
+/*
+// Side column.
+*/
+.mdeditor aside.side { display: flex; flex-direction: column; gap: 16px; }
+/*
+// The side column (checklist and structure) stays in view while the article scrolls, like the tabs and toolbar;
+// a long column scrolls by itself.
+*/
+.mdeditor aside.side { position: sticky; top: 8px; align-self: start; max-height: calc(100vh - 16px); overflow-y: auto; overscroll-behavior: contain; }
+.mdeditor aside.side .card { padding: 14px 18px; }
+.mdeditor aside.side h2 { font-size: 15px; margin: 0 0 10px; }
+.mdeditor .checks { list-style: none; margin: 0; padding: 0; font-size: 13.5px; }
+.mdeditor .checks li { display: flex; gap: 8px; align-items: flex-start; padding: 3px 0; }
+.mdeditor .checks .fa-check { color: var(--ok); }
+.mdeditor .checks .fa-times { color: var(--red); }
+.mdeditor .checks .fa-exclamation-triangle { color: #B36B00; }
+.mdeditor .facts { list-style: disc; margin: 0 0 12px; padding-left: 18px; font-size: 13px; color: var(--grey); }
+.mdeditor .facts li { padding: 1px 0; }
+.mdeditor .facts li.save { color: var(--ok); font-weight: 700; }
+.mdeditor .facts li.save.unsaved { color: #8A4B00; }
+.mdeditor .switch { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 0 0 10px; cursor: pointer; }
+.mdeditor .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.mdeditor .switch .track { width: 34px; height: 20px; border-radius: 10px; background: #8A9096; position: relative; flex: none; transition: background .15s; }
+.mdeditor .switch .track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s; }
+.mdeditor .switch input:checked + .track { background: var(--action); }
+.mdeditor .switch input:checked + .track::after { left: 16px; }
+.mdeditor .switch input:focus-visible + .track { outline: 3px solid var(--action); outline-offset: 2px; }
+.mdeditor .allgood { font-size: 13px; color: var(--ok); margin: 2px 0 8px; }
+.mdeditor .checks li button { margin-left: auto; }
+.mdeditor .summary { font-weight: 700; font-size: 13px; margin-top: 8px; }
+.mdeditor .summary.ok { color: var(--ok); }
+.mdeditor .summary.no { color: var(--red); }
+.mdeditor .outline a { display: block; color: var(--black); text-decoration: none; padding: 3px 0; font-size: 14px; }
+.mdeditor .outline a.sub { padding-left: 14px; color: var(--grey); font-size: 13px; }
+.mdeditor .outline a:hover { color: var(--action); }
+.mdeditor .small { font-size: 12px; color: var(--darkgrey); }
+
+/*
+// Menus and dialogs.
+*/
+.mdeditor .popup { position: absolute; z-index: 20; background: #fff; border: 1px solid #9AA1A6; border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,.15); min-width: 300px; max-width: 380px; padding: 6px; font-family: var(--sans); font-size: 15px; }
+.mdeditor .popup .ph { font-size: 11px; color: var(--darkgrey); font-weight: 700; padding: 6px 8px; letter-spacing: .3px; }
+.mdeditor .popup .it { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 4px; cursor: pointer; }
+.mdeditor .popup .it .fa { color: var(--formheaderback); }
+.mdeditor .popup .it code { margin-left: auto; font-size: 12px; color: var(--darkgrey); }
+.mdeditor .popup .it small { display: block; color: var(--darkgrey); font-size: 12px; }
+.mdeditor .popup .it.sel, .mdeditor .popup .it:hover { background: var(--bluegreen-light); }
+.mdeditor dialog { border: 1px solid var(--line); border-radius: 10px; padding: 0; width: min(900px, calc(100vw - 24px)); max-height: calc(100vh - 24px); }
+.mdeditor dialog::backdrop { background: rgba(29,32,33,.4); }
+.mdeditor dialog form { padding: 20px 24px; }
+.mdeditor dialog h2 { font-family: var(--serif); margin: 0 0 14px; display: flex; justify-content: space-between; }
+.mdeditor dialog h2 button { border: 0; background: none; font-size: 20px; color: var(--darkgrey); }
+.mdeditor .dlg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.mdeditor .field { margin-bottom: 12px; }
+.mdeditor .field label { display: block; font-weight: 700; margin-bottom: 4px; }
+.mdeditor .field input[type=text], .mdeditor .field textarea { width: 100%; border: 1px solid #9AA1A6; border-radius: 3px; padding: 7px 9px; }
+.mdeditor .field .help { font-size: 12px; color: var(--darkgrey); margin-top: 3px; }
+.mdeditor .place { display: flex; gap: 8px; }
+.mdeditor .place label { flex: 1; border: 1px solid var(--line); border-radius: 4px; padding: 8px 4px; text-align: center; font-weight: 400; cursor: pointer; font-size: 13px; }
+.mdeditor .place input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.mdeditor .place label:has(input:focus-visible) { outline: 3px solid var(--action); outline-offset: 2px; }
+.mdeditor .place label { position: relative; }
+.mdeditor .place label:has(input:checked) { border: 2px solid var(--bluegreen); background: var(--bluegreen-light); }
+.mdeditor .dropzone { width: 100%; cursor: pointer; font: inherit; border: 2px dashed var(--line); border-radius: 6px; min-height: 200px; display: grid; place-items: center; text-align: center; color: var(--grey); background: #F7F8F8; overflow: hidden; }
+.mdeditor .dropzone img { max-width: 100%; max-height: 260px; display: block; }
+.mdeditor .mdout { background: #F7F8F8; border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px; font-family: var(--mono); font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mdeditor .mdout b { font-family: var(--sans); font-size: 11px; color: var(--darkgrey); display: block; margin-bottom: 4px; }
+.mdeditor .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.mdeditor .templates { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; position: relative; }
+.mdeditor .templates button { border: 1px solid #9AA1A6; background: #fff; border-radius: 16px; padding: 5px 14px; }
+.mdeditor .templates button[aria-pressed=true] { background: var(--action); border-color: var(--action); color: #fff; }
+/*
+// 'Meer soorten': list of diagram types with a preview of the example left of the list.
+*/
+.mdeditor .dpanel { position: absolute; top: 100%; right: 0; z-index: 30; margin-top: 4px; display: flex; background: #fff; border: 1px solid #9AA1A6; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.18); width: min(720px, calc(100vw - 48px)); max-height: 430px; }
+.mdeditor .dpanel[hidden] { display: none; }
+.mdeditor .dprev { flex: 1 1 55%; border-right: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.mdeditor .dprev .dpv { flex: 1; display: grid; place-items: center; overflow: hidden; background: #FAFBFB; border-radius: 4px; min-height: 220px; }
+.mdeditor .dprev .dpv svg { max-width: 100%; max-height: 300px; height: auto; }
+.mdeditor .dprev .dpd { font-size: 13px; color: var(--grey); }
+.mdeditor .dlist { flex: 1 1 45%; list-style: none; margin: 0; padding: 6px; overflow: auto; }
+.mdeditor .dlist li { padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+.mdeditor .dlist li small { display: block; color: var(--darkgrey); font-size: 12px; }
+.mdeditor .dlist li[aria-selected=true], .mdeditor .dlist li[role=option]:hover { background: var(--bluegreen-light); }
+.mdeditor .dlist li.dgroup { cursor: default; margin-top: 8px; border-top: 1px solid var(--line); border-radius: 0; padding-top: 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; color: var(--darkgrey); }
+@media (max-width: 700px) { .mdeditor .dpanel { flex-direction: column; max-height: 70vh; } .mdeditor .dprev { border-right: 0; border-bottom: 1px solid var(--line); } .mdeditor .dprev .dpv { min-height: 140px; } }
+.mdeditor #diagSrc { width: 100%; min-height: 220px; font-family: var(--mono); font-size: 14px; border: 1px solid #9AA1A6; border-radius: 3px; padding: 10px; }
+.mdeditor #diagView { border: 1px solid var(--line); border-radius: 4px; min-height: 220px; padding: 10px; display: grid; place-items: center; overflow: auto; }
+.mdeditor .diagerr { background: var(--orange-light); border: 1px solid var(--orange); border-radius: 4px; padding: 10px 12px; margin-top: 8px; font-size: 14px; }
+.mdeditor .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--black); color: #fff; padding: 10px 18px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+.mdeditor .toast.on { opacity: 1; }
+.mdeditor .toast.act { pointer-events: auto; }
+.mdeditor .toast button { margin-left: 10px; background: none; border: 1px solid #fff; color: #fff; border-radius: 4px; padding: 3px 10px; min-height: 30px; }
+.mdeditor .btn.danger { color: var(--red); border-color: var(--red); margin-right: auto; }
+.mdeditor .proto { background: var(--orange-light); border-bottom: 1px solid var(--orange); font-size: 13px; padding: 6px 24px; display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.mdeditor .proto button { border: 0; background: none; color: #075A69; text-decoration: underline; padding: 0; }
+.mdeditor .proto .protoctl { display: flex; gap: 12px; align-items: center; }
+.mdeditor .proto select { font: inherit; font-size: 13px; border: 1px solid var(--orange); border-radius: 3px; background: #fff; }
+
+/*
+// Phone and tablet.
+*/
+@media (max-width: 1020px) {
+	.mdeditor .layout { grid-template-columns: 1fr; }
+	.mdeditor aside.side { position: static; max-height: none; overflow: visible; }
+}
+@media (max-width: 700px) {
+	.mdeditor main { padding: 10px 10px 90px; }
+	.mdeditor .site { padding: 6px 12px; }
+	.mdeditor .site img { height: 44px; }
+	.mdeditor .site nav span { font-size: 11px; padding: 4px 6px; }
+	.mdeditor .titlebar h1 { font-size: 21px; }
+	.mdeditor .grid { grid-template-columns: 1fr; gap: 4px; }
+	.mdeditor .grid label { padding-top: 6px; }
+	.mdeditor .ed textarea, .mdeditor .ed .hl { font-size: 18px; padding: 16px 16px 40px; }
+	.mdeditor .toolbar { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 30; border-left: 0; border-right: 0; justify-content: space-between; flex-wrap: nowrap; overflow-x: auto; padding: 2px 4px calc(2px + env(safe-area-inset-bottom)); }
+	.mdeditor .toolbar .tb { min-width: 44px; min-height: 44px; justify-content: center; }
+	.mdeditor .toolbar .tb span.lbl, .mdeditor .toolbar .sep, .mdeditor .toolbar .tbmore { display: none; }
+	.mdeditor .toolbar { overflow-x: auto; }
+	.mdeditor .editmodebar { padding: 4px 10px; }
+	.mdeditor .editbar { padding-top: 6px; }
+	.mdeditor .panes.side { grid-template-columns: minmax(0, 1fr); height: auto; }
+	.mdeditor .wys { padding: 16px; font-size: 18px; }
+	.mdeditor .toolbar .modes { order: -1; margin: 0 4px 0 0; }
+	.mdeditor .toolbar .modes span { display: none; }
+	.mdeditor .modes button[data-mode=side] { display: none; }
+	.mdeditor .dlg-grid { grid-template-columns: 1fr; }
+	.mdeditor .steps .step span.t { display: none; }
+	.mdeditor .steps .step.now span.t { display: inline; }
+}
+/*
+// Touch screens (Apple HIG): every control has a hit area of at least 44 x 44 pt.
+*/
+@media (pointer: coarse) {
+	.mdeditor .modes button, .mdeditor .editmode button, .mdeditor .devicebar button, .mdeditor .linkbtn, .mdeditor .switch { min-height: 44px; }
+	.mdeditor .switch .track { width: 51px; height: 31px; border-radius: 16px; }
+	.mdeditor .switch .track::after { width: 27px; height: 27px; }
+	.mdeditor .switch input:checked + .track::after { left: 22px; }
+}
+
+/*
+//
+// The editor on CodeMirror 6 and ProseMirror (task T08): the parts that the prototype did with a textarea and a
+// contenteditable.
+//
+*/
+.mdeditor.mode-visual .mde-markdown, .mdeditor.mode-markdown .mde-visual { display: none; }
+.mdeditor .mde-loading { color: var(--darkgrey); padding: 24px; }
+.mdeditor .mde-markdown .cm-editor { background: #fff; font-family: var(--mono); font-size: 15px; line-height: 1.6; min-height: 420px; }
+.mdeditor .mde-markdown .cm-editor.cm-focused { outline: none; box-shadow: inset 0 0 0 2px var(--action); }
+.mdeditor .mde-markdown .cm-content { padding: 16px 20px; max-width: 46em; }
+.mdeditor .mde-markdown .cm-front, .mdeditor .mde-markdown .cm-front * { color: var(--dim) !important; font-weight: 400 !important; font-style: normal !important; }
+.mdeditor .mde-markdown .cm-activeLine { background: #F5FAFB; }
+.mdeditor .wys.ProseMirror, .mdeditor .wf-field .ProseMirror { outline: none; white-space: pre-wrap; word-wrap: break-word; }
+.mdeditor .wys .ProseMirror { outline: none; min-height: 360px; padding: 16px 20px; white-space: pre-wrap; }
+.mdeditor .wys .ProseMirror-focused, .mdeditor .wf-field .ProseMirror-focused { box-shadow: inset 0 0 0 2px var(--action); }
+.mdeditor .wf-field .ProseMirror { min-height: 3em; padding: 6px 8px; }
+.mdeditor .ProseMirror-selectednode { outline: 3px solid var(--action); }
+.mdeditor .ProseMirror .callout { border-left: 4px solid var(--bluegreen); background: var(--bluegreen-light); padding: 8px 14px; margin: 1em 0; }
+.mdeditor .ProseMirror .callout.quote { border-left: 0; border-top: 3px solid var(--orange); background: none; font-family: var(--serif); font-style: italic; font-size: 21px; }
+.mdeditor .raw { background: #F2F2F0; border: 1px dashed #9AA1A6; border-radius: 4px; padding: 6px 10px; margin: 1em 0; color: var(--grey); }
+.mdeditor .raw .raw-label { display: block; font: 700 12px var(--sans); text-transform: uppercase; color: var(--grey); }
+.mdeditor .raw pre { margin: 4px 0 0; white-space: pre-wrap; font-size: 13px; }
+.mdeditor .raw-inline { background: #F2F2F0; color: var(--grey); }
+.mdeditor .note-inline { color: var(--dim); background: #F2F2F0; padding: 0 3px; border-radius: 3px; cursor: help; }
+.mdeditor .footnote-def { font-size: 14px; display: flex; gap: 6px; }
+.mdeditor .footnote-def .footnote-label::after { content: '.'; }
+.mdeditor .ProseMirror figcaption:empty::before { content: attr(data-ph); color: var(--dim); }
+.mdeditor .ProseMirror li.task { list-style: none; }
+.mdeditor .ProseMirror li.task::before { content: '☐ '; }
+.mdeditor .ProseMirror li.task[data-checked="true"]::before { content: '☑ '; }
+.mdeditor .wikilink { color: var(--action); text-decoration: underline; }
+.mdeditor .wikilink.missing { text-decoration: underline wavy var(--red); }
+.mdeditor .math-err { color: var(--red); }
+.mdeditor .tb.moved { display: none; }
+.mdeditor .tags .tag { display: inline-flex; align-items: center; gap: 4px; background: var(--orange-light); border-radius: 12px; padding: 2px 4px 2px 10px; margin-right: 4px; }
+.mdeditor .tags .tag.unknown { background: #FCE8E8; outline: 1px dashed var(--red); }
+.mdeditor .tags .tag button { border: 0; background: none; min-width: 24px; min-height: 24px; }
+.mdeditor .mde-pagehead { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 20px; background: #fff; }
+.mdeditor .mde-pagehead input[type=text] { flex: 1 1 240px; font-size: 18px; padding: 6px 8px; }
+.mdeditor .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--black); color: #fff; padding: 10px 16px; border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 1000; max-width: min(90vw, 560px); }
+.mdeditor .toast.on { opacity: 1; pointer-events: auto; }
+.mdeditor .toast .linkbtn { color: #9FE3F0; }
+.mdeditor .step[data-partial] .dot { background: conic-gradient(var(--ok) var(--fill), #fff 0); color: var(--black); border-color: var(--ok); }
+.mdeditor .steps .arrow { color: var(--dim); }
+.mdeditor .steps .btn.small { margin-left: 8px; }
+.mdeditor dialog { max-width: min(960px, 96vw); border: 0; border-radius: 6px; padding: 0 20px 16px; box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+.mdeditor dialog::backdrop { background: rgba(29,32,33,.45); }
+.mdeditor dialog h2 { display: flex; justify-content: space-between; align-items: center; }
+.mdeditor .dlg-close { border: 0; background: none; min-width: 44px; min-height: 44px; font-size: 18px; }
+.mdeditor table.cheat td { border-bottom: 1px solid var(--line); padding: 6px; vertical-align: top; }
+.mdeditor .req { color: var(--red); }
+.mdeditor .dhead { font-weight: 700; padding: 8px 10px 2px; color: var(--grey); list-style: none; }
+#mdeSave.dirty::after { content: ' •'; }
+@media (prefers-reduced-motion: reduce) { .mdeditor * { transition: none !important; } }
+.mdeditor .toolbar { flex-wrap: nowrap; overflow: hidden; }
