@@ -4,7 +4,6 @@
 // The page gives the configuration as JSON in #mdeConfig (system/core/mdeditor.php); saving goes to the server as
 // fields plus the SVG of the diagrams and the MathML of the formulas, keyed by the SHA-256 of their source.
 //
-import * as CM from 'codemirror';
 import * as PM from 'prosemirror';
 import DOMPurify from 'dompurify';
 import { createMarkdown, esc, slug, plainText } from './hypha-markdown.js';
@@ -22,6 +21,10 @@ const idle = fn => (window.requestIdleCallback || (f => setTimeout(f, 200)))(fn)
 //
 const lazy = {};
 export const load = name => lazy[name] ||= import(name).then(m => m.default || m);
+//
+// CodeMirror only when the Markdown view is used: most authors write in Opmaak (requirement 4, Lighthouse).
+//
+let CM = null;
 
 export class Editor {
 	constructor(root, config) {
@@ -72,13 +75,13 @@ export class Editor {
 	//
 	// Start: the interface, the two views and the side column.
 	//
-	mount() {
+	async mount() {
 		this.root.innerHTML = this.template();
 		this.root.classList.add('mde-ready');
 		this.bindToolbar();
 		this.bindHead();
-		this.createMarkdownView();
 		this.createVisualViews();
+		if (this.editMode === 'markdown') await this.createMarkdownView();
 		this.setEditMode(this.editMode, false);
 		this.setViewMode('write');
 		this.applySplit(this.split);
@@ -191,7 +194,9 @@ export class Editor {
 	// The Markdown view: CodeMirror 6, with the Markdown characters dimmed, the Frontmatter on top, the / menu and the
 	// [[ suggestions, and paste from word processors.
 	//
-	createMarkdownView() {
+	async createMarkdownView() {
+		if (this.cm) return;
+		CM ||= await import('codemirror');
 		const { state, view, commands, language, markdown, highlight, search } = CM;
 		const dim = language.HighlightStyle.define([
 			{ tag: [highlight.tags.processingInstruction, highlight.tags.meta, highlight.tags.contentSeparator], color: 'var(--dim)' },
@@ -424,6 +429,11 @@ export class Editor {
 	//
 	// Switching between Opmaak and Markdown (BR-75): the source does not change, the cursor keeps its place.
 	//
+	async switchEditMode(mode) {
+		if (mode === 'markdown' && !this.cm) await this.createMarkdownView();
+		this.setEditMode(mode);
+	}
+
 	setEditMode(mode, keepCaret = true) {
 		//
 		// With broken Frontmatter the Markdown stays as typed: switching would rebuild it from the last good values.
@@ -764,7 +774,7 @@ export class Editor {
 			const act = e.target.closest('[data-act]');
 			if (act && this.root.contains(act)) { e.preventDefault(); this.action(act.dataset.act, act); }
 			const edit = e.target.closest('[data-edit]');
-			if (edit) this.setEditMode(edit.dataset.edit);
+			if (edit) this.switchEditMode(edit.dataset.edit);
 			const mode = e.target.closest('[data-mode]');
 			if (mode) this.setViewMode(mode.dataset.mode);
 			const device = e.target.closest('[data-device]');

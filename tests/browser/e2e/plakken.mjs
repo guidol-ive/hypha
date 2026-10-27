@@ -41,6 +41,10 @@ export default async function (t) {
 	for (const d of docs) {
 		t.test(`visual view: ${d.id}`, async () => {
 			await page.evaluate(() => { const v = window.hyphaMdeditor.editor.pm; v.dispatch(v.state.tr.delete(0, v.state.doc.content.size).setMeta('addToHistory', false)); v.focus(); });
+			//
+			// More than 500 ms after the previous change, so the paste is an undo step of its own.
+			//
+			await page.waitForTimeout(600);
 			await paste('#mdeVisual .ProseMirror', d.html);
 			const got = await text();
 			//

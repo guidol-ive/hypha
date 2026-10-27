@@ -2,13 +2,18 @@
 // Step 1 of the design: a new article from its title in the popup 'nieuwe pagina', with the address shown below the
 // title and the choice how to write; other page types keep the page name as before.
 //
-import { login, assert } from './helpers.mjs';
+import { login, command, assert } from './helpers.mjs';
 
 export default async function (t) {
 	const { browser, base } = t;
 	let page;
 	t.test('the popup asks for the title of an article and shows the address', async () => {
-		page = await login(browser, base, 'ahmed');
+		page = await login(browser, base, 'lotte');
+		//
+		// Start without a remembered choice, also when the test ran before on this site.
+		//
+		await command(page, 'nl/Start', 'mdPreferences', JSON.stringify({ remember: false }));
+		await page.reload();
 		await page.evaluate(() => newPage());
 		await page.selectOption('#newPageType', 'peer_reviewed_article');
 		await page.fill('#newPagename', 'Café „De Zwaan” krijgt geen vergunning');

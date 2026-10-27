@@ -989,6 +989,9 @@
 		"mde-suggestions" => "suggestions",
 		"mde-save-front-error" => "First repair the fixed fields at the top (see the checklist); then you can save.",
 		"mde-switch-front-error" => "First repair the fixed fields at the top (see the checklist); then you can switch.",
+		"mde-share-email" => "Share by e-mail",
+		"mde-share-twitter" => "Share on Twitter",
+		"mde-share-facebook" => "Share on Facebook",
 		// End of the Markdown editor
 	);
 

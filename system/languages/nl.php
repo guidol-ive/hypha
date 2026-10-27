@@ -984,6 +984,9 @@
 		"mde-suggestions" => "suggesties",
 		"mde-save-front-error" => "Herstel eerst de vaste velden bovenaan (zie de checklist); daarna kun je opslaan.",
 		"mde-switch-front-error" => "Herstel eerst de vaste velden bovenaan (zie de checklist); daarna kun je wisselen.",
+		"mde-share-email" => "Delen per e-mail",
+		"mde-share-twitter" => "Delen op Twitter",
+		"mde-share-facebook" => "Delen op Facebook",
 		// End of the Markdown editor
 	);
 

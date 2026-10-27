@@ -128,7 +128,10 @@ export default async function (t) {
 		const times = [];
 		for (let i = 0; i < 3; i++) {
 			const t0 = Date.now();
-			await page.reload();
+			//
+			// Until the editor is ready to type in (requirement 4), not until every image of the article has loaded.
+			//
+			await page.reload({ waitUntil: 'commit' });
 			await page.waitForFunction(() => window.hyphaMdeditor?.editor?.ready, null, { timeout: 10000 });
 			times.push(Date.now() - t0);
 		}

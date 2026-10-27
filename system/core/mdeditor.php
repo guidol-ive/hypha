@@ -42,6 +42,13 @@
 		$script->setAttribute('id', 'mdeConfig');
 		$script->appendText(json_encode($config, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP));
 
+		//
+		// The tag list of Hypha above the page is the same as the tags in the article head; on the edit page it would
+		// be a second, unlabelled control (Lighthouse, WCAG 4.1.2).
+		//
+		$tagList = $page->html->getElementById('tagList');
+		if ($tagList) while ($tagList->firstChild) $tagList->removeChild($tagList->firstChild);
+		hypha_mdeditorReader($page->language, '', false);
 		$commands = $page->html->getElementById('pageCommands');
 		$cancel = $config['kind'] === 'article' ? __('art-cancel') : __('cancel');
 		$save = $config['kind'] === 'article' ? __('art-save') : __('save');
@@ -86,7 +93,7 @@
 		$map = $body->createChild('script');
 		$map->setAttribute('type', 'importmap');
 		$map->appendText(json_encode(['imports' => $imports], JSON_UNESCAPED_SLASHES));
-		foreach (['codemirror', 'prosemirror', 'markdown-it'] as $name) if (isset($imports[$name])) {
+		foreach (['prosemirror', 'markdown-it', 'dompurify'] as $name) if (isset($imports[$name])) {
 			$link = $body->createChild('link');
 			$link->setAttribute('rel', 'modulepreload');
 			$link->setAttribute('href', $imports[$name]);
@@ -370,7 +377,7 @@
 		$language - language of the page
 		$description - the excerpt as plain text, or ''
 	*/
-	function hypha_mdeditorReader(string $language, string $description) {
+	function hypha_mdeditorReader(string $language, string $description, bool $reader = true) {
 		global $hyphaHtml;
 		$root = $hyphaHtml->documentElement;
 		if ($root && !$root->getAttribute('lang')) $root->setAttribute('lang', $language);
@@ -381,5 +388,16 @@
 			$meta->setAttribute('name', 'description');
 			$meta->setAttribute('content', mb_substr($description, 0, 300));
 		}
-		$hyphaHtml->linkStyle('system/mdeditor/lezer.css?v=' . hypha_mdeditorVersion());
+		if ($reader) $hyphaHtml->linkStyle('system/mdeditor/lezer.css?v=' . hypha_mdeditorVersion());
+		//
+		// Two gaps of the page template that Lighthouse and WCAG report (design section 13.15): the main region, and
+		// the share links, which are only an icon.
+		//
+		$main = $hyphaHtml->getElementById('main');
+		if ($main && !$main->getAttribute('role') && !$hyphaHtml->findXPath('//main')->length) $main->setAttribute('role', 'main');
+		foreach ($hyphaHtml->findXPath('//div[contains(@class, "share-links")]/a') as $link) {
+			$href = $link->getAttribute('href');
+			$key = str_starts_with($href, 'mailto:') ? 'mde-share-email' : (str_contains($href, 'twitter.com') ? 'mde-share-twitter' : (str_contains($href, 'facebook.com') ? 'mde-share-facebook' : ''));
+			if ($key && !$link->getAttribute('aria-label')) $link->setAttribute('aria-label', __($key));
+		}
 	}

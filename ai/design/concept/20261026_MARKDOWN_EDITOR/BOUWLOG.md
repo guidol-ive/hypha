@@ -158,6 +158,28 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 2. Niet verwerkt (open punten): de samenvatting van een dichtgevouwen blok blijft leeg; de werkbalkknop heet niet *Beeld bewerken* of *Diagram bewerken* als de cursor in een foto of diagram staat; een webadres plakken over geselecteerde tekst maakt nog geen link; de titel van een kader wordt in Opmaak met een invoervenster gevraagd in plaats van geselecteerd; geen werkbalk boven het schermtoetsenbord via `visualViewport`; het diagram in het voorbeeld heeft geen `role="img"`; de `srcdoc` van een interactief blok in het voorbeeld heeft geen CSP; het voorbeeld laat op niveau 1 ook HTML zien die de server weghaalt.
 3. Tests na de herstelling, op PHP 8.4 in de container: editor 14 van 14 (nieuw: drie keer opnieuw openen met de cache warm, en kapotte Frontmatter), toegankelijkheid 11 van 11 (axe-core 4.10.2: 0 overtredingen in 9 toestanden; aanraakvlakken ≥ 44 pt op 393 pt breed, geen horizontaal scrollen), plakken 9 van 9, nieuwe pagina 4 van 4.
 
+### T11 Gouden dataset en integratietests (2026-10-27)
+
+1. Gebouwd: `tests/gouden/gouden.php` (generator, vaste seed per item, zodat elk deel los te maken is: 6.000 Markdown-artikelen, 1.000 Markdown-tekstpagina's met drie versies, 2.000 oude HTML-artikelen en 1.000 oude tekstpagina's zoals WYMeditor ze maakt, alle statussen, en per honderd een randgeval: 20.000 woorden, lege velden, onbekende tag, Unicode en emoji, `-->` in een diagram, kapotte notatie, een CDATA-aanval), `tests/gouden/maak.php` (manifest of `data/`-map), `tests/gouden/manifest.tsv` (SHA-256 van de verwachte XHTML per veld, in git), `tests/markdown/GoudenTest.php` en `tests/integratie/gouden.sh` en `gouden.py`.
+2. Tests en uitkomsten:
+   1. manifest: 500 van 500 op PHP 8.2.35 en 8.4.27 (snelle selectie), 10.000 van 10.000 op 8.4.27 (dezelfde uitkomst als de generator op 8.2: de XHTML is gelijk over de versies);
+   2. integratie op de hele set (10.000 pagina's anoniem, 500 als lid, 500 bewerkschermen): 0 fouten op PHP 8.2 en 8.4, geen nieuwe PHP-meldingen; mediaan 43 en 45 ms per pagina, langzaamste 1,7 s (het artikel van 20.000 woorden); `hypha.xml` met 10.000 pagina's.
+3. Het manifest is gemaakt met de code van nu; de uitkomsten zijn steekproefsgewijs nagekeken, niet alle 10.000.
+
+### T12 Prestaties en Lighthouse (2026-10-27)
+
+1. Gebouwd: `lezer.css` en `hypha_mdeditorReader()` voor de leesweergave van Markdown-pagina's (`lang`, `meta description`, opmaak van kaders, figuren, diagrammen, formules en code, `role="main"`, namen voor de deelknoppen); in de editor: CodeMirror pas laden bij de Markdown-weergave, hoogte vooraf reserveren (geen verspringen), de dubbele tagkeuze van Hypha weg uit het bewerkscherm.
+2. Uitkomsten (`tests/browser/e2e/prestaties.mjs`, Chrome op de ontwikkelmachine, PHP 8.4 in de container, artikel van 19.636 woorden):
+   1. typen (eis 1, 100 ms): Opmaak mediaan 25,9 / p95 33 / hoogste 44,9 ms; Markdown 25,5 / 32,7 / 33,8 ms; met *Naast elkaar* 25,8 / 33,8 / 34,6 ms (500 aanslagen elk);
+   2. bewaren (eis 2, 1 s): 138 ms, waarvan 106 ms op de server; een gewoon artikel 139 ms;
+   3. editor de tweede keer openen (eis 4, 3 s): 155 tot 173 ms (tien keer);
+   4. plakken van tien pagina's (eis 5, 1 s): 84 ms (T09);
+   5. leesweergave via wifi op een iPhone 16 (eis 3, 250 ms): niet te meten zonder toestel; Lighthouse-LCP op de computer 0,5 s (desktop-preset);
+   6. Lighthouse 13.4.1, gepubliceerd artikel, standaardthema, anoniem: telefoon 96 / 94 / 100 / 91, computer 100 / 94 / 100 / 91 (prestaties, toegankelijkheid, goede werkwijzen, SEO). Wat ontbreekt: het contrast van de rode links en grijze knoppen van het thema, de kopvolgorde h1 → h3 (bewust, §13.15) en een `robots.txt` van de site;
+   7. met het advies van het ontwerp in een kopie van het thema (links `#0B7285`, knoppen `#5F656A`): telefoon 97 / 98 / 100 / 91, computer 100 / 98 / 100 / 91; met een `robots.txt` (alleen tijdelijk in de proef) wordt SEO 100;
+   8. Lighthouse op de editor (ingelogd, zonder SEO): computer 96 / 95 / 100, telefoon 69 / 95 / 100. Op de telefoon rekent Lighthouse met traag 4G: de ruim 400 kB code van de editor haalt 95 daar niet. De eis „95 voor de editor” is op de telefoon dus niet gehaald.
+3. Gevonden in de testopstelling: een reeks ontbrekende afbeeldingen (404-pagina's van Hypha) houdt de twee Apache-werkers bezet en vertraagt de volgende pagina met seconden; voor de meting is de voorbeeldfoto uit het lange artikel gehaald.
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.

@@ -457,3 +457,6 @@ mde-new-pagename	paginanaam	page name
 mde-suggestions	suggesties	suggestions
 mde-save-front-error	Herstel eerst de vaste velden bovenaan (zie de checklist); daarna kun je opslaan.	First repair the fixed fields at the top (see the checklist); then you can save.
 mde-switch-front-error	Herstel eerst de vaste velden bovenaan (zie de checklist); daarna kun je wisselen.	First repair the fixed fields at the top (see the checklist); then you can switch.
+mde-share-email	Delen per e-mail	Share by e-mail
+mde-share-twitter	Delen op Twitter	Share on Twitter
+mde-share-facebook	Delen op Facebook	Share on Facebook
