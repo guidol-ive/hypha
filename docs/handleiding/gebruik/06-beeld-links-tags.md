@@ -1,6 +1,6 @@
 ---
 title: "Beeld, links en tags"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -65,9 +65,11 @@ Bij oudere pagina's en artikelen gebruik je de knop voor een afbeelding in de we
 
 ![Na [[ stelt de editor bestaande pagina's voor](../afbeeldingen/suggesties-paginas.png)
 
-1. Typ `[[` en de eerste letters van de pagina. De editor stelt pagina's van de site voor.
-2. Kies de pagina. De link staat er nu als `[[Over ons]]`.
-3. Wil je een andere tekst voor de link? Schrijf dan `[[Over ons|lees meer over de redactie]]`.
+1. Selecteer de tekst die de link wordt, en kies **Link** in de werkbalk (of ⌘K, Ctrl+K). In Opmaak kun je ook gewoon `[[` typen.
+2. Typ in het venster de eerste letters van de pagina. De editor stelt pagina's van de site voor; een privépagina heeft een `*`. Kies er een met de pijltjes en Enter, of met een tik.
+3. Bestaat de pagina nog niet, kies dan **nieuwe pagina „…”**. Bij opslaan maakt Hypha die pagina aan.
+4. **Tekst van de link**: laat leeg voor de naam van de pagina, of typ een eigen tekst. In Markdown staat de link er dan als `[[Over ons]]` of `[[Over ons|lees meer over de redactie]]`.
+5. Een link weghalen of wijzigen: zet de cursor in de link, kies **Link** en dan **Link weghalen** of pas het venster aan.
 
 Een link naar een pagina die nog niet bestaat, meldt de checklist. Bij opslaan maakt Hypha die pagina aan.
 
@@ -80,8 +82,9 @@ Selecteer de tekst en kies de knop voor een link. Kies als **link type** een **l
 
 ## Een link naar een andere website
 
-1. In Opmaak: selecteer de tekst en kies de knop voor een link. Plak het webadres.
-2. In Markdown: schrijf `[tekst](https://www.eemstad.example/raad)`.
+1. Selecteer de tekst en kies **Link** (⌘K, Ctrl+K). Typ of plak het webadres in hetzelfde venster; `https://` mag je weglaten.
+2. Sneller: selecteer de tekst en plak een webadres eroverheen. De tekst wordt een link.
+3. In Markdown kun je ook schrijven: `[tekst](https://www.eemstad.example/raad)`.
 
 Gebruik altijd een volledig adres dat begint met `https://`.
 
