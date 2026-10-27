@@ -499,3 +499,5 @@ mde-check-html-removed	Niet getoond op de site: [[what]]. Die HTML laat de site 
 mde-check-diagram-drawing	Een diagram is opgeslagen zonder tekening; lezers zien de tekst ervan. Open het artikel opnieuw en sla op.	A diagram was saved without its drawing; readers see its text. Open the article again and save.
 mde-fact-level	vrijheidsniveau [[n]]	freedom level [[n]]
 mde-fact-level-help	Niveau 1: tekst, opmaak, beeld en diagrammen. Niveau 2: ook ingesloten video en kaarten en interactieve blokken.	Level 1: text, layout, images and diagrams. Level 2: also embedded video and maps, and interactive blocks.
+mde-statute	Redactiestatuut	Editorial statute
+mde-statute-confirmed	bevestigd door [[n]] van [[of]]	confirmed by [[n]] of [[of]]

@@ -294,6 +294,7 @@ export class Editor {
 					<ul class="facts" id="mdeFacts"></ul>
 					<ul class="checks" id="mdeChecks"></ul>
 					<div class="summary" id="mdeSummary" role="status"></div>
+					<div id="mdeStatuteBox" hidden><h2 style="margin-top:14px">${t('statute')}</h2><ol class="statute-list" id="mdeStatute"></ol></div>
 					<div id="mdeTipsBox"><h2 style="margin-top:14px">${t('tips')} <span class="small">(${t('optional')})</span></h2><ul class="checks" id="mdeTips"></ul></div>
 				</div>
 				<details class="card" id="mdeOutlineBox"><summary><i class="fa fa-caret-right" aria-hidden="true"></i><h2>${t('outline')}</h2></summary><nav class="outline" id="mdeOutline" aria-label="${t('outline')}"></nav></details>
@@ -1680,6 +1681,14 @@ export class Editor {
 		// Every button of an item runs its own action (the checklist and the tips both have them).
 		//
 		for (const b of this.root.querySelectorAll('[data-fn]')) b.addEventListener('click', () => fns[+b.dataset.fn]?.());
+		//
+		// The editorial statute as a block of its own while colleagues review: every approval confirms every point
+		// (design step 8, point 5).
+		//
+		const p = this.cfg.page, statute = this.cfg.settings?.statute || [];
+		const reviewing = this.article && ['review', 'approved'].includes(p.status) && statute.length;
+		$('#mdeStatuteBox', this.root).hidden = !reviewing;
+		if (reviewing) $('#mdeStatute', this.root).innerHTML = statute.map(point => `<li class="${p.approves >= p.approvesNeeded ? 'ok' : ''}">${esc(point)} <span class="small">(${esc(this.t('statute-confirmed', { n: p.approves, of: p.approvesNeeded }))})</span></li>`).join('');
 		const f = this.fields;
 		const words = countWords(f.text.replace(/```[\s\S]*?```/g, ''));
 		const languages = this.cfg.languages || [];

@@ -1030,6 +1030,8 @@
 		"mde-check-diagram-drawing" => "A diagram was saved without its drawing; readers see its text. Open the article again and save.",
 		"mde-fact-level" => "freedom level [[n]]",
 		"mde-fact-level-help" => "Level 1: text, layout, images and diagrams. Level 2: also embedded video and maps, and interactive blocks.",
+		"mde-statute" => "Editorial statute",
+		"mde-statute-confirmed" => "confirmed by [[n]] of [[of]]",
 		// End of the Markdown editor
 	);
 

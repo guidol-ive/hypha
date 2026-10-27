@@ -187,6 +187,18 @@ export default async function (t) {
 		assert(!/Niet getoond op de site/.test(await page.textContent('#mdeChecks')), 'message stays after a clean save');
 	});
 
+	t.test('in review the checklist shows the editorial statute with how many confirmed it', async () => {
+		await editor(() => { const e = window.hyphaMdeditor.editor; Object.assign(e.fields, { excerpt: 'Een verzonnen uittreksel.', section: 'Politiek en bestuur', tags: ['Raadsnieuws'], method: 'Verzonnen werkwijze.', sources: '- Verzonnen bron' }); e.fields.text = 'Tekst van het artikel.\n'; e.loadVisual(); e.renderHead(); e.changed(); });
+		assert(await editor(() => window.hyphaMdeditor.editor.save()), 'save');
+		assert(await page.isHidden('#mdeStatuteBox'), 'statute shown in a draft');
+		await command(page, 'nl/' + slug, 'status_change_review');
+		await page.goto(base + 'nl/' + slug + '/edit');
+		await page.waitForFunction(() => window.hyphaMdeditor?.editor?.ready);
+		await page.waitForTimeout(300);
+		assert(await page.isVisible('#mdeStatuteBox'), 'no statute in review');
+		assert(/bevestigd door 0 van 3/.test(await page.textContent('#mdeStatute')), await page.textContent('#mdeStatute'));
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

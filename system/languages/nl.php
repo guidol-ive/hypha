@@ -1025,6 +1025,8 @@
 		"mde-check-diagram-drawing" => "Een diagram is opgeslagen zonder tekening; lezers zien de tekst ervan. Open het artikel opnieuw en sla op.",
 		"mde-fact-level" => "vrijheidsniveau [[n]]",
 		"mde-fact-level-help" => "Niveau 1: tekst, opmaak, beeld en diagrammen. Niveau 2: ook ingesloten video en kaarten en interactieve blokken.",
+		"mde-statute" => "Redactiestatuut",
+		"mde-statute-confirmed" => "bevestigd door [[n]] van [[of]]",
 		// End of the Markdown editor
 	);
 

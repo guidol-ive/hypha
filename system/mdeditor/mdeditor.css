@@ -678,3 +678,6 @@
 .mdeditor .linklist li { padding: 8px 10px; border-radius: 3px; cursor: pointer; }
 .mdeditor .linklist li[aria-selected=true], .mdeditor .linklist li:hover { background: var(--bluegreen-light); box-shadow: inset 3px 0 0 var(--bluegreen); }
 @media (pointer: coarse) { .mdeditor .linklist li { min-height: 44px; display: flex; align-items: center; } }
+.mdeditor .statute-list { margin: 0; padding-left: 1.4em; font-size: 14px; line-height: 1.45; }
+.mdeditor .statute-list li { margin: 0 0 6px; }
+.mdeditor .statute-list li.ok::marker { color: var(--bluegreen); }
