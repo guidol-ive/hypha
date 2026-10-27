@@ -1025,6 +1025,7 @@
 		"mde-link-text" => "Text of the link (empty: the name of the page or the address)",
 		"mde-link-remove" => "Remove link",
 		"mde-link-pages" => "Pages of this site",
+		"mde-retracted-closed" => "This article was withdrawn; reactions are closed.",
 		// End of the Markdown editor
 	);
 

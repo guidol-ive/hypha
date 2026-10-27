@@ -260,6 +260,11 @@ def withdraw_with_reason_leaves_overviews_br73_br86(base):
     assert page_node(SLUG).get("retracted") == "on"
     status, text, _ = Client(base).get(f"nl/{SLUG}")
     assert status == 200 and "Een jaartal klopte niet." in text and "De eerste zetels" not in text
+    _, index, _ = Client(base).get("index/nl")
+    assert SLUG not in index, "a withdrawn article is still in the index"
+    STATE["ahmed"].get(f"nl/{SLUG}")
+    _, text, _ = STATE["ahmed"].follow(STATE["ahmed"].post(f"nl/{SLUG}/discussions/review", "discussion_started"))
+    assert "reageren kan niet meer" in text, "a withdrawn article takes new discussions"
 
 
 @test

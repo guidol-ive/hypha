@@ -42,6 +42,8 @@
 			// get list of available pages and sort alphabetically
 			$pageList = [];
 			foreach(hypha_getPageList() as $page) {
+				// A withdrawn article has left the site (BR-86).
+				if ($page->getAttribute('retracted') === 'on') continue;
 				$lang = hypha_pageGetLanguage($page, $language);
 				if ($lang) if ($this->O_O->isUser() || ($page->getAttribute('private')!='on')) {
 					$pageList[] = $lang->getAttribute('name').($page->getAttribute('private')=='on' ? '&#;' : '');

@@ -1020,6 +1020,7 @@
 		"mde-link-text" => "Tekst van de link (leeg: de naam van de pagina of het adres)",
 		"mde-link-remove" => "Link weghalen",
 		"mde-link-pages" => "Pagina's van deze site",
+		"mde-retracted-closed" => "Dit artikel is teruggetrokken; reageren kan niet meer.",
 		// End of the Markdown editor
 	);
 

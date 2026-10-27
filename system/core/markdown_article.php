@@ -75,6 +75,13 @@
 				notify('error', __('mde-error-only-author-or-admin'));
 				return $this->mdRedirect();
 			}
+			//
+			// A withdrawn article takes no new discussions or reactions (BR-86): it has left the site.
+			//
+			if ($this->getStatus() === self::MD_STATUS_RETRACTED && in_array($request->getView(), [self::PATH_DISCUSSIONS, self::PATH_COMMENT], true)) {
+				notify('error', __('mde-retracted-closed'));
+				return $this->mdRedirect();
+			}
 			switch ([$request->getView(), $request->getCommand()]) {
 				case [null,            null]:                  return $this->mdDefaultView($request);
 				case [self::PATH_EDIT, null]:                  return $this->mdEditView($request);
