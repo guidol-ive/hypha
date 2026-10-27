@@ -182,15 +182,17 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 
 ## Afwijkingen
 
+Bewuste afwijkingen van het ontwerp, met de reden. Het ontwerp is op deze punten bijgewerkt (§22).
+
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.
 2. **Plaatsing `{.klasse}` met een eigen kleine parser**, niet met de Attributes-extensie van league/commonmark (§13.4.2, punt 5). Die extensie kent ook blokattributen op een eigen regel, die markdown-it niet zo kent; met een eigen parser alleen direct achter een afbeelding of op de regel van een codeblok zijn server en browser gelijk.
 3. **Kop-id's beginnen met `kop-`** (`kop-de-eerste-zetels`), omdat Hypha elementen als `main` en `menu` op id zoekt en een tussenkop „Menu” anders botst.
 4. **`system/vendor/` is 2,7 MB** in plaats van de geschatte 1,3 MB (§13.12): vooral league/commonmark zelf (1,4 MB met alle extensies).
 5. **Temml 0.14.0** zoals in het prototype; highlight.php kent HTML als `xml`, dus tien talen met negen definities.
+6. **Ingesloten inhoud krijgt `sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"`**: de spelers van YouTube en Vimeo werken niet zonder hun eigen herkomst. Een `<iframe>` mag alleen naar het pad van de speler van een dienst (§13.5 noemde alleen de host).
 7. **De afbeelding bij het uittreksel staat onder de wortel** (`hypha/featured_image`), niet in `article/context` (§14.1): daar leest en schrijft de bestaande code haar.
 8. **Doorschakelen in `process()`** in plaats van in `editView()` en `editAction()` (§13.13): de nieuwe opdrachten (terugtrekken, goedkeuren met redactiestatuut, taal, webadres) hebben eigen routes, en zo blijft het bij één regel. In totaal raken de wijzigingen 27 regels van `peer_reviewed_article.php`, 2 van `pages.php` en 1 van `index.php` (het ontwerp schatte zes regels en geen wijziging in `index.php`).
-11. **De bron van een tekstpagina staat in `source/language[@id]/version[@at]`**, niet met `xml:id` zoals de inhoud: een `xml:id` moet uniek zijn in het document, en de versie van de bron heeft hetzelfde tijdstip als die van de inhoud. Opslaan gebeurt met een eigen kleine functie in plaats van `storeWikiContent()` (de terugvaloptie van §19).
-12. **Een `.md`-bestand openen in de popup van stap 1** is niet gebouwd; openen en slepen kan in de werkbalk van de editor, direct na het aanmaken.
 9. **Een tekstpagina houdt haar paginanaam als titel** (§9: „de paginanaam zoals Hypha hem toont”); het webadres uit de titel (kleine letters, koppeltekens) geldt alleen voor artikelen. Anders zou het menu „over-ons” tonen in plaats van „Over ons”.
 10. **Goedkeuren met het redactiestatuut gebeurt in de leesweergave**, waar beoordelaars nu ook goedkeuren, in een venster; de editor toont de status en de knop *trek terug*.
-6. **Ingesloten inhoud krijgt `sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"`**: de spelers van YouTube en Vimeo werken niet zonder hun eigen herkomst. Een `<iframe>` mag alleen naar het pad van de speler van een dienst (§13.5 noemde alleen de host).
+11. **De bron van een tekstpagina staat in `source/language[@id]/version[@at]`**, niet met `xml:id` zoals de inhoud: een `xml:id` moet uniek zijn in het document, en de versie van de bron heeft hetzelfde tijdstip als die van de inhoud. Opslaan gebeurt met een eigen kleine functie in plaats van `storeWikiContent()` (de terugvaloptie van §19).
+12. **Een `.md`-bestand openen in de popup van stap 1** is niet gebouwd; openen en slepen kan in de werkbalk van de editor, direct na het aanmaken.

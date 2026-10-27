@@ -1,6 +1,6 @@
 ---
 title: "MARKDOWN EDITOR: een tekst-editor op basis van Markdown naast WYMeditor, functioneel, grafisch en technisch ontwerp"
-revision: 16
+revision: 17
 date_created: 2026-10-26
 date_last_review:
 status: concept
@@ -49,6 +49,7 @@ proeven: 20261026_MARKDOWN_EDITOR/proeven/
 19. [Risico's en open vragen](#19-risicos-en-open-vragen)
 20. [Besluiten](#20-besluiten)
 21. [Volgende stappen](#21-volgende-stappen)
+22. [Uitkomst van de bouw](#22-uitkomst-van-de-bouw)
 
 ---
 
@@ -812,6 +813,7 @@ De basis is **CommonMark** met de uitbreidingen van **GitHub Flavored Markdown**
 | Links naar pagina's | `[[Pagina]]`, `[[Pagina\|tekst]]` | ✓ → Hypha-pagina-id | gangbare uitbreiding (wikilinks) | 1 |
 | Callouts | `> [!info] Titel`, `> [!quote]`, `> [!warning]` | ✓ → kader / citaat | gangbaar; GitHub kent vergelijkbare *alerts* | 1 |
 | Markeren | `==tekst==` | ✓ → `<mark>` | gangbare uitbreiding | 1 |
+| Subscript en doorhalen | `~sub~`, `~~weg~~` | ✓ enkele tilde zonder spatie is subscript (HedgeDoc), dubbele is doorhalen (bouw; GFM kent ook enkele tilde als doorhalen) | gangbaar | 1 |
 | Diagram (Mermaid-notatie) | ` ```mermaid `, met plaatsing ` ```mermaid {.klein-rechts} ` | ✓ (Pele), 36 soorten met voorbeeld | gangbaar (o.a. GitHub, GitLab); de plaatsing wordt elders genegeerd | 1 |
 | Bijschrift | cursieve regel direct onder een afbeelding | ✓ → `<figcaption>` | leesbaar als cursieve tekst | 1 |
 | Plaatsing van beeld | `{.breed}` achter de afbeelding | ✓ | attributen-uitbreiding (league/commonmark *Attributes*); elders zichtbaar als tekst | 1 |
@@ -1164,8 +1166,10 @@ Randvoorwaarde: zo weinig mogelijk wijzigingen aan de bestaande PHP-code. Dat ka
 | `system/datatypes/text.php` | **circa vijf regels**: `use MarkdownPage;` en de doorschakeling in bewerken, opslaan, vertalen en terugzetten |
 | `system/core/tags.php` | **aanbevolen, niet verplicht**: één controle op beheerder in `tagNewCallback()` (BR-98); de nieuwe editor controleert het zelf al |
 | `system/languages/nl.php`, `en.php` | alleen **nieuwe** teksten toevoegen (namen, knoppen, hulp) |
-| `hypha.php` | 2 regels: de nieuwe mappen `system/mdeditor` en `system/vendor` meenemen in het installatiebestand |
-| `.htaccess`, `index.php` | **geen** |
+| `hypha.php` | 3 regels voor de nieuwe mappen, en `index()` daalt eerst af in submappen (bouw: anders werd `system/mdeditor/vendor` als bestand gezien) |
+| `.htaccess` | **geen** |
+| `index.php` | **1 regel** (bouw): `system/mdeditor/` serveren met lange cache |
+| `system/core/pages.php` | **2 regels** (bouw): teruggetrokken artikelen uit de overzichten (BR-86) |
 
 Het **paginatype blijft** `peer_reviewed_article` (en `textpage`); het **signaal** is `format="markdown"` met het bron-element in de XML ([§12.5](#125-opslag-oude-artikelen-blijven-html-signaal-voor-markdown)). Een nieuw type zou de opmaak breken: Hypha zet het type als klasse `type_peer_reviewed_article` op de pagina. Het standaardthema gebruikt die klasse op 11 plekken, en de macro `pagelist` filtert op het type ([§13.13](#1313-paginatype-en-opslag)).
 
@@ -1767,7 +1771,7 @@ Dit hoofdstuk legt vast hoe wat de auteur ziet (de vaste blokken en de tekst) op
 | uittreksel | Frontmatter `uittreksel` | artikelkop | `article/context/excerpt` (XHTML) en `article/source/excerpt` (Markdown) | XHTML + bron | XHTML ja, bron nieuw |
 | rubriek | Frontmatter `rubriek` | artikelkop | `article/context/section` | rubriek uit de lijst van de site | **nieuw** |
 | tags | Frontmatter `tags` | artikelkop | bij de pagina in `hypha.xml` (tag-ID's uit `tagList`) | ID's | ja |
-| afbeelding | Frontmatter `afbeelding` | artikelkop | `article/context/featured_image` | bestandsnaam | ja |
+| afbeelding | Frontmatter `afbeelding` | artikelkop | `featured_image` onder de wortel van het bestand (bouw: daar leest en schrijft de bestaande code haar) | bestandsnaam | ja |
 | beschrijving, bijschrift, fotograaf | Frontmatter | artikelkop | attributen `alt`, `caption`, `credit` op `featured_image` | tekst | **nieuw** |
 | bijsluiter | Frontmatter `bijsluiter` (blok) | blok onderaan | `article/context/method` (XHTML) en `article/source/method` (Markdown) | XHTML + bron | XHTML ja, bron nieuw |
 | bronnen | Frontmatter `bronnen` (blok) | blok onderaan | `article/content/sources` (XHTML) en `article/source/sources` (Markdown) | XHTML + bron | XHTML ja, bron nieuw |
@@ -2292,3 +2296,15 @@ Het maximum is **160 dagen**; de begroting komt uit op **107 dagen**, met een re
 4. OverType: [README](https://cdn.jsdelivr.net/npm/overtype@2.4.0/README.md)
 5. Huisstijl: [test.destadsbron.nl](https://test.destadsbron.nl) (thema-CSS `data/themes/destadsbron/hypha.css` op die site); het voorbeeldartikel is verzonnen
 6. Hypha-broncode: [`system/core/editor.php`](../../../system/core/editor.php), [`system/datatypes/peer_reviewed_article.php`](../../../system/datatypes/peer_reviewed_article.php), [`system/core/database.php`](../../../system/core/database.php), [`system/core/pages.php`](../../../system/core/pages.php), [`system/languages/nl.php`](../../../system/languages/nl.php)
+
+## 22. Uitkomst van de bouw
+
+De bouw (branch `issue520-bouw`, oktober 2026) volgt dit ontwerp. Wat anders is gebouwd, staat met de reden in [`20261026_MARKDOWN_EDITOR/BOUWLOG.md`](20261026_MARKDOWN_EDITOR/BOUWLOG.md#afwijkingen); de tests en hun uitkomsten per taak en het eindverslag ook. De belangrijkste punten:
+
+1. **Doorschakelen** gebeurt aan het begin van `process()` (één regel per klasse), omdat de nieuwe reviewstappen eigen routes hebben; samen raken de wijzigingen 27 regels van `peer_reviewed_article.php` (waaronder exacte zoekpaden, want `//method` en `//title` vinden ook de bron en de `<title>` van een SVG), 3 van `text.php`, 2 van `pages.php` en 1 van `index.php`.
+2. **XHTML via XML**: `storeWikiContent()` en `writeToElement()` lezen inhoud met de HTML-parser van libxml, die `viewBox` kleine letters geeft. De nieuwe code leest de XHTML als XML in, ook voor de versies van tekstpagina's (de terugvaloptie van §19).
+3. **Tekstpagina's** houden hun paginanaam als titel; het webadres uit de titel geldt voor artikelen.
+4. **Goedkeuren met het redactiestatuut** gebeurt in de leesweergave, waar beoordelaars nu al goedkeuren.
+5. **Lighthouse**: een gepubliceerd artikel haalt met het standaardthema 96–100 voor prestaties en goede werkwijzen; toegankelijkheid 94 en SEO 91 liggen aan het thema (contrast) en het ontbreken van een `robots.txt`. Met het advies van §12.9 (`#0B7285`) wordt toegankelijkheid 98, met een `robots.txt` SEO 100. De editor haalt op de computer 96 / 95 / 100, op de telefoon (traag 4G) 69 voor prestaties.
+6. **Container**: met twee Apache-werkers moet keep-alive uit (`docs/container/hypha-vhost.conf`), anders wacht elk bestand seconden.
+
