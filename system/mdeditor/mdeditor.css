@@ -594,3 +594,7 @@
 @media (prefers-reduced-motion: reduce) { .mdeditor * { transition: none !important; } }
 .mdeditor .toolbar { flex-wrap: nowrap; overflow: hidden; }
 @media (pointer: coarse) { .mdeditor .modes button, .mdeditor .editmode button, .mdeditor .gobtn, .mdeditor .dlg-close { min-width: 44px; min-height: 44px; justify-content: center; } }
+.mdeditor .ProseMirror .callout input.callout-title { display: block; width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px dashed transparent; background: transparent; padding: 2px 0; margin: 0 0 4px; font: 700 15px/1.4 var(--sans); color: var(--formheaderback); }
+.mdeditor .ProseMirror .callout input.callout-title:hover, .mdeditor .ProseMirror .callout input.callout-title:focus { border-bottom-color: var(--bluegreen); outline: none; }
+.mdeditor .ProseMirror .callout input.callout-title:focus-visible { outline: 2px solid var(--bluegreen); outline-offset: 2px; }
+.mdeditor .ProseMirror .callout input.callout-title::placeholder { color: var(--formheaderback); opacity: .6; }

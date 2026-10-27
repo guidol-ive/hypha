@@ -338,6 +338,12 @@ mde-tb-math	Formule	Formula
 mde-tb-math-help	Formule invoegen in LaTeX-notatie (bewerk later met een dubbelklik)	Insert a formula in LaTeX notation (edit later with a double-click)
 mde-tb-diagram	Diagram…	Diagram…
 mde-tb-diagram-help	Diagram invoegen… (opent een venster)	Insert diagram… (opens a window)
+mde-tb-image-edit	Beeld bewerken…	Edit image…
+mde-tb-image-edit-help	Beeld bewerken… (opent een venster)	Edit image… (opens a window)
+mde-tb-diagram-edit	Diagram bewerken…	Edit diagram…
+mde-tb-diagram-edit-help	Diagram bewerken… (opent een venster)	Edit diagram… (opens a window)
+mde-summary-tags	[[n]] tags	[[n]] tags
+mde-summary-image	met beeld	with image
 mde-tb-blocks	Alle blokken (typ / aan het begin van een regel)	All blocks (type / at the start of a line)
 mde-tb-download	.md	.md
 mde-tb-download-help	Het artikel downloaden als Markdown-bestand (.md)	Download the article as a Markdown file (.md)

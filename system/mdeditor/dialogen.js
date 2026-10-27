@@ -520,6 +520,30 @@ export class Dialogs {
 
 	visualCursor(view) { this.ed.lastPm = view; }
 
+	//
+	// Beeld and Diagram become Bewerken when the cursor is in an image or a diagram (design step 2b), a moment after
+	// the cursor stops, so moving the cursor stays fast.
+	//
+	updateEditLabels() {
+		clearTimeout(this.labelTimer);
+		this.labelTimer = setTimeout(() => {
+			let changed = false;
+			for (const [act, target] of [['image', this.currentImage()], ['diagram', this.currentDiagram()]]) {
+				const editing = !!(target.node || target.line || target.text !== undefined);
+				for (const b of this.root.querySelectorAll(`.toolbar [data-act="${act}"]`)) {
+					if ((b.dataset.editing === '1') === editing) continue;
+					b.dataset.editing = editing ? '1' : '';
+					const key = 'tb-' + act + (editing ? '-edit' : '');
+					b.title = this.t(key + '-help');
+					const label = b.querySelector('.lbl');
+					if (label) label.textContent = this.t(key);
+					changed = true;
+				}
+			}
+			if (changed) this.ed.fitToolbar();
+		}, 150);
+	}
+
 	showSlash() {
 		if (this.ed.editMode !== 'markdown') return;
 		const cm = this.ed.cm, line = cm.state.doc.lineAt(cm.state.selection.main.head);

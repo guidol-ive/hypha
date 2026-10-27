@@ -67,9 +67,25 @@ export class Editor {
 			diagram: preview ? (text, description) => this.diagramSvg(text, description) : null,
 			math: preview ? (tex, display) => this.mathml(tex, display) : null,
 			highlight: preview ? (code, language) => lazy.hljsLoaded ? lazy.hljsLoaded.highlight(code, { language, ignoreIllegals: true }).value : null : null,
-			interactive: preview ? (code, height, description) => `<figure class="interactief"><iframe sandbox="allow-scripts" title="${esc(description)}" height="${height || 400}" srcdoc="${esc('<!doctype html><meta charset="utf-8">' + code)}"></iframe><figcaption>${esc(description)}</figcaption></figure>` : null,
+			interactive: preview ? (code, height, description) => `<figure class="interactief"><iframe data-mde-own="${this.own}:${this.frames.push(this.srcdoc(code)) - 1}" sandbox="allow-scripts" title="${esc(description)}" loading="lazy" referrerpolicy="no-referrer" height="${Math.min(height || 400, 4000)}"></iframe><figcaption>${esc(description)}</figcaption></figure>` : null,
 			imageSrc: src => /^(https?:|\/|data:)/.test(src) ? src : this.cfg.root + src,
 		};
+	}
+
+	//
+	// The document of an interactive block, with the same Content-Security-Policy as HyphaMarkdown::srcdoc() on the server.
+	//
+	frames = [];
+
+	get own() {
+		if (!this.ownToken) this.ownToken = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2, '0')).join('');
+		return this.ownToken;
+	}
+
+	srcdoc(code) {
+		const hosts = (this.cfg.settings?.scriptHosts || []).map(h => 'https://' + h).join(' ');
+		const csp = `default-src 'none'; script-src 'unsafe-inline' ${hosts}; style-src 'unsafe-inline' ${hosts}; img-src data: https:; font-src ${hosts}; connect-src 'none'; form-action 'none'`;
+		return `<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${esc(csp)}"><style>body{margin:0;font-family:Lato,Helvetica,Arial,sans-serif}</style>` + code;
 	}
 
 	//
@@ -244,7 +260,7 @@ export class Editor {
 					commands.history(), view.drawSelection(), view.highlightActiveLine(), view.EditorView.lineWrapping, keys,
 					markdown.markdown({ base: markdown.markdownLanguage }), language.syntaxHighlighting(dim), frontDeco,
 					view.EditorView.contentAttributes.of({ lang: this.cfg.page.language, spellcheck: 'true', autocorrect: 'on', autocapitalize: 'sentences', 'aria-label': this.t(this.article ? 'region-article' : 'region-page'), 'aria-multiline': 'true', 'aria-describedby': 'mdeTextHelp' }),
-					view.EditorView.updateListener.of(u => { if (u.docChanged) this.onMarkdownChange(); if (u.selectionSet || u.docChanged) { this.dialogs.markdownCursor(u); this.followCaret(); } }),
+					view.EditorView.updateListener.of(u => { if (u.docChanged) this.onMarkdownChange(); if (u.selectionSet || u.docChanged) { this.dialogs.markdownCursor(u); this.dialogs.updateEditLabels(); this.followCaret(); } }),
 					view.EditorView.domEventHandlers({ paste: e => this.pasteIntoMarkdown(e), drop: e => this.dropFile(e) }),
 				],
 			}),
@@ -313,7 +329,7 @@ export class Editor {
 				dispatchTransaction: tr => {
 					v.updateState(v.state.apply(tr));
 					if (tr.docChanged) { this.fields[field] = pmSerialize(v.state.doc, v.parsed); this.changed(); }
-					if (tr.selectionSet || tr.docChanged) { this.dialogs.visualCursor(v); this.followCaret(); }
+					if (tr.selectionSet || tr.docChanged) { this.dialogs.visualCursor(v); this.dialogs.updateEditLabels(); this.followCaret(); }
 				},
 				handlePaste: (pv, event) => this.pasteIntoVisual(pv, event),
 				handleDrop: (pv, event) => this.dropFile(event),
@@ -386,6 +402,7 @@ export class Editor {
 				removable(dom, view, getPos, () => this.dialogs.openImage({ view, pos: getPos(), node: view.state.doc.nodeAt(getPos()) }));
 				return { dom, contentDOM: caption, update: n => { if (n.type !== node.type) return false; img.src = this.markdownOptions(false).imageSrc(n.attrs.src); img.alt = n.attrs.alt; dom.className = 'figure ' + n.attrs.placement; return true; }, ignoreMutation: m => !caption.contains(m.target) };
 			},
+			callout: (node, view, getPos) => this.calloutView(node, view, getPos),
 			math_block: (node, view, getPos) => this.mathView(node, true, view, getPos),
 			math_inline: (node, view, getPos) => this.mathView(node, false, view, getPos),
 			html_block: node => this.rawView(node, 'raw-html'),
@@ -405,6 +422,45 @@ export class Editor {
 				return { dom: a };
 			},
 			image: node => { const i = document.createElement('img'); i.src = this.markdownOptions(false).imageSrc(node.attrs.src); i.alt = node.attrs.alt; return { dom: i }; },
+		};
+	}
+
+	//
+	// A kader in the visual view: its title is a field above the text (a citaat has no title).
+	//
+	calloutView(node, view, getPos) {
+		const type = node.attrs.type;
+		const dom = document.createElement(type === 'quote' ? 'blockquote' : 'aside');
+		dom.className = 'callout ' + type;
+		const body = document.createElement('div');
+		body.className = 'callout-body';
+		let input = null;
+		if (type !== 'quote') {
+			input = document.createElement('input');
+			input.type = 'text';
+			input.className = 'callout-title';
+			input.value = node.attrs.title;
+			const name = this.t('callout-' + type);
+			input.placeholder = name === 'callout-' + type ? type : name;
+			input.setAttribute('aria-label', this.t('callout-title-prompt'));
+			input.addEventListener('input', () => {
+				const pos = getPos();
+				view.dispatch(view.state.tr.setNodeMarkup(pos, null, Object.assign({}, view.state.doc.nodeAt(pos).attrs, { title: input.value })));
+			});
+			input.addEventListener('keydown', e => {
+				if (e.key !== 'Enter' && e.key !== 'ArrowDown') return;
+				e.preventDefault();
+				view.dispatch(view.state.tr.setSelection(PM.state.Selection.near(view.state.doc.resolve(getPos() + 1))));
+				view.focus();
+			});
+			dom.append(input);
+		}
+		dom.append(body);
+		return {
+			dom, contentDOM: body,
+			update: n => { if (n.type !== node.type || n.attrs.type !== type) return false; if (input && input.value !== n.attrs.title && document.activeElement !== input) input.value = n.attrs.title; return true; },
+			stopEvent: e => e.target === input,
+			ignoreMutation: m => m.target === input,
 		};
 	}
 
@@ -622,10 +678,25 @@ export class Editor {
 
 	refresh() {
 		if (this.editMode === 'visual') this.renderHead();
+		this.renderSummaries();
 		this.renderChecks();
 		this.renderOutline();
 		this.renderSteps();
 		if (this.viewMode !== 'write') this.renderPreview();
+	}
+
+	//
+	// A folded block shows a summary of what is in it (design step 2).
+	//
+	renderSummaries() {
+		const f = this.fields;
+		const plain = md => md.replace(/%%[\s\S]*?%%/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\[\^[^\]]*\]/g, '')
+			.replace(/^[ \t]*(#{1,6}|>|[-*+]|\d+[.)])[ \t]+/gm, '').replace(/[*_~=^`]+/g, '').replace(/\s+/g, ' ').trim();
+		const set = (id, text) => { const el = $('#' + id, this.root); if (el) el.textContent = text ? '– ' + text : ''; };
+		if (!this.article) return;
+		set('mdeSumHead', [f.section, f.title, f.tags.length ? this.t('summary-tags', { n: f.tags.length }) : '', f.image ? this.t('summary-image') : ''].filter(Boolean).join(' · '));
+		set('mdeSumMethod', plain(f.method).slice(0, 120));
+		set('mdeSumSources', plain(f.sources).slice(0, 120));
 	}
 
 	draftKey() { return 'mde:' + this.cfg.page.language + '/' + this.cfg.page.name + (this.cfg.translate ? '/translate' : ''); }
@@ -684,12 +755,23 @@ export class Editor {
 	}
 
 	sanitize(html) {
-		const hosts = this.markdownOptions(false).frameHosts;
+		//
+		// The hosts an iframe may point to, as HyphaFilter gets them: none at level 1.
+		//
+		const o = this.markdownOptions(false);
+		const hosts = o.level >= 2 ? [...o.frameHosts, ...o.peertubeHosts].map(h => h.toLowerCase()) : [];
 		const clean = DOMPurify.sanitize(html, { ADD_TAGS: ['iframe'], ADD_ATTR: ['srcdoc', 'sandbox', 'allow', 'allowfullscreen', 'target', 'data-page'], FORBID_TAGS: ['style', 'form'], RETURN_DOM_FRAGMENT: false });
 		const t = document.createElement('template');
 		t.innerHTML = clean;
 		for (const f of t.content.querySelectorAll('iframe')) {
-			if (f.hasAttribute('srcdoc')) { f.setAttribute('sandbox', 'allow-scripts'); continue; }
+			//
+			// Only the interactive blocks of the editor get a srcdoc; one written by the author disappears, as in
+			// HyphaFilter.
+			// The document is added after DOMPurify, which drops an attribute with </style in it.
+			//
+			const own = (f.getAttribute('data-mde-own') || '').split(':');
+			f.removeAttribute('srcdoc');
+			if (own[0] === this.own && this.frames[+own[1]] !== undefined) { f.removeAttribute('data-mde-own'); f.setAttribute('srcdoc', this.frames[+own[1]]); f.setAttribute('sandbox', 'allow-scripts'); continue; }
 			let host = '';
 			try { host = new URL(f.getAttribute('src')).host; } catch (e) { /* no address */ }
 			if (!hosts.includes(host)) f.remove();
@@ -698,7 +780,15 @@ export class Editor {
 		//
 		// An author must not take over the ids of the editor (mde...): those elements would be found first.
 		//
+		this.frames = [];
 		for (const el of t.content.querySelectorAll('[id^="mde"], [id^="MDE"]')) el.removeAttribute('id');
+		//
+		// A diagram is one image for a screen reader, named after its description, as HyphaMarkdown does it.
+		//
+		for (const svg of t.content.querySelectorAll('figure.diagram > svg')) {
+			svg.setAttribute('role', 'img');
+			svg.setAttribute('aria-label', svg.parentNode.querySelector('figcaption')?.textContent.trim() || this.t('html-diagram'));
+		}
 		for (const a of t.content.querySelectorAll('a[href^="http"]')) { a.classList.add('ext'); a.title = this.t('external-link', { url: a.getAttribute('href') }); a.rel = 'noopener nofollow'; a.target = '_blank'; }
 		return t.innerHTML;
 	}
@@ -905,12 +995,14 @@ export class Editor {
 		}
 		const block = n.callout.create({ type, title }, n.paragraph.create(null, schema.text(this.t(type === 'quote' ? 'quote-sample' : 'callout-sample'))));
 		const end = $from.after(1);
-		v.dispatch(v.state.tr.insert(end, block).setSelection(PM.state.TextSelection.create(v.state.tr.insert(end, block).doc, end + 2)).scrollIntoView());
-		if (type !== 'quote') {
-			const answer = prompt(this.t('callout-title-prompt'), title);
-			if (answer !== null) v.dispatch(v.state.tr.setNodeMarkup(end, null, { type, title: answer.trim() }));
-		}
-		v.focus();
+		const tr = v.state.tr.insert(end, block);
+		v.dispatch(tr.setSelection(PM.state.TextSelection.create(tr.doc, end + 2)).scrollIntoView());
+		//
+		// The title of a kader is selected, so typing replaces it.
+		//
+		const input = type !== 'quote' ? v.nodeDOM(end)?.querySelector('input.callout-title') : null;
+		if (input) { input.focus(); input.select(); }
+		else v.focus();
 	}
 
 	markdownAction(act) {
@@ -1002,7 +1094,20 @@ export class Editor {
 		return result.md;
 	}
 
+	pastedLink(event, selected) {
+		const text = (event.clipboardData?.getData('text/plain') || '').trim();
+		return selected && !this.plainPaste && /^https?:\/\/\S+$/.test(text) ? text : null;
+	}
+
 	pasteIntoMarkdown(event) {
+		const range = this.cm.state.selection.main;
+		const url = this.pastedLink(event, !range.empty);
+		if (url) {
+			event.preventDefault();
+			const insert = `[${this.cm.state.sliceDoc(range.from, range.to)}](${url})`;
+			this.cm.dispatch({ changes: { from: range.from, to: range.to, insert }, selection: { anchor: range.from + insert.length }, userEvent: 'input.paste' });
+			return true;
+		}
 		const md = this.pastedMarkdown(event);
 		if (md === null) return false;
 		event.preventDefault();
@@ -1014,6 +1119,13 @@ export class Editor {
 	}
 
 	pasteIntoVisual(view, event) {
+		const { from, to, empty } = view.state.selection;
+		const url = this.pastedLink(event, !empty);
+		if (url) {
+			event.preventDefault();
+			view.dispatch(view.state.tr.addMark(from, to, schema.marks.link.create({ href: url })).setMeta('paste', true));
+			return true;
+		}
 		const md = this.pastedMarkdown(event);
 		if (md === null) return false;
 		event.preventDefault();
