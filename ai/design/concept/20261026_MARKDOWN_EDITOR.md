@@ -1,17 +1,17 @@
 ---
 title: "MARKDOWN EDITOR: een tekst-editor op basis van Markdown naast WYMeditor, functioneel en grafisch ontwerp"
-revision: 11
+revision: 12
 date_created: 2026-10-26
 date_last_review:
 status: concept
 issue: https://github.com/PlanBCode/hypha/issues/520   # Replace WYMeditor and improve the authoring experience
-estimate: "85 mandagen (74 werk + 11 reserve), AI-ondersteund, inclusief codemarkering, wiskunde en de handleiding; maximum 160"
+estimate: "93 mandagen (81 werk + 12 reserve), AI-ondersteund, inclusief codemarkering, wiskunde, handleiding, gouden dataset en tests; maximum 160"
 language: nl            # Nederlandstalig op verzoek: de doelgroep en het voorbeeld zijn Nederlands
 fase: 1 van 3 (ontwerp → technisch ontwerp → technisch prototype en test)
 php_minimum: "8.2"
 ai_model_advies: claude-opus-5-5   # Claude Opus 5.5 voor ontwerp, bouw en review; Claude Sonnet 5.5 kan routinewerk (teksten, tests) overnemen
-ai_tokens_bouw: "ca. 94 miljoen"  # schatting: ± 1,1 miljoen tokens per mandag, grotendeels hergebruikte context (cache); ± 7 miljoen output
-mandagen: 85                      # 74 werk + 11 reserve (zie §17), inclusief codemarkering, wiskunde en handleiding; maximum 160
+ai_tokens_bouw: "ca. 102 miljoen"  # schatting: ± 1,1 miljoen tokens per mandag, grotendeels hergebruikte context (cache); ± 8 miljoen output
+mandagen: 93                      # 81 werk + 12 reserve (zie §17), inclusief handleiding, gouden dataset en tests; maximum 160
 markdown_versie: "Hypha-Markdown 1.0 = CommonMark 0.31.2 + GFM 0.29-gfm + uitbreidingen (zie §10)"
 prototype: 20261026_MARKDOWN_EDITOR/prototype/index.html
 ---
@@ -88,9 +88,11 @@ Zie [§3.4](#34-randvoorwaarden-waar-een-oplossing-aan-moet-voldoen).
 4. Codemarkering en wiskundige formules horen bij de eerste oplevering.
 5. De server zet de Markdown om naar dezelfde XHTML als nu (league/commonmark); oude artikelen blijven HTML.
 6. Erbij komt een **Nederlandse handleiding van Hypha** in Markdown, te openen en te publiceren met Obsidian ([§16](#16-handleiding-van-hypha)).
-7. **Versies** van een artikel vallen buiten de scope (besluit, issue #241).
+7. Getest wordt met een **gouden dataset van 10.000 verzonnen artikelen**, met **unit tests** en **integratietests** ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)).
+8. **Docker** blijft een ondersteunde manier om Hypha te draaien, ook met de nieuwe editor, en staat beschreven in de handleiding ([§12.14](#1214-docker-blijft-mogelijk)).
+9. **Versies** van een artikel vallen buiten de scope (besluit, issue #241).
 
-De begroting is **85 dagen** (74 werk en 11 reserve), AI-ondersteund, binnen een maximum van 160 ([§17](#17-scope-en-begroting)). De besluiten staan in [§19](#19-besluiten).
+De begroting is **93 dagen** (81 werk en 12 reserve), AI-ondersteund, binnen een maximum van 160 ([§17](#17-scope-en-begroting)). De besluiten staan in [§19](#19-besluiten).
 
 ## 2. Huidige situatie
 
@@ -275,12 +277,14 @@ Zie de schermafbeelding in [§2.1](#21-zo-ziet-artikel-bewerken-er-nu-uit). De p
 | AI-vriendelijke HTML | De HTML van een artikel is zo opgebouwd dat ook taalmodellen en andere software hem goed begrijpen: semantische elementen, één heldere kopstructuur, gestructureerde gegevens (schema.org) en geen inhoud die alleen via JavaScript bestaat. Zie [§12.10](#1210-ai-vriendelijke-html). |
 | SEO blijft hetzelfde | Lezers en zoekmachines krijgen dezelfde server-gerenderde HTML als nu: dezelfde URL's, paginatitels, koppen, tekst, afbeeldingen met alt-tekst en links. De Markdown-bron is alleen voor de editor; voor een zoekmachine is er geen verschil tussen een HTML- en een Markdown-artikel. |
 | Flexibiliteit voor gevorderd gebruik (doel) | De Markdown mag geen dichte doos zijn. Wat de editor niet kent, blijft ongewijzigd in de bron staan. Eigen HTML, ingesloten inhoud (video, kaart, grafiek), Hypha-macro's en, voor een vertrouwde rol, eigen JavaScript zijn mogelijk, in oplopende niveaus van vrijheid en met een veilige standaard. Notities uit **HedgeDoc** zijn grotendeels over te nemen. Als modules erbij: codemarkering voor meerdere talen en wiskundige formules in LaTeX-notatie. Zie [§10.1](#101-flexibiliteit-eigen-html-javascript-en-uitbreidingen) en [§10.2](#102-hedgedoc-compatibiliteit). |
+| Docker-deployment blijft mogelijk | Hypha draait ook met de nieuwe editor in een container met **Docker** of Podman, op PHP 8.2 tot en met 8.5, met de bestanden in `docs/container/`. De nieuwe bestanden komen vanzelf mee in het image. De werkwijze staat in de handleiding ([§12.14](#1214-docker-blijft-mogelijk)). |
+| Toetsbaar | Elke wijziging is te toetsen met **unit tests** en **integratietests** op een **gouden dataset** van 10.000 verzonnen artikelen, zonder persoonsgegevens ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)). |
 | Bestaande artikelen ongemoeid | Oude artikelen blijven HTML en blijven met de opmaakeditor bewerkbaar. Geen conversie, geen migratie van de XML. |
 | Geen wijziging in architectuur of complexiteit | Het `<editor>`-element, `loadEditor()`, de formulieren, de XML-opslag met versies, `wikify_html()` en de reviewstroom blijven zoals ze zijn. De Markdown-editor is een tweede *weergave* van hetzelfde formulierveld. Geen database, geen Node.js op de server en geen build-stap bij installatie. |
 | iPhone, iPad en Chromium | Ontwerp eerst voor touch (knoppen ≥ 44 pt) en daarna voor toetsenbord. De editor gebruikt het native tekstinvoermodel, zodat iOS-autocorrectie, dicteren en spellingcontrole blijven werken. Test op Safari iOS/iPadOS en Chrome/Edge. |
 | Alleen open source met een permissieve licentie (vergelijkbaar met Apache 2.0 of de PHP-licentie) | Toegestaan: MIT, BSD-2/3, Apache-2.0 en ISC. **Uitgesloten**: GPL/LGPL/AGPL en commerciële licenties, en daarmee o.a. TinyMCE 7 (GPLv2+ of commercieel) en CKEditor 5 (GPL of commercieel). |
 | Bij voorkeur geschikt voor Nederlandstaligen | Alle labels, hulpteksten en foutmeldingen in het Nederlands (taalniveau B1), via de bestaande taalbestanden `system/languages/nl.php` en `en.php`. Nederlandse spellingcontrole via de browser (`lang="nl"`, `spellcheck="true"`). Nederlandse aanhalingstekens („…”) mogelijk. |
-| Doorlooptijd (AI-ondersteund) | Oorspronkelijk maximaal 50 dagen; op verzoek verruimd tot 80 en daarna tot **maximaal 160**. Begroting in [§17](#17-scope-en-begroting): 74 dagen werk plus 11 dagen reserve = 85 dagen, inclusief codemarkering, wiskunde en de handleiding. |
+| Doorlooptijd (AI-ondersteund) | Oorspronkelijk maximaal 50 dagen; op verzoek verruimd tot 80 en daarna tot **maximaal 160**. Begroting in [§17](#17-scope-en-begroting): 81 dagen werk plus 12 dagen reserve = 93 dagen, inclusief codemarkering, wiskunde, handleiding, gouden dataset en tests. |
 
 ## 4. Bekeken mogelijkheden
 
@@ -332,7 +336,7 @@ Uit te werken in het technisch ontwerp:
 4. Diagrammen in Mermaid-notatie tekent **Pele** (MIT): 230 kB in plaats van 1,6 MB voor mermaid.js, en 0,1–0,7 ms per diagram.
 5. Integratie in Hypha met **PHP 8.2 als minimum**, toegankelijk volgens **WCAG 2.1 AA** en getoetst aan de **Apple Human Interface Guidelines** voor iPhone en iPad.
 
-Geschatte doorlooptijd: **74 mensdagen plus 11 dagen reserve = 85 dagen**, AI-ondersteund, inclusief de modules **codemarkering** en **wiskunde** en de **handleiding van Hypha** in het Nederlands (zie [§17](#17-scope-en-begroting)). Het maximum is 160 dagen. **Versies** van een artikel vallen buiten de scope (issue #241).
+Geschatte doorlooptijd: **81 mensdagen plus 12 dagen reserve = 93 dagen**, AI-ondersteund, inclusief de modules **codemarkering** en **wiskunde**, de **handleiding van Hypha** in het Nederlands, de **gouden dataset** en de **tests** (zie [§17](#17-scope-en-begroting)). Het maximum is 160 dagen. **Versies** van een artikel vallen buiten de scope (issue #241).
 
 ## 6. Ontwerpprincipes
 
@@ -1136,6 +1140,42 @@ Getoetst aan de Apple Human Interface Guidelines (HIG) voor iPhone en iPad, op h
 | **Donkere modus** | de editor en het thema zijn licht | **aandachtspunt**: thema De Stadsbron heeft geen donkere variant; voor de editor zelf in de bouw `prefers-color-scheme: dark` overwegen |
 | Beweging beperken | geen animaties behalve een korte schakelaar-overgang | ✓ |
 
+### 12.13 Testen: gouden dataset, unit tests en integratietests
+
+**Gouden dataset.** Een vaste verzameling van **10.000 verzonnen artikelen**, met per artikel de verwachte uitkomst. „Gouden” betekent: de uitkomst is één keer nagekeken en vastgelegd, en elke latere versie van Hypha moet precies die uitkomst weer geven.
+
+1. **Verzonnen, zonder persoonsgegevens**: namen, plaatsen, partijen en teksten zijn gegenereerd, zoals het voorbeeldartikel over Eemstad ([`CLAUDE.md`](../../../CLAUDE.md)). Er komt geen inhoud van een echte site in.
+2. **Reproduceerbaar**: een generator met een vaste *seed* maakt de dataset opnieuw. In git staan de generator, de profielen en een manifest met per artikel de SHA-256 van de verwachte XHTML; de dataset zelf (geschat 150 MB) wordt gegenereerd en niet ingecheckt.
+3. **Samenstelling**:
+   1. circa 7.000 **Markdown-artikelen** met alle onderdelen van Hypha-Markdown 1.0 ([§10](#10-ondersteunde-markdown-syntaxis)): front matter, tussenkoppen, beeld met bijschrift en plaatsing, citaten, kaders, voetnoten, tabellen, de 25 diagramsoorten, formules, code in tien talen, HedgeDoc-notatie en HTML van de vier vrijheidsniveaus;
+   2. circa 3.000 **oude HTML-artikelen** zoals WYMeditor ze maakt, met de bekende eigenaardigheden (zoals `&#13;` en lege alinea's), voor de regressie;
+   3. alle **statussen** (schets tot en met teruggetrokken), met discussies, breekpunten en goedkeuringen;
+   4. **randgevallen**: een heel lang artikel (20.000 woorden), lege velden, kapotte front matter, een diagram of formule die niet klopt, Unicode en emoji, `-->` in diagramtekst, een onbekende tag.
+4. **Gebruik**: de dataset is ook een `data/`-map, zodat Hypha er in een container op draait ([§12.14](#1214-docker-blijft-mogelijk)).
+
+**Unit tests** toetsen één onderdeel los:
+
+1. **PHP**, in de stijl van de bestaande `tests/HyphaRequestTest.php` (een eigen runner, zonder Composer en PHPUnit): Markdown naar XHTML met de Hypha-uitbreidingen, het HTML-filter per vrijheidsniveau, het lezen en schrijven van de front matter, het signaal `format="markdown"` en de bedrijfsregels uit [§14](#14-bedrijfsregels-als-constraints), elk met een geval dat slaagt en een dat faalt.
+2. **JavaScript**, als testpagina in gewoon JavaScript die in een browser draait (headless Chromium op de ontwikkelmachine; geen Node.js op de server): heen en terug tussen Opmaak en Markdown zonder verschil, de cursorpositie bij wisselen, de checklist, tabellen, en formules en diagrammen die wel en niet kloppen.
+3. Elke gouden casus is ook een unit test: Markdown erin, de vastgelegde XHTML eruit.
+
+**Integratietests** toetsen Hypha als geheel, in een container op PHP 8.2 tot en met 8.5:
+
+1. de gouden dataset als `data/` laden en elke pagina opvragen, anoniem en als lid, in de stijl van `docs/container/smoke_test.py`: statuscode, verwachte HTML en geen nieuwe PHP-meldingen in het logboek;
+2. de schrijf- en reviewstroom van begin tot eind via HTTP: artikel maken, opslaan, beoordeling starten, opmerking met breekpunt, drie goedkeuringen, publiceren, terugtrekken; met de regels dat de auteur niet goedkeurt (BR-94) en alleen een beheerder een tag maakt (BR-98);
+3. de editor in een browser (headless Chromium): artikel schrijven in beide weergaven, beeld uploaden, opslaan en het resultaat vergelijken met de gouden uitkomst;
+4. regressie: oude HTML-artikelen openen, bewerken en opslaan zonder wijziging in hun XML-structuur;
+5. tijd en geheugen: de 10.000 artikelen opslaan en tonen binnen een vast te stellen grens, ook met de begrenzing van twee Apache-werkers in 256 MB.
+
+De tests draaien met één opdracht per PHP-versie, lokaal en in een CI-omgeving, en staan beschreven in `docs/technical/TESTING.md`.
+
+### 12.14 Docker blijft mogelijk
+
+1. Het image in `docs/container/Containerfile` (officieel `php:<versie>-apache`, Docker en Podman) blijft de manier om Hypha in een container te draaien. De nieuwe editor bestaat uit gewone bestanden in `system/`, dus ze komen vanzelf mee; er is geen build-stap en geen Node.js in het image.
+2. Het image wordt bij elke oplevering getest op PHP 8.2 tot en met 8.5, met de integratietests van [§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests).
+3. `compose.yaml` blijft werken met `docker compose` en `podman compose`.
+4. De handleiding beschrijft het in het Nederlands, op de pagina [*Installatie, ook met Docker*](../../../docs/handleiding/techniek/02-installatie.md): bouwen, een nieuwe site, een bestaande site, logboek, NGINX ervoor en bijwerken.
+
 ## 13. Projectie op de XML-opslag
 
 Dit hoofdstuk legt vast hoe wat de auteur ziet (de vaste blokken en de tekst) op de XML van Hypha terechtkomt, waar de Markdown en de HTML landen, en hoe het type van een artikel in de XML staat. Uitgangspunt: de **bestaande structuur blijft**; er komt alleen bij wat de Markdown-bron nodig heeft. Alles wat artikelen leest (de leespagina, overzichten, zoeken, de checklist, e-mails) blijft op de XHTML werken.
@@ -1459,12 +1499,14 @@ date_last_review:
 | 10 | `gebruik/09-vragen.md` | veelgestelde vragen en foutmeldingen in gewone taal | – |
 | | **Technische handleiding (hoofdlijnen)** | | |
 | 11 | `techniek/01-architectuur.md` | van verzoek tot pagina: `index.php`, de kern, datatypes, macro's, thema | `flowchart`: een verzoek door Hypha |
-| 12 | `techniek/02-installatie.md` | eisen (PHP 8.2 tot en met 8.5), installeren met git, met `hypha.php` of in een container | `flowchart`: drie manieren van installeren |
+| 12 | `techniek/02-installatie.md` | eisen (PHP 8.2 tot en met 8.5), installeren in een **container met Docker** of Podman (bouwen, nieuwe site, bestaande site, Compose, logboek, NGINX, bijwerken), met git of met `hypha.php`; de rooktest | `flowchart`: drie manieren van installeren; `flowchart`: wat in de container zit |
 | 13 | `techniek/03-opslag.md` | `hypha.xml`, de map `data/`, een artikel in XML, de Markdown-bron | `erDiagram`: site, pagina, artikel, gebruiker |
 | 14 | `techniek/04-datatypes-en-macros.md` | tekstpagina, artikel met review, mailinglijst, festival; macro's | `classDiagram`: de datatypes |
 | 15 | `techniek/05-themas.md` | thema's, CSS-variabelen, de kleuren van diagrammen | – |
 | 16 | `techniek/06-beheer.md` | back-up, logboeken, e-mail, updates | `timeline`: een update stap voor stap |
 | 17 | `techniek/07-beveiliging.md` | rollen, vrijheidsniveaus van de editor, HTML-filter, aanbevelingen | `flowchart`: wat er met ingevoerde HTML gebeurt |
+
+**Klaar** (revisie 1, 2026-10-27): [`index.md`](../../../docs/handleiding/index.md), [`gebruik/04-artikel-schrijven.md`](../../../docs/handleiding/gebruik/04-artikel-schrijven.md), [`gebruik/05-beoordelen-en-publiceren.md`](../../../docs/handleiding/gebruik/05-beoordelen-en-publiceren.md), [`techniek/01-architectuur.md`](../../../docs/handleiding/techniek/01-architectuur.md) en [`techniek/02-installatie.md`](../../../docs/handleiding/techniek/02-installatie.md), samen met elf Mermaid-diagrammen. De andere pagina's volgen.
 
 ### 16.5 Voorbeeld van een pagina
 
@@ -1507,7 +1549,9 @@ stateDiagram-v2
 2. Markdown naar XHTML op de server, het nieuwe datatype naast het bestaande, het signaal in de opslag ([§12](#12-technische-keuzes-php-82), [§13](#13-projectie-op-de-xml-opslag)).
 3. De modules **codemarkering** en **wiskunde** ([§10.1](#101-flexibiliteit-eigen-html-javascript-en-uitbreidingen)).
 4. De **handleiding van Hypha** in het Nederlands, als Markdown voor Obsidian ([§16](#16-handleiding-van-hypha)).
-5. Toegankelijkheid (WCAG 2.1 AA), Apple-stijlgids, Nederlandse teksten, tests en packaging.
+5. Een **gouden dataset** van 10.000 verzonnen artikelen, met **unit tests** en **integratietests** ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)).
+6. **Docker-deployment** blijft mogelijk en staat in de handleiding ([§12.14](#1214-docker-blijft-mogelijk)).
+7. Toegankelijkheid (WCAG 2.1 AA), Apple-stijlgids, Nederlandse teksten en packaging.
 
 **Buiten de scope**
 
@@ -1546,11 +1590,14 @@ In mensdagen, uitgaande van een ontwikkelaar met AI-ondersteuning.
 | 14 | Module codemarkering: highlight.php op de server, highlight.js in de editor, kleuren in het thema met voldoende contrast, regelnummers | 2 |
 | 15 | Module wiskunde: Temml in de editor en het voorbeeld, formule als blokje in Opmaak met bewerken, MathML door de allowlist van de server, foutmelding en tip, testset | 3 |
 | 16 | Handleiding van Hypha in het Nederlands als Markdown voor Obsidian: gebruikshandleiding en technische handleiding op hoofdlijnen, met front matter, Mermaid-diagrammen en schermafdrukken ([§16](#16-handleiding-van-hypha)) | 4 |
-| | **Subtotaal** | **74** |
-| | Reserve (circa 15 %) | 11 |
-| | **Totaal** | **85** |
+| 17 | Gouden dataset: generator met vaste seed, profielen voor 10.000 verzonnen artikelen (Markdown en oud HTML, alle statussen, randgevallen), manifest met de verwachte uitkomst, eenmalig nakijken ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)) | 2 |
+| 18 | Testcases: unit tests in PHP en JavaScript, integratietests in de container op PHP 8.2 tot en met 8.5 (pagina's, reviewstroom, editor in de browser, regressie, tijd en geheugen), één opdracht per versie | 4 |
+| 19 | Docker: image en Compose met de nieuwe editor, test op vier PHP-versies; handleidingpagina *Installatie, ook met Docker* ([§12.14](#1214-docker-blijft-mogelijk)) | 1 |
+| | **Subtotaal** | **81** |
+| | Reserve (circa 15 %) | 12 |
+| | **Totaal** | **93** |
 
-Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begroting komt uit op **85 dagen**. Daarin zitten nu ook codemarkering (+2) en wiskunde (+3), eerst *could haves*, en de handleiding van Hypha (+4). Versies van een artikel vallen buiten de scope (besluit, #241). Eerder kwamen erbij: bijsluiter en bronnen als vaste velden en het terugtrekken van een gepubliceerd artikel (+2), beoordelen met redactiestatuut, terugtrekken en taal (+3), flexibiliteit, HedgeDoc-notatie en het interactieve blok (+5), de vaste front matter en artikelkop (+3), de afbeeldingsknop (+1), de cursorpositie en tooltips (+1), tabellen (+2) en meer diagramsoorten (+1). De reserve is circa 15 %. Tot 160 dagen blijft ruim 75 dagen over, bijvoorbeeld voor een tweede gebruikerstest, de Markdown-editor ook voor tekstpagina's of later versies van een artikel.
+Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begroting komt uit op **93 dagen**. Daarin zitten nu ook codemarkering (+2) en wiskunde (+3), eerst *could haves*, de handleiding van Hypha (+4), de gouden dataset (+2), de testcases (+4) en Docker (+1). Versies van een artikel vallen buiten de scope (besluit, #241). Eerder kwamen erbij: bijsluiter en bronnen als vaste velden en het terugtrekken van een gepubliceerd artikel (+2), beoordelen met redactiestatuut, terugtrekken en taal (+3), flexibiliteit, HedgeDoc-notatie en het interactieve blok (+5), de vaste front matter en artikelkop (+3), de afbeeldingsknop (+1), de cursorpositie en tooltips (+1), tabellen (+2) en meer diagramsoorten (+1). De reserve is circa 15 %. Tot 160 dagen blijft ruim 65 dagen over, bijvoorbeeld voor een tweede gebruikerstest, de Markdown-editor ook voor tekstpagina's of later versies van een artikel.
 
 ## 18. Risico's en open vragen
 
@@ -1570,6 +1617,9 @@ Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begrotin
 | Front matter wordt met de hand kapotgemaakt (bijv. `---` weggehaald) | middel | laag | de checklist meldt de regel en de laatste goede waarden blijven staan; wisselen naar Opmaak zet de vier regels weer goed |
 | Overschrijding van de begroting | laag | middel | reserve van 11 dagen; daarboven ruimte tot 160 dagen |
 | Formules of codekleuren zien er in de editor anders uit dan in het gepubliceerde artikel | middel | laag | MathML gaat bij opslaan mee (geen tweede omzetting op de server); highlight.php en highlight.js gebruiken dezelfde taaldefinities; testset met beide |
+| De gouden dataset lijkt niet op echte artikelen | middel | middel | profielen afleiden uit de **opbouw** van echte artikelen (lengte, aantal koppen, foto's, kaders, tabellen), nooit uit hun inhoud; randgevallen apart toevoegen |
+| Gouden uitkomsten worden klakkeloos bijgewerkt als een test faalt | middel | hoog | een gewijzigde uitkomst vraagt een verklaring in de commit en een tweede paar ogen |
+| De tests met 10.000 artikelen duren te lang voor elke wijziging | middel | laag | een snelle selectie van 500 artikelen bij elke wijziging, de volledige set per oplevering en per PHP-versie |
 | Handleiding veroudert zodra de editor verandert | middel | laag | elke pagina heeft `date_last_review`; een functionele wijziging krijgt een regel in `ai/DOCUMENTATION_LOG.md` en een bijgewerkte pagina |
 | Eigen JavaScript van een auteur draait in de sessie van een beoordelaar of beheerder (*stored XSS*) | middel | hoog | niveau 4 alleen voor een vertrouwde rol en per artikel goedgekeurd; voorbeeld in `<iframe sandbox>`; standaard niveau 1 |
 | JavaScript in een interactief blok misbruikt de lezer (bijv. een nepformulier of zware berekening) | laag | middel | afgeschermd iframe zonder formulieren en pop-ups; beoordeling door collega's zoals nu; beheerder kan niveau 2 per rol uitzetten |
@@ -1605,6 +1655,9 @@ Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begrotin
 | 8 | 2026-10-27 | **Versies van Markdown-artikelen vallen buiten de scope** (issue #241); het nieuwe datatype houdt `Xml::versionsOff`, zoals het bestaande | BR-74; [§17.1](#171-binnen-en-buiten-de-scope) |
 | 9 | 2026-10-27 | Een **handleiding van Hypha in het Nederlands**, als Markdown voor Obsidian, hoort bij de scope | [§16](#16-handleiding-van-hypha) |
 | 10 | 2026-10-27 | Diagrammen gebruiken een **rustig deelpalet** van de huisstijl in plaats van felle contrasten | [§2.5](#25-huisstijl-van-de-stadsbron) |
+| 11 | 2026-10-27 | Er komt een **gouden dataset van 10.000 verzonnen artikelen** voor de testcases | [§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests) |
+| 12 | 2026-10-27 | Er komen testcases met **unit tests** én **integratietests** | [§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests) |
+| 13 | 2026-10-27 | **Docker-deployment blijft mogelijk** en staat beschreven in de handleiding | [§12.14](#1214-docker-blijft-mogelijk) |
 
 ## 20. Volgende stappen
 
@@ -1616,7 +1669,9 @@ Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begrotin
    2. een gebruikerstest met twee à drie auteurs uit de doelgroep (taken: artikel starten, foto met bijschrift, kader, tijdlijn, beoordeling starten);
    3. import en export van `.md`-bestanden met een ander Markdown-programma;
    4. regressie: oude HTML-artikelen openen, bewerken en opslaan met de opmaakeditor, zonder wijziging in hun XML-structuur.
-5. **Handleiding** opzetten in `docs/handleiding/`: de inhoudsopgave uit [§16.4](#164-inhoud), de front matter en eerst de pagina's over schrijven, beoordelen en publiceren, zodat de gebruikerstest ze kan meenemen.
+5. **Handleiding** aanvullen in `docs/handleiding/`: de eerste vijf pagina's staan er ([§16.4](#164-inhoud)); de andere volgen, zodat de gebruikerstest ze kan meenemen.
+6. **Gouden dataset** opbouwen: generator, profielen en manifest, en de uitkomsten eenmalig nakijken ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)).
+7. **Testcases** schrijven: unit tests in PHP en JavaScript en integratietests in de container op PHP 8.2 tot en met 8.5, ook voor Docker ([§12.14](#1214-docker-blijft-mogelijk)).
 
 ---
 
