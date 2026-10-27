@@ -15,7 +15,7 @@ mkdir -p "$WORK/install"
 docker run --rm -v "$PWD":/src:ro -v "$WORK":/work php:$V-cli sh -c '
 	set -e
 	cp -R /src /work/tree && cd /work/tree && rm -rf data/hypha.xml
-	post() { php -r '\''$c = stream_context_create(["http" => ["method" => "POST", "header" => "Content-Type: application/x-www-form-urlencoded\r\n" . (getenv("COOKIE") ? "Cookie: " . getenv("COOKIE") . "\r\n" : ""), "content" => $argv[2], "ignore_errors" => true]]); $b = file_get_contents($argv[1], false, $c); foreach ($http_response_header as $h) if (stripos($h, "Set-Cookie:") === 0) fwrite(STDERR, trim(explode(";", substr($h, 11))[0])); echo $b;'\'' "$1" "$2"; }
+	post() { php -d display_errors=stderr -d error_reporting=24575 -r '\''$c = stream_context_create(["http" => ["method" => "POST", "header" => "Content-Type: application/x-www-form-urlencoded\r\n" . (getenv("COOKIE") ? "Cookie: " . getenv("COOKIE") . "\r\n" : ""), "content" => $argv[2], "ignore_errors" => true]]); $b = file_get_contents($argv[1], false, $c); foreach ((function_exists("http_get_last_response_headers") ? http_get_last_response_headers() : ${"http_" . "response_header"}) ?? [] as $h) if (stripos($h, "Set-Cookie:") === 0) fwrite(STDERR, trim(explode(";", substr($h, 11))[0])); echo $b;'\'' "$1" "$2"; }
 	php -S 127.0.0.1:8199 >/dev/null 2>&1 & P=$!; sleep 1
 	post http://127.0.0.1:8199/hypha.php "command=build&username=beheer&password=proef-wachtwoord-520&build_system/datatypes/text=on&build_system/datatypes/peer_reviewed_article=on&build_system/languages/nl=on&build_system/languages/en=on" > /work/hypha.php 2>/dev/null
 	kill $P

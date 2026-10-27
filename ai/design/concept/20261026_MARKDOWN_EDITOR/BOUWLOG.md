@@ -180,6 +180,44 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
    8. Lighthouse op de editor (ingelogd, zonder SEO): computer 96 / 95 / 100, telefoon 69 / 95 / 100. Op de telefoon rekent Lighthouse met traag 4G: de ruim 400 kB code van de editor haalt 95 daar niet. De eis „95 voor de editor” is op de telefoon dus niet gehaald.
 3. Gevonden in de testopstelling: een reeks ontbrekende afbeeldingen (404-pagina's van Hypha) houdt de twee Apache-werkers bezet en vertraagt de volgende pagina met seconden; voor de meting is de voorbeeldfoto uit het lange artikel gehaald.
 
+## Eindverslag (2026-10-27)
+
+### Wat klaar en getest is
+
+Alle tests zijn opnieuw gedraaid op PHP 8.2.35, 8.3.36, 8.4.27 en 8.5.12 (`sh tests/run.sh <versie> browser`, `sh tests/packaging/run.sh <versie>`, `HYPHA_GOUDEN=alle`), in containers op deze machine, met Chrome headless voor de browser.
+
+| Onderdeel | 8.2 | 8.3 | 8.4 | 8.5 |
+|---|---|---|---|---|
+| `HyphaRequestTest.php` (bestaand) | 84 | 84 | 84 | 84 |
+| unit (`tests/markdown/`): filter, Markdown, niveau 2, 500 gouden items | 99 van 99 | 99 van 99 | 99 van 99 | 99 van 99 |
+| gouden manifest, alle 10.000 items | 10.000 | 10.000 | 10.000 | 10.000 |
+| integratie over HTTP: proefsite, artikel en reviewstroom, tekstpagina | 38 van 38 | 38 van 38 | 38 van 38 | 38 van 38 |
+| browser: unit-pagina's en end-to-end (zie hieronder) | 141 van 141 | 141 van 141 | 141 van 141 | 141 van 141 |
+| packaging: `hypha.php` bouwen en installeren | 11 van 11 | 11 van 11 | 11 van 11 | 11 van 11 |
+| gouden dataset als site, 10.000 pagina's | 0 fouten | – | 0 fouten | – |
+| nieuwe PHP-meldingen in het logboek | geen | geen | geen | geen (na `mail()`, zie hieronder) |
+
+De browsertests: bibliotheken 7, pariteit met league/commonmark 19, Opmaak heen en terug 42, plaktest 28, editor 14, plakken in de editor 9, nieuwe pagina 4, toegankelijkheid 11 (axe 0 overtredingen in 9 toestanden, aanraakvlakken ≥ 44 pt), prestaties 6; samen 141 (inclusief de runner-proef).
+
+Gebouwd volgens het ontwerp, per onderdeel van §18.2: 4 (server en filter), 5 (Markdown-weergave op CodeMirror 6), 6 (Opmaak op ProseMirror met eigen schema en serializer, verliesvrij wisselen), 7, 7a, 7b, 7c (artikelscherm, vaste velden, cursor bij wisselen, tabellen), 8 (beelddialoog met upload, `[[`-suggesties), 9 (diagrammen met 36 sjablonen), 9a–9e (niveau 1 en 2, HedgeDoc, interactief blok in de server, reviewstroom met redactiestatuut, terugtrekken), 10 (import en export van `.md`), 11 (regressie met oude artikelen en tekstpagina's), 12 (WCAG met axe, HIG-aanraakvlakken, teksten in nl en en), 13 en 19 (`hypha.php`, Docker), 14 en 15 (codemarkering en wiskunde), 16 (handleiding, 17 pagina's), 17 en 18 (gouden dataset, unit- en integratietests), 20 (plakken), 21 (prestaties en Lighthouse), 22 (tekstpagina's met versies, vertalen en terugzetten).
+
+### Wat niet af is, en waarom
+
+1. **Lighthouse ≥ 95 overal**: een gepubliceerd artikel haalt met het standaardthema 96–100 / 94 / 100 / 91; met het advies `#0B7285` voor links (en `#5F656A` voor knoppen) en een `robots.txt` van de site 97–100 / 98 / 100 / 100. Beide zijn keuzes van het thema en de site, niet van de editor (standaardkeuze a). De editor op de telefoon haalt 69 voor prestaties (traag 4G met ruim 400 kB code); op de computer 96.
+2. **Interactief blok in de editor**: de server maakt het afgeschermde iframe, het voorbeeld toont het, maar er is geen eigen dialoog met codevenster en voorbeeld; bewerken gaat in Markdown, in Opmaak is het een grijs blok.
+3. **Punten uit de review die open staan** (zie „Review van de editor”): samenvatting van dichtgevouwen blokken, de knoptekst *Beeld bewerken* en *Diagram bewerken*, link maken door een webadres over geselecteerde tekst te plakken, de titel van een kader selecteren in plaats van vragen, werkbalk boven het schermtoetsenbord (`visualViewport`), `role="img"` op diagrammen in het voorbeeld, CSP in de `srcdoc` van het voorbeeld, en een voorbeeld dat op niveau 1 precies het filter van de server volgt.
+4. **Gouden dataset als site op 8.3 en 8.5**: draaide volledig op 8.2 en 8.4; op 8.3 en 8.5 alleen het manifest (10.000) en de integratietests.
+5. **Documentatie**: `docs/functional/` en `docs/technical/DATA_MODEL.md` beschrijven `format="markdown"` en het `source`-element nog niet (open regel in `ai/DOCUMENTATION_LOG.md`).
+6. **Bestaande problemen gevonden, niet opgelost** (buiten deze issue): `hypha.php` installeert niet zonder map `data/` en pakt het standaardthema niet in; een nieuw artikel via de oude popup zonder titel gaf een fatale fout (nu opgelost door de titel als tekst te schrijven); `strftime()` en enkele HTML-fouten in de sjablonen van Hypha (`bekende-meldingen.txt`); op PHP 8.5 meldt `mail()` een fout als de container geen sendmail heeft.
+
+### Wat alleen met de hand kan
+
+1. Een echte **iPhone en iPad**: autocorrectie, woordsuggesties, dicteren en de vergrootloep in CodeMirror 6 en ProseMirror (het grootste risico, §13.16), de leesweergave binnen 250 ms via wifi op een iPhone 16, en Safari in het algemeen (alle tests hier draaiden in Chrome).
+2. **Echte klembord-HTML** uit Word (Windows en macOS) en Google Docs: de testdocumenten zijn nagebouwd; alleen LibreOffice is een echte export. Ook de vorm van een formule uit Google Docs.
+3. **VoiceOver en NVDA** met beide weergaven; axe vindt niet alles.
+4. Een **gebruikerstest** met twee à drie auteurs.
+5. De **e-mail** bij statuswijzigingen met een echte mailserver.
+
 ## Afwijkingen
 
 Bewuste afwijkingen van het ontwerp, met de reden. Het ontwerp is op deze punten bijgewerkt (§22).

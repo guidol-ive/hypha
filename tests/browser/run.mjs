@@ -66,6 +66,7 @@ if (process.argv[2]) {
 	for (const f of fs.readdirSync(path.join(root, 'tests/browser/e2e')).filter(f => f.endsWith('.mjs')).sort()) {
 		if (!wanted(f)) continue;
 		const mod = await import(path.join(root, 'tests/browser/e2e', f));
+		if (typeof mod.default !== 'function') continue;
 		const tests = [];
 		await mod.default({ browser, base, stat, root, test: (name, fn) => tests.push([name, fn]) });
 		for (const [name, fn] of tests) {
