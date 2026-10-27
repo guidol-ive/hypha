@@ -207,6 +207,22 @@ export default async function (t) {
 		await page.waitForFunction(s => document.querySelector('.mde-address')?.textContent.includes(s + '-2'), slug, { timeout: 5000 });
 	});
 
+	t.test('side by side: the preview scrolls along with the text', async () => {
+		await page.goto(base + 'nl/' + slug + '/edit?mode=markdown');
+		await page.waitForFunction(() => window.hyphaMdeditor?.editor?.ready);
+		await page.setViewportSize({ width: 1600, height: 900 });
+		await editor(() => { const e = window.hyphaMdeditor.editor; e.fields.text = Array.from({ length: 80 }, (_, i) => `### Kop ${i}\n\nAlinea ${i} met wat tekst om te scrollen.`).join('\n\n'); e.loadMarkdown(); e.changed(); });
+		await page.click('[data-mode="side"]');
+		await page.waitForTimeout(800);
+		await editor(() => { const pane = document.getElementById('mdeEditorpane'); pane.scrollTop = pane.scrollHeight / 2; });
+		await page.waitForTimeout(400);
+		const top = await editor(() => { const preview = document.getElementById('mdePreviewPane'), box = preview.getBoundingClientRect(); return [...document.querySelectorAll('#mdePreview .body h3')].find(h => h.getBoundingClientRect().bottom > box.top)?.textContent; });
+		const n = +String(top).replace(/\D/g, '');
+		assert(n > 25 && n < 55, 'preview at ' + top);
+		await page.click('[data-mode="write"]');
+		await command(page, 'nl/Start', 'mdPreferences', JSON.stringify({ mode: 'visual' }));
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

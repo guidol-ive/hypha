@@ -150,6 +150,53 @@ export class Editor {
 	// The height an interactive block reports (as lezer.js in the reading view), for the preview and its dialog.
 	//
 	//
+	// Side by side: the preview scrolls along with the text (design iPad 2 and 4, section 18.2 part 7). The block at
+	// the top of the text pane is put at the top of the preview; only in that direction, so nothing echoes back.
+	//
+	followScroll() {
+		const pane = $('#mdeEditorpane', this.root), preview = $('#mdePreviewPane', this.root);
+		if (!pane || !preview) return;
+		let pending = false;
+		pane.addEventListener('scroll', () => {
+			if (this.viewMode !== 'side' || pending) return;
+			pending = true;
+			requestAnimationFrame(() => {
+				pending = false;
+				const index = this.topBlock(pane);
+				if (index === null) return;
+				const blocks = $('#mdePreview .body', this.root)?.children || $('#mdePreview', this.root).children;
+				const target = blocks[Math.min(index, blocks.length - 1)];
+				if (target) preview.scrollTop += target.getBoundingClientRect().top - preview.getBoundingClientRect().top - 8;
+			});
+		}, { passive: true });
+	}
+
+	//
+	// The index of the top-level block at the top of the text pane, in either view; null above the text.
+	//
+	topBlock(pane) {
+		const box = pane.getBoundingClientRect();
+		if (this.editMode === 'markdown') {
+			const pos = this.cm.posAtCoords({ x: box.left + box.width / 2, y: box.top + 12 }, false);
+			const front = (this.cm.state.doc.toString().match(FRONT_RE) || [''])[0].length;
+			if (pos < front) return 0;
+			const lineNo = this.cm.state.doc.lineAt(pos).number - this.cm.state.doc.lineAt(front).number;
+			if (this.startsFor !== this.fields.text) {
+				const p = pmParse(this.fields.text, this.markdown);
+				let line = (p.gaps[0] || []).length;
+				this.starts = [];
+				p.doc.forEach((n, o, i) => { this.starts.push(line); line += (p.sources.get(n) || '').split('\n').length + (p.gaps[i + 1] || []).length; });
+				this.startsFor = this.fields.text;
+			}
+			let index = 0;
+			while (index + 1 < this.starts.length && this.starts[index + 1] <= lineNo) index++;
+			return index;
+		}
+		const top = [...this.pm.dom.children].findIndex(el => el.getBoundingClientRect().bottom > box.top + 12);
+		return top < 0 ? null : top;
+	}
+
+	//
 	// A phone in the preview is made smaller until it fits the preview pane (design step 7): a phone on its side is
 	// wider than the page column of many themes.
 	//
@@ -206,6 +253,7 @@ export class Editor {
 		if (editbar) new ResizeObserver(() => this.root.style.setProperty('--sticky-top', editbar.offsetHeight + 8 + 'px')).observe(editbar);
 		this.followKeyboard();
 		this.followHeights();
+		this.followScroll();
 		new ResizeObserver(() => this.fitFrame()).observe($('#mdeFrame', this.root).parentElement);
 		this.ready = true;
 		this.root.dispatchEvent(new CustomEvent('mde-ready'));
