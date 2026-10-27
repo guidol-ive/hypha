@@ -1,0 +1,79 @@
+# Installation
+
+Three ways: from git (developers and operators who want updates through git), with the
+self-extracting `hypha.php` (shared hosting), or as a container ([CONTAINER.md](CONTAINER.md)).
+
+## From git
+
+```bash
+git clone --branch dev https://github.com/PlanBCode/hypha.git /var/www/hypha
+```
+
+1. Give the web server user write access to `data/` only, not to the code:
+   `chown -R www-data:www-data /var/www/hypha/data`. Do not follow the old advice to
+   `chmod -R 777` the whole folder.
+2. Set the maintenance credentials at the top of `hypha.php` (`$username`, `$password`); with the
+   defaults (empty) the installer is open to anyone (security review SEC-002).
+3. Open the site in a browser. Because `data/hypha.xml` is missing, `index.php` sends you to
+   `hypha.php`. Log in with the credentials of step 2 and fill in title, default language, default
+   page, the first administrator and the system e-mail address.
+4. Remove `hypha.php` from the web root afterwards, or keep the credentials strong (see
+   [OPERATIONS.md](OPERATIONS.md#hardening)).
+
+`git pull` updates the code; `data/` is git-ignored except for the default theme.
+
+## With hypha.php
+
+Download `hypha.php` from hypha.net, write a user name and password into the first lines, upload it
+to the web root and open it in a browser. It extracts the files and continues as in step 3 above.
+The same script later serves as "system tools" for administrators.
+
+## Apache configuration
+
+The repository's `.htaccess` needs mod_rewrite and `AllowOverride FileInfo`:
+
+- every request for `system/...` or `data/...` goes to `index.php`, which serves only theme files,
+  assets and editor files and refuses the rest;
+- every request that is not an existing file or folder goes to `index.php`;
+- `ai/`, `docs/`, `tests/` and the Markdown files in the root (including `README.md`) are refused
+  with 403 (added 2026-10-26).
+
+A virtual host, as used for the local test set-up of De Stadsbron:
+
+```apache
+<VirtualHost *:8080>
+	ServerName www.example.org
+	DocumentRoot /var/www/hypha
+	DirectoryIndex index.php
+	ErrorLog /dev/stderr
+	CustomLog /dev/stdout combined
+	# When TLS ends at a proxy in front of Apache, tell Hypha the original scheme:
+	SetEnv HTTPS on
+	<Directory "/var/www/hypha">
+		AllowOverride FileInfo Options
+		Require all granted
+	</Directory>
+	# Defence in depth: refuse data/ except the theme files, even if .htaccess is not read.
+	<LocationMatch "^/data/(?!themes/)">
+		Require all denied
+	</LocationMatch>
+</VirtualHost>
+```
+
+Do not use `<Directory .../data> Require all denied` instead: Apache checks access before the
+rewrite of `.htaccess` runs, so the theme style sheet (`data/themes/<name>/hypha.css`) would be
+refused as well and the site loses its layout (tested 2026-10-26). The `LocationMatch` above keeps
+themes reachable and refuses `data/hypha.xml`, `data/pages/...` and `data/digest` with 403;
+uploaded images are served as `images/...` through `index.php` and are not affected. Set `ServerName` and `UseCanonicalName On` so links in
+e-mails cannot be steered by a forged Host header (SEC-006).
+
+## Behind NGINX
+
+Most installations have NGINX in front, ending TLS. Configure both sides as in
+[REVERSE_PROXY.md](REVERSE_PROXY.md); without it, links are built with `http://`, every visitor
+seems to come from the proxy's address, and uploads over 1 MB fail at NGINX.
+
+## Content of an existing site
+
+To move a site, copy its `data/` folder. All internal links are relative or stored by page id. Check
+afterwards for images linked with the full address of the old host (KI-GLE-2026W44-hypha-013).

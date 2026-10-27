@@ -1,0 +1,44 @@
+# Hypha on Apache with mod_php, for local testing and small installations.
+#
+# Works with both Podman and Docker:
+#
+#   podman build -t hypha:php8.2 -f docs/container/Containerfile .
+#   docker build -t hypha:php8.2 -f docs/container/Containerfile .
+#
+# Build from the root of the repository; the source tree is copied into the image.
+# The PHP version is a build argument, so the supported range (8.2 up to and including 8.5)
+# can be tested with the same file:
+#
+#   podman build --build-arg PHP_VERSION=8.4 -t hypha:php8.4 -f docs/container/Containerfile .
+#
+# See docs/technical/CONTAINER.md for the full procedure.
+
+ARG PHP_VERSION=8.2
+FROM docker.io/library/php:${PHP_VERSION}-apache
+
+# GD is used for image resizing (system/core/HyphaImage.php). DOM, XML, libxml, mbstring,
+# curl, openssl, zlib and fileinfo are compiled into the official image.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
+ && docker-php-ext-configure gd --with-jpeg --with-freetype \
+ && docker-php-ext-install -j"$(nproc)" gd \
+ && rm -rf /var/lib/apt/lists/*
+
+# mod_rewrite is required: .htaccess sends every request through index.php.
+RUN a2enmod rewrite headers remoteip
+
+COPY docs/container/php.ini /usr/local/etc/php/conf.d/zz-hypha.ini
+COPY docs/container/hypha-vhost.conf /etc/apache2/sites-available/000-default.conf
+# Cap the number of workers to what fits in memory (see the file for how to size it).
+COPY docs/container/mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
+
+# Listen on 8080 so the container can run rootless.
+RUN sed -i 's/^Listen 80$/Listen 8080/' /etc/apache2/ports.conf
+
+COPY --chown=www-data:www-data . /var/www/html/
+RUN rm -rf /var/www/html/.git /var/www/html/ai /var/www/html/docs \
+ && chown -R www-data:www-data /var/www/html/data
+
+VOLUME ["/var/www/html/data"]
+EXPOSE 8080
+USER www-data

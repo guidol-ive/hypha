@@ -1,0 +1,22 @@
+# Run Hypha with podman-compose, "podman compose" or "docker compose" from the root of the
+# repository:
+#
+#   podman compose -f docs/container/compose.yaml up -d --build
+#
+# The site data lives in ./hypha-data on the host. Leave it empty for a fresh installation
+# (index.php redirects to hypha.php), or copy the data/ folder of an existing site into it.
+services:
+  hypha:
+    build:
+      context: ../..
+      dockerfile: docs/container/Containerfile
+      args:
+        PHP_VERSION: "8.2"
+    image: localhost/hypha:php8.2
+    container_name: hypha
+    ports:
+      - "8086:8080"
+    mem_limit: 256m
+    restart: unless-stopped
+    volumes:
+      - ./hypha-data:/var/www/html/data:Z
