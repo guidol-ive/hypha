@@ -1,0 +1,69 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Opmaak</title>
+<script type="importmap">
+{ "imports": {
+	"markdown-it": "../../../system/mdeditor/vendor/markdown-it-14.1.0.js",
+	"prosemirror": "../../../system/mdeditor/vendor/prosemirror-1.40.0.js"
+} }
+</script>
+<script type="module">
+	//
+	// The visual view (task T07): Markdown to ProseMirror and back without any difference (BR-75), for the three test
+	// texts and every case of the parity test; a changed block in the house style while the rest stays as it was.
+	//
+	import { test, same, check, done, diffLine } from './lib.js';
+	import { createMarkdown } from '../../../system/mdeditor/hypha-markdown.js';
+	import { parse, serialize, schema, serializer } from '../../../system/mdeditor/opmaak.js';
+	const data = await (await fetch('../../fixtures/pariteit.json')).json();
+	const md = createMarkdown({ frameHosts: data.frameHosts, peertubeHosts: data.peertubeHosts });
+	const roundTrip = src => serialize(parse(src, md).doc, parse(src, md));
+
+	for (const c of data.cases) test(`round trip without change: ${c.name}`, () => {
+		const p = parse(c.md, md);
+		const out = serialize(p.doc, p);
+		same('', diffLine(c.md, out));
+		same(c.md, out);
+	});
+	test('round trip with a trailing newline and leading blank lines', () => {
+		for (const src of ['a\n', '\n\na\n\n\nb\n', '- x\n- y\n\n\n\nz', '']) same(src, (p => serialize(p.doc, p))(parse(src, md)));
+	});
+	//
+	// Every block serialised fresh (as if the author changed all of it) gives Markdown with the same meaning: the same
+	// HTML after rendering.
+	//
+	for (const c of data.cases) test(`serialiser keeps the meaning: ${c.name}`, () => {
+		const fresh = serialize(parse(c.md, md).doc, null);
+		same('', diffLine(md.hyphaRender(c.md).replace(/\s+/g, ' ').trim(), md.hyphaRender(fresh).replace(/\s+/g, ' ').trim()), fresh.slice(0, 300));
+	});
+	test('a changed paragraph is written in the house style; the rest stays as it was', () => {
+		const src = '### Kop\n\n* een\n* twee\n\nTekst __vet__.\n\n|a|b|\n|---|---|\n|1|2|\n';
+		const p = parse(src, md);
+		const para = p.doc.child(2);
+		const changed = schema.nodes.paragraph.create(null, para.content.append(model.Fragment.from(schema.text(' Erbij.'))));
+		const doc = p.doc.copy(p.doc.content.replaceChild(2, changed));
+		same('### Kop\n\n* een\n* twee\n\nTekst **vet**. Erbij.\n\n|a|b|\n|---|---|\n|1|2|\n', serialize(doc, p));
+	});
+	test('a new table, list, callout, figure, diagram and formula in the house style', () => {
+		const n = schema.nodes;
+		const cell = (t, align = null, header = false) => (header ? n.table_header : n.table_cell).create({ align }, t ? schema.text(t) : null);
+		const doc = n.doc.create(null, [
+			n.table.create(null, [n.table_row.create(null, [cell('Onderdeel', 'left', true), cell('Kosten', 'right', true)]), n.table_row.create(null, [cell('Fietspad', 'left'), cell('€ 1,6 miljoen', 'right')])]),
+			n.bullet_list.create(null, [n.list_item.create(null, [n.paragraph.create(null, schema.text('een'))]), n.list_item.create({ checked: true }, [n.paragraph.create(null, schema.text('klaar'))])]),
+			n.callout.create({ type: 'info', title: 'Kader' }, [n.paragraph.create(null, schema.text('Uitleg.'))]),
+			n.figure.create({ src: 'images/a.jpg', alt: 'Foto', placement: 'klein-rechts' }, schema.text('Bijschrift')),
+			n.diagram.create({ info: 'mermaid', text: 'pie\n  "a" : 1\n' }),
+			n.math_block.create({ tex: 'a^2' }),
+		]);
+		same('| Onderdeel | Kosten |\n|:--|--:|\n| Fietspad | € 1,6 miljoen |\n\n- een\n- [x] klaar\n\n> [!info] Kader\n> Uitleg.\n\n![Foto](images/a.jpg){.klein-rechts}\n*Bijschrift*\n\n```mermaid\npie\n  "a" : 1\n```\n\n$$\na^2\n$$\n', serialize(doc, null));
+	});
+	test('plain text that looks like Hypha syntax is escaped', () => {
+		const n = schema.nodes;
+		const doc = n.doc.create(null, [n.paragraph.create(null, schema.text('Van $10 tot $20, a == b, [[geen link]] en %% geen notitie'))]);
+		const out = serialize(doc, null);
+		const html = md.hyphaRender(out);
+		check(!/<a |math|<mark>/.test(html) && html.includes('%%'), out + ' => ' + html);
+	});
+	import { model } from 'prosemirror';
+	done();
+</script>

@@ -111,6 +111,12 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 1. Gebouwd: `system/mdeditor/hypha-markdown.js` met dezelfde uitbreidingen als de server (kaders en citaten, `:::`, paginalinks, `==`, `++`, `^`, `~`, notities, figuren met plaatsing en grootte, diagrammen, formules, codemarkering, voetnoten in de HTML van de server, kop-id's, `[TOC]`, ingesloten inhoud, takenlijsten, uitlijning als `align`); `tests/fixtures/pariteit.php` en `maak-pariteit.php` (19 gevallen, waaronder de drie proefteksten).
 2. Tests: `tests/browser/unit/pariteit.test.html`: 19 van 19 gelijk na normaliseren (attributen gesorteerd, witruimte samengevoegd, `rel` en de kleurspans van de codemarkering weggelaten).
 
+### T07 (deel 2) ProseMirror-schema en serializer (2026-10-27)
+
+1. Gebouwd: `system/mdeditor/opmaak.js`: een eigen schema voor Hypha-Markdown 1.0 (kaders, figuur met bijschrift, diagram, interactief blok, formule, paginalink, voetnoot, notitie, `[TOC]`, ingesloten inhoud, tabellen met uitlijning, takenlijsten, en een grijs blok „bewerk in Markdown” voor eigen HTML en onbekende bron), de omzetting van de tokens van markdown-it en een eigen serializer (op `MarkdownSerializer` van prosemirror-markdown).
+2. Verliesvrij wisselen (BR-75): elk blok op het hoogste niveau onthoudt zijn bron; ProseMirror houdt een ongewijzigd blok als hetzelfde object, dus wat de auteur niet aanraakte, gaat letterlijk terug, met de eigen witregels. Alleen gewijzigde blokken worden opnieuw geschreven, in de huisstijl. Regels die geen blok claimt, worden een eigen blok met hun bron.
+3. Tests: `tests/browser/unit/opmaak.test.html`, 42 van 42: heen en terug zonder één verschil voor de drie proefteksten en alle 19 pariteitsgevallen en randgevallen (lege tekst, witregels voor en na); elk blok vers geschreven geeft dezelfde HTML (19 van 19); een gewijzigde alinea in de huisstijl met de rest letterlijk; nieuwe tabel, lijst, kader, figuur, diagram en formule in de huisstijl; platte tekst die op Hypha-syntaxis lijkt, wordt ontsnapt.
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.
