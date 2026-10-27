@@ -149,6 +149,23 @@ export class Editor {
 	//
 	// The height an interactive block reports (as lezer.js in the reading view), for the preview and its dialog.
 	//
+	//
+	// A phone in the preview is made smaller until it fits the preview pane (design step 7): a phone on its side is
+	// wider than the page column of many themes.
+	//
+	fitFrame() {
+		const frame = $('#mdeFrame', this.root);
+		if (!frame) return;
+		frame.style.transform = frame.style.marginLeft = frame.style.marginBottom = '';
+		if (!/phone/.test(frame.className)) return;
+		const room = frame.parentElement.clientWidth - 8, width = frame.offsetWidth;
+		if (width <= room || !room) return;
+		const scale = room / width;
+		frame.style.transform = `scale(${scale})`;
+		frame.style.marginLeft = '4px';
+		frame.style.marginBottom = -Math.round((1 - scale) * frame.offsetHeight) + 'px';
+	}
+
 	followHeights() {
 		addEventListener('message', event => {
 			const height = event.data?.hyphaHeight;
@@ -174,6 +191,12 @@ export class Editor {
 		this.refresh();
 		window.addEventListener('beforeunload', e => { if (this.dirty()) { e.preventDefault(); e.returnValue = ''; } });
 		document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); this.save(); } });
+		//
+		// ⌘⇧V / Ctrl+Shift+V: paste as plain text, also where the browser still offers the HTML (Safari).
+		//
+		document.addEventListener('keydown', e => {
+			if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'v') { this.plainPaste = true; setTimeout(() => { this.plainPaste = false; }, 1000); }
+		}, true);
 		this.fitToolbar();
 		new ResizeObserver(() => this.fitToolbar()).observe($('.toolbar', this.root));
 		//
@@ -183,6 +206,7 @@ export class Editor {
 		if (editbar) new ResizeObserver(() => this.root.style.setProperty('--sticky-top', editbar.offsetHeight + 8 + 'px')).observe(editbar);
 		this.followKeyboard();
 		this.followHeights();
+		new ResizeObserver(() => this.fitFrame()).observe($('#mdeFrame', this.root).parentElement);
 		this.ready = true;
 		this.root.dispatchEvent(new CustomEvent('mde-ready'));
 	}
@@ -319,6 +343,32 @@ export class Editor {
 				return b.finish();
 			}
 		}, { decorations: v => v.decorations });
+		//
+		// A link to a page that does not exist and a formula with an error are marked red, as in Opmaak (BR-46, BR-63).
+		// Only the visible part of the text is searched, on every update: that is a few thousand characters.
+		//
+		const ed = this;
+		const markDeco = view.ViewPlugin.fromClass(class {
+			constructor(v) { this.decorations = this.build(v); }
+			update(u) { this.decorations = this.build(u.view); }
+			build(v) {
+				const found = [];
+				for (const { from, to } of v.visibleRanges) {
+					const text = v.state.doc.sliceString(from, to);
+					for (const m of text.matchAll(/\[\[([^\]|#\n]+)(?:#[^\]|\n]*)?(?:\|[^\]\n]*)?\]\]/g)) {
+						if (!ed.pagesByName.has(asciiLower(m[1].trim()))) found.push([from + m.index, from + m.index + m[0].length, 'cm-missing', ed.t('page-missing')]);
+					}
+					for (const m of text.matchAll(/\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g)) {
+						const tex = m[1] ?? m[2];
+						if (ed.mathErrors.has(tex) || ed.mathErrors.has(tex.trim())) found.push([from + m.index, from + m.index + m[0].length, 'cm-math-err', ed.t('math-error')]);
+					}
+				}
+				found.sort((a, b) => a[0] - b[0]);
+				const b = new state.RangeSetBuilder();
+				for (const [a, z, cls, title] of found) b.add(a, z, view.Decoration.mark({ class: cls, attributes: { title } }));
+				return b.finish();
+			}
+		}, { decorations: v => v.decorations });
 		const keys = view.keymap.of([
 			{ key: 'Mod-b', run: () => (this.action('bold'), true) },
 			{ key: 'Mod-i', run: () => (this.action('italic'), true) },
@@ -334,7 +384,7 @@ export class Editor {
 				doc: this.markdownDocument(),
 				extensions: [
 					commands.history(), view.drawSelection(), view.highlightActiveLine(), view.EditorView.lineWrapping, keys,
-					markdown.markdown({ base: markdown.markdownLanguage }), language.syntaxHighlighting(dim), frontDeco,
+					markdown.markdown({ base: markdown.markdownLanguage }), language.syntaxHighlighting(dim), frontDeco, markDeco,
 					view.EditorView.contentAttributes.of({ lang: this.cfg.page.language, spellcheck: 'true', autocorrect: 'on', autocapitalize: 'sentences', 'aria-label': this.t(this.article ? 'region-article' : 'region-page'), 'aria-multiline': 'true', 'aria-describedby': 'mdeTextHelp' }),
 					view.EditorView.updateListener.of(u => { if (u.docChanged) this.onMarkdownChange(); if (u.selectionSet || u.docChanged) { this.dialogs.markdownCursor(u); this.dialogs.updateEditLabels(); this.followCaret(); } }),
 					view.EditorView.domEventHandlers({ paste: e => this.pasteIntoMarkdown(e), drop: e => this.dropFile(e) }),
@@ -577,6 +627,13 @@ export class Editor {
 	async switchEditMode(mode) {
 		if (mode === 'markdown' && !this.cm) await this.createMarkdownView();
 		this.setEditMode(mode);
+		//
+		// The way of writing is remembered for the next time (handbook, step 2), unless the switch was refused.
+		//
+		if (this.editMode === mode && mode !== this.cfg.user?.preferences?.mode) {
+			this.storePreferences({ mode });
+			if (this.cfg.user?.preferences) this.cfg.user.preferences.mode = mode;
+		}
 	}
 
 	setEditMode(mode, keepCaret = true) {
@@ -933,6 +990,7 @@ export class Editor {
 			this.diagrams.clear();
 			this.refresh();
 			this.redrawAtoms();
+			this.cm?.dispatch({});
 		});
 	}
 
@@ -1008,6 +1066,7 @@ export class Editor {
 			if (device) {
 				for (const b of this.root.querySelectorAll('[data-device]')) b.setAttribute('aria-pressed', String(b === device));
 				$('#mdeFrame', this.root).className = 'frame ' + (device.dataset.device === 'desktop' ? '' : device.dataset.device);
+				this.fitFrame();
 			}
 		});
 		for (const b of this.root.querySelectorAll('.toolbar [data-act], .modes button, .editmode button')) b.addEventListener('mousedown', e => e.preventDefault());
@@ -1253,10 +1312,66 @@ export class Editor {
 	//
 	pastedMarkdown(event) {
 		const html = event.clipboardData?.getData('text/html');
-		if (!html || this.plainPaste) return null;
+		const plain = this.plainPaste;
+		this.plainPaste = false;
+		if (!html || plain) return null;
 		const result = HyphaPlakken.toMarkdown(html, { texts: { image: this.t('paste-image'), formula: this.t('paste-formula'), merged: this.t('paste-merged') } });
-		for (const note of result.notes) this.toast(note);
-		return result.md;
+		//
+		// What could not be taken over stays in the checklist until the author has seen it (design section 12.15); a
+		// formula placeholder is found there in the text itself.
+		//
+		for (const note of result.notes) {
+			this.toast(note);
+			if (note !== this.t('paste-formula')) this.pasteNotes.add(note);
+		}
+		//
+		// Images that came along as data (Word, LibreOffice) are uploaded as with Beeld…, under a name of their own;
+		// otherwise beeld/geplakt-1.png would stay in the text as a broken image.
+		//
+		let md = result.md;
+		const uploads = [];
+		for (const image of result.images.filter(x => /^data:image\//i.test(x.src))) {
+			const key = image.key.replace('geplakt-', 'geplakt-' + Date.now().toString(36) + '-');
+			md = md.split('(' + image.key + ')').join('(' + key + ')');
+			uploads.push({ key, src: image.src });
+		}
+		if (uploads.length) setTimeout(() => this.uploadPasted(uploads), 0);
+		return md;
+	}
+
+	pasteNotes = new Set();
+
+	async uploadPasted(images) {
+		for (const image of images) {
+			let path = null;
+			try {
+				const blob = await (await fetch(image.src)).blob();
+				const body = new FormData();
+				body.append('uploadedfile', blob, image.key.split('/').pop());
+				body.append('csrfToken', this.cfg.csrf);
+				const r = await (await fetch(this.cfg.root + 'upload/image', { method: 'POST', body, credentials: 'same-origin' })).json();
+				if (r[0]?.thumbUrl && !r[0].error) path = r[0].thumbUrl.replace(this.cfg.root, '').replace(/\?.*$/, '');
+			} catch (e) { /* reported below */ }
+			if (path) this.replaceImageSrc(image.key, path);
+			else { this.pasteNotes.add(this.t('paste-image')); this.refresh(); }
+		}
+	}
+
+	//
+	// An image address in the text replaced in the view that is open; the field follows from that view.
+	//
+	replaceImageSrc(from, to) {
+		if (this.editMode === 'markdown') {
+			const doc = this.cm.state.doc.toString(), changes = [];
+			for (let i = doc.indexOf('(' + from + ')'); i >= 0; i = doc.indexOf('(' + from + ')', i + 1)) changes.push({ from: i + 1, to: i + 1 + from.length, insert: to });
+			if (changes.length) this.cm.dispatch({ changes });
+			return;
+		}
+		for (const v of this.pmViews) {
+			const tr = v.state.tr;
+			v.state.doc.descendants((n, pos) => { if (n.attrs?.src === from) tr.setNodeMarkup(pos, null, Object.assign({}, n.attrs, { src: to })); });
+			if (tr.docChanged) v.dispatch(tr);
+		}
 	}
 
 	pastedLink(event, selected) {
@@ -1284,6 +1399,18 @@ export class Editor {
 	}
 
 	pasteIntoVisual(view, event) {
+		//
+		// ⌘⇧V: the plain text, whatever HTML the browser offers.
+		//
+		if (this.plainPaste) {
+			this.plainPaste = false;
+			const text = event.clipboardData?.getData('text/plain');
+			if (text) {
+				event.preventDefault();
+				view.dispatch(view.state.tr.insertText(text).scrollIntoView());
+				return true;
+			}
+		}
 		const { from, to, empty } = view.state.selection;
 		const url = this.pastedLink(event, !empty);
 		if (url) {
@@ -1327,9 +1454,15 @@ export class Editor {
 		this.toast(this.t('imported', { file: file.name }));
 	}
 
+	//
+	// The export as in design section 9: the status in words and the publication date in the Frontmatter, and a box
+	// in ::: notation as a callout (> [!info]), which other Markdown programs show; code blocks stay as they are.
+	//
 	download() {
-		const extra = [`status: ${this.cfg.page.status}`, `lang: ${this.cfg.page.language}`].join('\n');
-		const text = frontText(Object.assign({}, this.fields, { frontmatter: [this.fields.frontmatter, extra].filter(Boolean).join('\n') }), this.kind) + this.fields.text;
+		const status = this.cfg.page.status ? this.t('status-' + this.cfg.page.status) : '';
+		const extra = [status && `status: ${status}`, this.cfg.page.publishedAt && `gepubliceerd: ${this.cfg.page.publishedAt}`, `lang: ${this.cfg.page.language}`].filter(Boolean).join('\n');
+		const boxes = md => md.split(/(^```[\s\S]*?^```[ \t]*$)/m).map((part, i) => i % 2 ? part : part.replace(/^:::[ \t]*(\w[\w-]*)[ \t]*(.*)\n([\s\S]*?)^:::[ \t]*$/gm, (all, type, title, body) => `> [!${type}]${title ? ' ' + title : ''}\n` + body.replace(/\n$/, '').split('\n').map(l => l ? '> ' + l : '>').join('\n'))).join('');
+		const text = frontText(Object.assign({}, this.fields, { frontmatter: [this.fields.frontmatter, extra].filter(Boolean).join('\n') }), this.kind) + boxes(this.fields.text);
 		const a = document.createElement('a');
 		a.href = URL.createObjectURL(new Blob([text], { type: 'text/markdown;charset=utf-8' }));
 		a.download = (this.cfg.page.name || 'artikel') + '.md';
@@ -1494,6 +1627,11 @@ export class Editor {
 		if (lazy.temmlLoaded) add('yellow', 'check-math', ![...this.mathErrors].length);
 		const missing = links.filter(x => !this.pagesByName.has(asciiLower(x.meta.page)));
 		add('yellow', 'check-links', !missing.length);
+		//
+		// What a paste could not take over (design section 12.15).
+		//
+		if (/\\text\{formule niet overgenomen\}/.test(f.text + f.method + f.sources)) list.push({ lvl: 'yellow', t: this.t('paste-formula') });
+		for (const note of this.pasteNotes) list.push({ lvl: 'yellow', t: note, button: this.t('paste-seen'), fn: () => { this.pasteNotes.delete(note); this.refresh(); } });
 		return list;
 	}
 
@@ -1515,8 +1653,9 @@ export class Editor {
 
 	renderChecks() {
 		const order = { red: 0, yellow: 1, ok: 2 };
+		const fns = [];
 		const sort = l => l.sort((a, b) => order[a.lvl] - order[b.lvl] || a.t.localeCompare(b.t, this.cfg.interfaceLanguage));
-		const item = c => `<li class="${c.lvl}"><i class="fa fa-${{ red: 'times', yellow: 'exclamation-triangle', ok: 'check' }[c.lvl]}" aria-hidden="true"></i><span class="sr">${esc(this.t('check-' + c.lvl))}</span> ${esc(c.t)}${c.go ? ` <button type="button" class="gobtn" data-go="${c.go}">${esc(this.t('fill-in'))} <i class="fa fa-arrow-right" aria-hidden="true"></i></button>` : ''}${c.button ? ` <button type="button" class="gobtn" data-tip="1">${esc(c.button)}</button>` : ''}</li>`;
+		const item = c => `<li class="${c.lvl}"><i class="fa fa-${{ red: 'times', yellow: 'exclamation-triangle', ok: 'check' }[c.lvl]}" aria-hidden="true"></i><span class="sr">${esc(this.t('check-' + c.lvl))}</span> ${esc(c.t)}${c.go ? ` <button type="button" class="gobtn" data-go="${c.go}">${esc(this.t('fill-in'))} <i class="fa fa-arrow-right" aria-hidden="true"></i></button>` : ''}${c.button ? ` <button type="button" class="gobtn" data-fn="${fns.push(c.fn) - 1}">${esc(c.button)}</button>` : ''}</li>`;
 		const checks = sort(this.checks());
 		const shown = checks.filter(c => this.showAll || c.lvl !== 'ok');
 		$('#mdeChecks', this.root).innerHTML = shown.map(item).join('');
@@ -1527,7 +1666,10 @@ export class Editor {
 		$('#mdeTipsBox', this.root).hidden = !shownTips.length;
 		$('#mdeTips', this.root).innerHTML = shownTips.map(item).join('');
 		for (const b of this.root.querySelectorAll('[data-go]')) b.addEventListener('click', () => this.goToField(b.dataset.go));
-		for (const b of this.root.querySelectorAll('[data-tip]')) b.addEventListener('click', () => tips.find(x => x.fn)?.fn());
+		//
+		// Every button of an item runs its own action (the checklist and the tips both have them).
+		//
+		for (const b of this.root.querySelectorAll('[data-fn]')) b.addEventListener('click', () => fns[+b.dataset.fn]?.());
 		const f = this.fields;
 		const words = countWords(f.text.replace(/```[\s\S]*?```/g, ''));
 		const languages = this.cfg.languages || [];

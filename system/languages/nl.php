@@ -1011,6 +1011,8 @@
 		"mde-page-moved" => "Iemand heeft deze pagina intussen verplaatst van [[from]] naar [[to]]; je tekst wordt daar opgeslagen.",
 		"mde-page-gone" => "Deze pagina bestaat niet meer. Je tekst staat nog in de editor: kopieer hem of download hem als .md.",
 		"mde-error-page-gone" => "Deze pagina is intussen hernoemd of verwijderd.",
+		"mde-paste-seen" => "gezien",
+		"mde-status-retracted" => "teruggetrokken",
 		// End of the Markdown editor
 	);
 

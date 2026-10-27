@@ -1016,6 +1016,8 @@
 		"mde-page-moved" => "Someone moved this page from [[from]] to [[to]] meanwhile; your text is saved there.",
 		"mde-page-gone" => "This page no longer exists. Your text is still in the editor: copy it or download it as .md.",
 		"mde-error-page-gone" => "This page was renamed or deleted meanwhile.",
+		"mde-paste-seen" => "seen",
+		"mde-status-retracted" => "withdrawn",
 		// End of the Markdown editor
 	);
 

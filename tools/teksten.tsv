@@ -485,3 +485,5 @@ mde-draft-found-changed	Er is een niet-opgeslagen versie, maar de tekst is intus
 mde-page-moved	Iemand heeft deze pagina intussen verplaatst van [[from]] naar [[to]]; je tekst wordt daar opgeslagen.	Someone moved this page from [[from]] to [[to]] meanwhile; your text is saved there.
 mde-page-gone	Deze pagina bestaat niet meer. Je tekst staat nog in de editor: kopieer hem of download hem als .md.	This page no longer exists. Your text is still in the editor: copy it or download it as .md.
 mde-error-page-gone	Deze pagina is intussen hernoemd of verwijderd.	This page was renamed or deleted meanwhile.
+mde-paste-seen	gezien	seen
+mde-status-retracted	teruggetrokken	withdrawn

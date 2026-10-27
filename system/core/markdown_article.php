@@ -722,7 +722,7 @@
 			$config = [
 				'kind' => 'article',
 				'fields' => $this->mdFields(),
-				'page' => ['language' => $this->language, 'name' => $this->pagename, 'private' => $this->privateFlag, 'status' => $this->getStatus(), 'approves' => $approves, 'approvesNeeded' => self::APPROVES_NEEDED, 'role' => $this->mdRole(), 'published' => $this->getStatus() === self::STATUS_PUBLISHED, 'id' => $this->pageListNode->getAttribute('id'), 'revision' => (int)$this->xml->findOneXPath('article')->getAttribute('md_revision')],
+				'page' => ['language' => $this->language, 'name' => $this->pagename, 'private' => $this->privateFlag, 'status' => $this->getStatus(), 'approves' => $approves, 'approvesNeeded' => self::APPROVES_NEEDED, 'role' => $this->mdRole(), 'published' => $this->getStatus() === self::STATUS_PUBLISHED, 'id' => $this->pageListNode->getAttribute('id'), 'revision' => (int)$this->xml->findOneXPath('article')->getAttribute('md_revision'), 'publishedAt' => ($published = (int)ltrim($this->xml->findOneXPath('article')->getAttribute(self::FIELD_NAME_PUBLISHED_AT), 't')) ? date('Y-m-d', $published) : ''],
 				'checks' => array_map(fn ($c) => ['status' => $c['status'], 'label' => $c['label']], $checks),
 				'checkStatus' => $checkStatus,
 				'settings' => ['sections' => $settings['sections'], 'statute' => $settings['statute'], 'level' => hypha_mdeditorLevel($this->O_O->getUser(), $settings), 'scriptHosts' => $settings['scriptHosts'], 'frameHosts' => $settings['frameHosts'], 'peertubeHosts' => $settings['peertubeHosts']],
