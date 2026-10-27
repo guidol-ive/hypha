@@ -60,6 +60,13 @@
 		private array $frameHosts;
 
 		/**
+		 * HTML elements and attributes of the author that were removed, for the checklist (design section 10.1).
+		 *
+		 * @var list<string>
+		 */
+		public array $removed = [];
+
+		/**
 		 * @param list<string> $frameHosts hosts an iframe may point to (level 2); empty for level 1
 		 */
 		public function __construct(array $frameHosts = []) {
@@ -121,6 +128,7 @@
 				};
 				if ($name === 'iframe' && !$this->frameHosts) $allowed = null;
 				if ($allowed === null) {
+					if ($inner === 'html') $this->removed[] = '<' . strtolower($name) . '>';
 					//
 					// Drop the element. A dangerous one goes with its content; of a harmless container the content stays.
 					//
@@ -142,7 +150,10 @@
 						$keep = $inner === 'html' ? $this->safeUrl($attribute->value, $name === 'iframe') : str_starts_with(trim($attribute->value), '#');
 					if ($keep && $attributeName === 'style')
 						$keep = !preg_match('/url\s*\(|image-set|image\s*\(|cross-fade|src\s*\(|expression|@import|javascript:|behavior|-moz-binding|\\\\/i', $attribute->value);
-					if (!$keep) $child->removeAttributeNode($attribute);
+					if (!$keep) {
+						if ($inner === 'html') $this->removed[] = $attributeName . '=';
+						$child->removeAttributeNode($attribute);
+					}
 				}
 				if ($name === 'iframe' && $inner === 'html') {
 					if (!$child->hasAttribute('src')) {

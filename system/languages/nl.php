@@ -1021,6 +1021,10 @@
 		"mde-link-remove" => "Link weghalen",
 		"mde-link-pages" => "Pagina's van deze site",
 		"mde-retracted-closed" => "Dit artikel is teruggetrokken; reageren kan niet meer.",
+		"mde-check-html-removed" => "Niet getoond op de site: [[what]]. Die HTML laat de site niet toe.",
+		"mde-check-diagram-drawing" => "Een diagram is opgeslagen zonder tekening; lezers zien de tekst ervan. Open het artikel opnieuw en sla op.",
+		"mde-fact-level" => "vrijheidsniveau [[n]]",
+		"mde-fact-level-help" => "Niveau 1: tekst, opmaak, beeld en diagrammen. Niveau 2: ook ingesloten video en kaarten en interactieve blokken.",
 		// End of the Markdown editor
 	);
 

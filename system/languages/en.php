@@ -1026,6 +1026,10 @@
 		"mde-link-remove" => "Remove link",
 		"mde-link-pages" => "Pages of this site",
 		"mde-retracted-closed" => "This article was withdrawn; reactions are closed.",
+		"mde-check-html-removed" => "Not shown on the site: [[what]]. The site does not allow that HTML.",
+		"mde-check-diagram-drawing" => "A diagram was saved without its drawing; readers see its text. Open the article again and save.",
+		"mde-fact-level" => "freedom level [[n]]",
+		"mde-fact-level-help" => "Level 1: text, layout, images and diagrams. Level 2: also embedded video and maps, and interactive blocks.",
 		// End of the Markdown editor
 	);
 

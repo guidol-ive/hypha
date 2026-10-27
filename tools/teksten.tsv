@@ -495,3 +495,7 @@ mde-link-text	Tekst van de link (leeg: de naam van de pagina of het adres)	Text 
 mde-link-remove	Link weghalen	Remove link
 mde-link-pages	Pagina's van deze site	Pages of this site
 mde-retracted-closed	Dit artikel is teruggetrokken; reageren kan niet meer.	This article was withdrawn; reactions are closed.
+mde-check-html-removed	Niet getoond op de site: [[what]]. Die HTML laat de site niet toe.	Not shown on the site: [[what]]. The site does not allow that HTML.
+mde-check-diagram-drawing	Een diagram is opgeslagen zonder tekening; lezers zien de tekst ervan. Open het artikel opnieuw en sla op.	A diagram was saved without its drawing; readers see its text. Open the article again and save.
+mde-fact-level	vrijheidsniveau [[n]]	freedom level [[n]]
+mde-fact-level-help	Niveau 1: tekst, opmaak, beeld en diagrammen. Niveau 2: ook ingesloten video en kaarten en interactieve blokken.	Level 1: text, layout, images and diagrams. Level 2: also embedded video and maps, and interactive blocks.

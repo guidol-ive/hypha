@@ -174,6 +174,19 @@ export default async function (t) {
 		await page.keyboard.press('Escape');
 	});
 
+	t.test('what the server does not show is in the checklist after saving, and the freedom level is shown', async () => {
+		await setText('Tekst met <span onclick="alert(1)">een knop</span>.\n\n<macro name="pagelist"></macro>\n');
+		assert(await editor(() => window.hyphaMdeditor.editor.save()), 'save');
+		await page.waitForTimeout(200);
+		const checks = await page.textContent('#mdeChecks');
+		assert(/Niet getoond op de site: .*onclick=/.test(checks) && checks.includes('<macro>'), 'checklist: ' + checks.slice(0, 300));
+		assert(/vrijheidsniveau 2/.test(await page.textContent('#mdeFacts')), 'no level');
+		await setText('Gewone tekst.\n');
+		assert(await editor(() => window.hyphaMdeditor.editor.save()), 'save 2');
+		await page.waitForTimeout(200);
+		assert(!/Niet getoond op de site/.test(await page.textContent('#mdeChecks')), 'message stays after a clean save');
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

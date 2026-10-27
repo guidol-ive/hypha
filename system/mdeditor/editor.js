@@ -1556,6 +1556,11 @@ export class Editor {
 			}
 			if (!result.ok) { this.toast((result.errors || []).join(' ') || this.t('save-failed')); return; }
 			if (result.revision !== undefined && result.revision !== null) this.revision = result.revision;
+			//
+			// What the server did not take over (an element of the author it removed, a diagram without drawing) stays
+			// in the checklist until the next save.
+			//
+			this.serverMessages = result.messages || [];
 			this.saved = snapshot;
 			this.storeDraft();
 			this.updateChip();
@@ -1633,6 +1638,10 @@ export class Editor {
 		//
 		if (/\\text\{formule niet overgenomen\}/.test(f.text + f.method + f.sources)) list.push({ lvl: 'yellow', t: this.t('paste-formula') });
 		for (const note of this.pasteNotes) list.push({ lvl: 'yellow', t: note, button: this.t('paste-seen'), fn: () => { this.pasteNotes.delete(note); this.refresh(); } });
+		for (const m of this.serverMessages || []) {
+			if (m.code === 'html-removed') list.push({ lvl: 'yellow', t: this.t('check-html-removed', { what: m.detail }) });
+			else if (m.code === 'diagram-without-drawing') list.push({ lvl: 'yellow', t: this.t('check-diagram-drawing') });
+		}
 		return list;
 	}
 
@@ -1674,7 +1683,7 @@ export class Editor {
 		const f = this.fields;
 		const words = countWords(f.text.replace(/```[\s\S]*?```/g, ''));
 		const languages = this.cfg.languages || [];
-		$('#mdeFacts', this.root).innerHTML = `<li>${esc(this.t('fact-words', { n: words }))}</li><li>${esc(this.t('fact-reading', { n: Math.max(1, Math.round(words / 220)) }))}</li>`
+		$('#mdeFacts', this.root).innerHTML = `<li>${esc(this.t('fact-words', { n: words }))}</li><li>${esc(this.t('fact-reading', { n: Math.max(1, Math.round(words / 220)) }))}</li><li title="${esc(this.t('fact-level-help'))}">${esc(this.t('fact-level', { n: this.cfg.settings?.level ?? 2 }))}</li>`
 			+ (this.article ? `<li><label for="mdeArticleLanguage">${esc(this.t('field-language'))}</label> <select id="mdeArticleLanguage"${this.cfg.page.published || this.cfg.page.role !== 'author' ? ' disabled' : ''}>${languages.map(l => `<option value="${esc(l)}"${l === this.cfg.page.language ? ' selected' : ''}>${esc(this.t('language-' + l) === 'language-' + l ? l : this.t('language-' + l))}</option>`).join('')}</select></li>` : '');
 		$('#mdeArticleLanguage', this.root)?.addEventListener('change', e => this.changeLanguage(e.target.value));
 		if (this.article) {

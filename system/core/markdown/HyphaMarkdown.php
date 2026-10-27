@@ -88,6 +88,10 @@
 			$html = $this->toHtml($markdown);
 			$filter = new HyphaFilter($this->options['level'] >= 2 ? $this->frameHosts() : []);
 			$fragment = $filter->sanitize($html);
+			//
+			// What the author wrote that the site does not show, for the checklist (design section 10.1).
+			//
+			if ($filter->removed) $this->message('html-removed', implode(', ', array_values(array_unique($filter->removed))));
 			$this->afterFilter($fragment);
 			return $filter->toXhtml($fragment);
 		}
