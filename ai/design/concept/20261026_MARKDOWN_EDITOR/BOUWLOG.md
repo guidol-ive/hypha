@@ -123,6 +123,15 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 2. Tests en uitkomsten: `tests/browser/e2e/editor.mjs` tegen Hypha op PHP 8.2 in de container: 12 van 12 (nieuw artikel zonder fouten, Frontmatter vult de velden, wisselen zonder verschil, cursor in hetzelfde blok, vet in Opmaak met de rest letterlijk, tabelmenu, diagramdialoog, plakken uit Word, voorbeeld met getekend diagram, opslaan in 139 ms met SVG en MathML in de leesweergave, export en import gelijk, geen fouten in de console).
 3. Gevonden en opgelost in de container: met twee Apache-werkers hielden open keep-alive-verbindingen de werkers vast; elk bestand van een pagina wachtte 7 tot 14 seconden. `KeepAlive Off` in `docs/container/hypha-vhost.conf`; daarna laadt de pagina in 0,12 s.
 
+### T09 Plakken uit Word, Google Docs en LibreOffice (2026-10-27)
+
+1. Gebouwd: `plakken.js` uit het prototype als module (meldingen nu uit de taalbestanden), in de plakhaak van CodeMirror en van ProseMirror; de klembord-HTML van het prototype als `tests/fixtures/plaktest/gegevens.js`.
+2. Tests en uitkomsten:
+   1. `tests/browser/unit/plaktest.test.html`: 28 van 28 (3 documenten letter voor letter, 24 losse gevallen waaronder zes OMML-formules, en snelheid: het Word-document veertig keer in 84 ms, eis 1 s);
+   2. `tests/browser/e2e/plakken.mjs` in de editor op PHP 8.2: 9 van 9: de drie documenten in Markdown letter voor letter, in Opmaak met dezelfde betekenis (de huisstijl), en ⌘Z maakt het plakken in één stap ongedaan.
+3. Opgelost: een lege tekst gaf een fout bij het zoeken van het blok van de cursor.
+4. Alleen met de hand: plakken uit de echte programma's (de documenten van Word en Google Docs zijn nagebouwd, dat van LibreOffice is een echte export).
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.

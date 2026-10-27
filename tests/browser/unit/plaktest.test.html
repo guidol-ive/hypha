@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Plaktest</title>
+<script type="importmap">{ "imports": { "temml": "../../../system/mdeditor/vendor/temml-0.14.0.js" } }</script>
+<script src="../../fixtures/plaktest/gegevens.js"></script>
+<script type="module">
+	//
+	// The paste test of the prototype (design section 12.15), on the converter of the editor (system/mdeditor/plakken.js):
+	// three documents (Word, Google Docs, LibreOffice), the separate cases and the speed: letter for letter the expected
+	// Markdown, the expected messages, and every formula draws in Temml.
+	//
+	import { test, same, check, done, diffLine } from './lib.js';
+	import { HyphaPlakken } from '../../../system/mdeditor/plakken.js';
+	import temml from 'temml';
+	const formulaErrors = md => {
+		const tex = [...md.matchAll(/^\$\$\n([\s\S]+?)\n\$\$$/gm)].map(m => m[1]).concat([...md.replace(/^\$\$\n[\s\S]+?\n\$\$$/gm, '').matchAll(/(^|[^\\$])\$(?=\S)([^$\n]*?\S)\$(?![\w$\d])/g)].map(m => m[2]));
+		return tex.filter(t => { try { temml.renderToString(t, { throwOnError: true }); return false; } catch (e) { return true; } });
+	};
+	const notes = (want = [], got = []) => same(JSON.stringify([...want].sort()), JSON.stringify([...got].sort()), 'messages');
+	for (const d of PLAKTEST.documenten) test(`document ${d.id}`, () => {
+		const r = HyphaPlakken.toMarkdown(d.html);
+		same('', diffLine(d.verwacht, r.md));
+		same(0, formulaErrors(r.md).length, 'formulas');
+		notes(d.meldingen, r.notes);
+	});
+	for (const c of PLAKTEST.gevallen) test(`case ${c.naam}`, () => {
+		let got, n = [];
+		if (c.omml) got = HyphaPlakken.ommlToTex(new DOMParser().parseFromString(`<x-omml>${c.omml}</x-omml>`, 'text/html').body.firstElementChild);
+		else { const r = HyphaPlakken.toMarkdown(c.html); got = r.md; n = r.notes; }
+		same(c.verwacht, got);
+		notes(c.meldingen, n);
+		if (c.omml) same(0, formulaErrors(`$${got}$`).length, 'formula');
+	});
+	test('speed: the Word document forty times within 1 second', () => {
+		const word = PLAKTEST.documenten.find(d => d.id === 'word-windows').html;
+		const body = word.replace(/^[\s\S]*<!--StartFragment-->/, '').replace(/<!--EndFragment-->[\s\S]*$/, '');
+		const big = word.replace(body, Array(40).fill(body).join('\n'));
+		const times = [];
+		for (let k = 0; k < 5; k++) { const t0 = performance.now(); HyphaPlakken.toMarkdown(big); times.push(performance.now() - t0); }
+		times.sort((a, b) => a - b);
+		check(times[2] < 1000, `median ${times[2]} ms`);
+		window.plakSpeed = times[2];
+	});
+	done();
+</script>

@@ -460,7 +460,7 @@ export class Editor {
 	// The cursor as block number and offset in the visible text of that block, counted the same in both views.
 	//
 	captureCaret() {
-		const blockStarts = text => { const p = pmParse(text, this.markdown); let line = (p.gaps[0] || []).length; const out = []; p.doc.forEach((n, o, i) => { out.push(line); line += p.sources.get(n).split('\n').length + (p.gaps[i + 1] || []).length; }); return out; };
+		const blockStarts = text => { const p = pmParse(text, this.markdown); let line = (p.gaps[0] || []).length; const out = []; p.doc.forEach((n, o, i) => { out.push(line); line += (p.sources.get(n) || '').split('\n').length + (p.gaps[i + 1] || []).length; }); return out; };
 		if (this.editMode === 'markdown') {
 			const head = this.cm.state.selection.main.head;
 			const front = (this.cm.state.doc.toString().match(FRONT_RE) || [''])[0].length;
@@ -508,7 +508,7 @@ export class Editor {
 			const front = (doc.toString().match(FRONT_RE) || [''])[0].length;
 			const p = pmParse(this.fields.text, this.markdown);
 			let line = doc.lineAt(front).number + (p.gaps[0] || []).length, i = 0;
-			p.doc.forEach((n, o, k) => { if (k < c.index) { line += p.sources.get(n).split('\n').length + (p.gaps[k + 1] || []).length; } });
+			p.doc.forEach((n, o, k) => { if (k < c.index) { line += (p.sources.get(n) || '').split('\n').length + (p.gaps[k + 1] || []).length; } });
 			let pos = doc.line(Math.min(line, doc.lines)).from;
 			const end = Math.min(doc.length, pos + 5000);
 			while (pos < end && this.visibleLength(doc.sliceString(doc.line(Math.min(line, doc.lines)).from, pos)) < c.visible) pos++;
@@ -1199,7 +1199,7 @@ export class Editor {
 		for (const b of this.root.querySelectorAll('[data-line]')) b.addEventListener('click', () => {
 			const index = pmParse(this.fields.text, this.markdown);
 			let k = 0, line = (index.gaps[0] || []).length;
-			index.doc.forEach((n, o, i) => { if (line <= +b.dataset.line) k = i; line += index.sources.get(n).split('\n').length + (index.gaps[i + 1] || []).length; });
+			index.doc.forEach((n, o, i) => { if (line <= +b.dataset.line) k = i; line += (index.sources.get(n) || '').split('\n').length + (index.gaps[i + 1] || []).length; });
 			this.applyCaret({ index: k, visible: 0 });
 		});
 	}
