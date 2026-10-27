@@ -1,6 +1,6 @@
 ---
 title: "MARKDOWN EDITOR: een tekst-editor op basis van Markdown naast WYMeditor, functioneel, grafisch en technisch ontwerp"
-revision: 17
+revision: 18
 date_created: 2026-10-26
 date_last_review:
 status: concept
@@ -1170,6 +1170,7 @@ Randvoorwaarde: zo weinig mogelijk wijzigingen aan de bestaande PHP-code. Dat ka
 | `.htaccess` | **geen** |
 | `index.php` | **1 regel** (bouw): `system/mdeditor/` serveren met lange cache |
 | `system/core/pages.php` | **2 regels** (bouw): teruggetrokken artikelen uit de overzichten (BR-86) |
+| `system/core/database.php` | **19 regels** (bouw): `diff()` en `patch()` houden tekst met `@@` heel in oudere versies (upstream #571 / PR #572); de Markdown-versies gebruiken dezelfde diff |
 
 Het **paginatype blijft** `peer_reviewed_article` (en `textpage`); het **signaal** is `format="markdown"` met het bron-element in de XML ([§12.5](#125-opslag-oude-artikelen-blijven-html-signaal-voor-markdown)). Een nieuw type zou de opmaak breken: Hypha zet het type als klasse `type_peer_reviewed_article` op de pagina. Het standaardthema gebruikt die klasse op 11 plekken, en de macro `pagelist` filtert op het type ([§13.13](#1313-paginatype-en-opslag)).
 
@@ -2307,4 +2308,9 @@ De bouw (branch `issue520-bouw`, oktober 2026) volgt dit ontwerp. Wat anders is 
 4. **Goedkeuren met het redactiestatuut** gebeurt in de leesweergave, waar beoordelaars nu al goedkeuren.
 5. **Lighthouse**: een gepubliceerd artikel haalt met het standaardthema 96–100 voor prestaties en goede werkwijzen; toegankelijkheid 94 en SEO 91 liggen aan het thema (contrast) en het ontbreken van een `robots.txt`. Met het advies van §12.9 (`#0B7285`) wordt toegankelijkheid 98, met een `robots.txt` SEO 100. De editor haalt op de computer 96 / 95 / 100, op de telefoon (traag 4G) 69 voor prestaties.
 6. **Container**: met twee Apache-werkers moet keep-alive uit (`docs/container/hypha-vhost.conf`), anders wacht elk bestand seconden.
+7. **Gelijktijdig werken** (gemeten met tot 32 verzoeken tegelijk): bron en XHTML lopen nooit uit elkaar, maar zonder controle ging een wijziging van een collega stil verloren. Gebouwd: een versiecontrole bij opslaan (`article/@md_revision`, bij tekstpagina's het tijdstip van de nieuwste bronversie) met een melding wie en wanneer, en *Toch opslaan*; tags na de tekst en alleen door de opslag waarvan de tekst bewaard is; de pagina op id opzoeken na het herladen van `hypha.xml`, met de opdracht `mdLocate` voor een editor waarvan de pagina intussen hernoemd is; statusovergangen opnieuw gecontroleerd onder het slot; concepten per pagina-id en per tabblad. De ACID-eigenschappen per bestand en over bestanden heen staan in `docs/technical/DATA_MODEL.md`.
+8. **Thema's**: in het thema van De Stadsbron (smalle kolom van 720 px, geen Fork Awesome) bleek de editor afhankelijk van de schermbreedte en van het thema. Fork Awesome zit nu bij de editor, de indeling volgt de breedte van de editor zelf (container queries) en *naast elkaar* kan alleen als de kolom breed genoeg is.
+9. **Unicode**: tekst in elk schrift komt goed door. Hersteld in de editor: `dir`/`lang`/`<bdi>` in het filter, dezelfde slug op server en browser ook zonder intl, NFC voor namen en tags, tellers in tekens zoals een lezer ze ziet. Een titel in een ander schrift dan Latijn geeft het adres `pagina`, zolang paginanamen buiten ASCII in Hypha niet werken (upstream #541, #543).
+10. **Capaciteit**: per werker ongeveer 30 MB plus 7,5 MB per 1.000 pagina's; de index duurt boven ongeveer 25.000 pagina's langer dan 1 seconde, de editor boven 50.000 (`docs/handleiding/techniek/06-beheer.md`).
+11. **Gevonden in bestaande code** en upstream gemeld met issue en waar mogelijk een pull request: #525–#530, #537, #539–#559, #560, #569, #571 (overzicht in `ai/reference/GITHUB_ISSUES_FILED_2026W44.md`).
 
