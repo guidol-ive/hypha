@@ -1,0 +1,2931 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prototype tekst-editor – De Stadsbron</title>
+<!--
+//
+// Clickable prototype of the Markdown editor for Hypha (phase 1, design).
+// Starts with a fictional sample article and keeps everything in the localStorage of the browser;
+// nothing is sent to a server.
+// Icons: Fork Awesome from the default Hypha theme. Fonts: Lora and Lato from the De Stadsbron theme.
+// Markdown and diagrams: marked, DOMPurify and Pele (MIT/Apache-2.0); formulas: Temml (MIT); code: highlight.js (BSD-3).
+//
+-->
+<link rel="stylesheet" href="../../../../../data/themes/default/css/fork-awesome.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/temml@0.14.0/dist/temml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"></script>
+<style>
+@font-face { font-family: 'Lato'; font-weight: 400; src: url('../img/fonts/lato-regular.woff2') format('woff2'); }
+@font-face { font-family: 'Lato'; font-weight: 700; src: url('../img/fonts/lato-bold.woff2') format('woff2'); }
+@font-face { font-family: 'Lora'; font-weight: 400; src: url('../img/fonts/lora-regular.woff2') format('woff2'); }
+@font-face { font-family: 'Lora'; font-weight: 700; src: url('../img/fonts/lora-bold.woff2') format('woff2'); }
+@font-face { font-family: 'Lora'; font-weight: 400; font-style: italic; src: url('../img/fonts/lora-italic.woff2') format('woff2'); }
+
+:root {
+	/*
+	// Colours of the 'destadsbron' theme.
+	*/
+	--black: #1d2021; --orange: #fe9900; --bluegreen: #0c8599; --formheaderback: #226765; --red: #be0709;
+	--grey: #505458; --darkgrey: #666; --lightgrey: #ddd;
+	--bluegreen-light: #E3F3F5; --orange-light: #FFF1DB; --yellow: #FFFFD6; --work: #F5F5F3; --ok: #237A35; --dim: #6E7781;
+	/*
+	// Accessible shades (WCAG 2.1 AA, contrast >= 4.5:1 on white): the brand blue-green #0c8599 reaches 4.3:1 only.
+	*/
+	--action: #0B7285; --greybtn: #5F656A;
+	/*
+	// Diagram colours for Pele: a calm sub-palette around blue-green and orange, all at about the same lightness,
+	// validated for colour blindness (adjacent pairs dE >= 8) and >= 4.5:1 for white text. Pele reads these variables.
+	*/
+	--pele-series-1: #007A8F; --pele-series-2: #9C6410; --pele-series-3: #3A5FA8; --pele-series-4: #3B7F34;
+	--pele-series-5: #9E4C76; --pele-series-6: #7D641E; --pele-series-7: #5F656A; --pele-series-8: #8A9096;
+	--pele-accent: #0B7285; --pele-fg: #1d2021; --pele-line: #505458; --pele-muted: #5F656A; --pele-border: #9AA1A6;
+	--pele-surface: #F2F6F7; --pele-surface-alt: #E3EDEF; --pele-error: #be0709;
+	--serif: Lora, Georgia, 'Times New Roman', serif; --sans: Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	--mono: Menlo, Consolas, monospace;
+	--line: #D5D8DA; --card: #fff;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--work); color: var(--black); font-family: var(--sans); font-size: 15px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.fa { width: 1.1em; text-align: center; }
+
+/*
+// Site header.
+*/
+.site { background: #fff; border-bottom: 1px solid var(--lightgrey); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 24px; flex-wrap: wrap; }
+.site img { height: 60px; display: block; }
+.site nav { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.site nav span { background: var(--orange); padding: 6px 9px; font-size: 13px; letter-spacing: .4px; }
+.site .user { font-size: 12px; color: var(--grey); width: 100%; text-align: right; margin-bottom: -4px; }
+
+main { max-width: 1240px; margin: 0 auto; padding: 16px 24px 80px; }
+.titlebar { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.titlebar h1 { font-family: var(--serif); font-size: 26px; line-height: 1.25; margin: 0; flex: 1 1 520px; }
+.buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 0; border-radius: 3px; padding: 9px 16px; min-height: 38px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; font-size: 13px; }
+.btn.primary { background: var(--action); color: #fff; }
+.btn.grey { background: var(--greybtn); color: #fff; }
+.btn.outline { background: #fff; border: 1px solid #9AA1A6; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 14px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/*
+// Status steps of the review workflow.
+*/
+.steps { display: flex; background: #fff; border: 1px solid var(--line); border-radius: 4px; margin: 12px 0; padding: 10px 16px; gap: 8px; align-items: center; flex-wrap: wrap; }
+.step { display: flex; align-items: center; gap: 8px; color: var(--darkgrey); font-size: 14px; }
+.step .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #6E7781; display: grid; place-items: center; font-size: 12px; color: var(--grey); }
+.step.done .dot, .step.now .dot { color: #fff; }
+.step.done .dot { background: var(--ok); border-color: var(--ok); }
+.step.now { color: var(--black); font-weight: 700; }
+.step.now .dot { background: var(--action); border-color: var(--action); }
+.step.partial .dot { border-color: var(--ok); color: var(--black); }
+.step.retracted .dot { background: var(--red); border-color: var(--red); color: #fff; }
+.step.retracted .t { color: var(--red); }
+details.card > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary h2 { margin: 0 !important; }
+details.card > summary .fa { transition: transform .15s; color: var(--grey); }
+details.card[open] > summary { margin-bottom: 10px; }
+details.card[open] > summary .fa { transform: rotate(90deg); }
+.art .retracted { background: #FDECEC; border-left: 4px solid var(--red); padding: 10px 14px; font-family: var(--sans); font-size: 14px; margin: 0 0 14px; }
+.steps .sep { flex: 1 1 20px; height: 3px; background: var(--lightgrey); min-width: 16px; }
+.steps .action { margin-left: auto; display: flex; gap: 8px; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 4px; }
+
+/*
+// Article properties.
+*/
+.meta { padding: 12px 20px 14px; }
+.metahead { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.metahead .hint { font-weight: 400; color: var(--darkgrey); font-size: 12px; }
+/*
+// Article head in visual mode: fixed fields shown as a clearly framed block above the text.
+*/
+.wyshead { display: none; margin: 16px 36px 0; padding: 10px 14px 12px; border: 1px solid var(--line); border-left: 4px solid var(--action); background: #F7FAFB; border-radius: 4px; }
+.editorpane.visual.head-on .wyshead { display: block; }
+.wh-label { font-size: 11px; font-weight: 700; color: var(--grey); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 6px; }
+.wyshead input, .wyshead textarea, .wf-field { width: 100%; border: 1px dashed #8A9096; border-radius: 3px; background: #fff; padding: 3px 6px; }
+/*
+// Fixed fields look editable even without the cursor in them: a white box with a dashed line, solid on hover.
+*/
+.wyshead input:hover, .wyshead textarea:hover, .wf-field:hover { border-style: solid; border-color: var(--action); }
+.wyshead input:focus, .wyshead textarea:focus, .wf-field:focus { border: 1px solid var(--action); box-shadow: 0 0 0 2px var(--bluegreen-light); outline: none; }
+.wh-label .hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.wysfoot { display: none; margin: 8px 36px 24px; }
+.fbox { padding: 10px 14px 12px; border: 1px solid var(--line); border-left: 4px solid var(--action); background: #F7FAFB; border-radius: 4px; margin-bottom: 10px; }
+/*
+// Article head, bijsluiter and bronnen fold open and closed; closed, the summary shows a short preview.
+*/
+summary.wh-label { cursor: pointer; list-style: none; display: flex; gap: 6px; align-items: baseline; }
+summary.wh-label::-webkit-details-marker { display: none; }
+summary.wh-label .tw { transition: transform .15s; }
+details[open] > summary.wh-label .tw { transform: rotate(90deg); }
+details:not([open]) > summary.wh-label { margin-bottom: 0; }
+.sumtext { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--black); font-family: var(--serif); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+details[open] > summary .sumtext { display: none; }
+.toolbar .modes.compact span { display: none; }
+/*
+// In the narrow column of 'Naast elkaar' the fixed blocks are more compact.
+*/
+.panes.side .wyshead { margin: 12px 14px 0; }
+.panes.side .wysfoot { margin: 8px 14px 16px; }
+.panes.side .wh-label .hint { display: none; }
+.panes.side .wh-media { flex-direction: column; }
+.panes.side .wh-img { flex-basis: auto; width: 100%; }
+.wh-imgfields .wh-row .linkbtn { flex: none; }
+.editorpane.visual .wysfoot { display: block; }
+.wh-sub { font-size: 12px; font-weight: 700; color: var(--grey); margin: 8px 0 4px; }
+.wf-field { min-height: 2.6em; font-family: var(--serif); font-size: 15px; line-height: 1.5; }
+.wf-field:empty::before { content: attr(data-ph); color: #8A9096; }
+.wf-field p { margin: 0 0 6px; }
+.wf-field ul { margin: 0 0 6px; padding-left: 20px; }
+.wyshead select { font: inherit; font-size: 13px; border: 1px dashed #8A9096; border-radius: 11px; background: #fff; padding: 1px 6px; color: var(--grey); }
+.wh-title { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 1.25; resize: none; overflow: hidden; }
+.wh-row { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--grey); }
+.wh-row input { flex: 1; font-size: 13px; }
+.wh-key { font-size: 12px; color: var(--grey); flex: none; }
+.wh-excerpt { font-family: var(--serif); font-weight: 700; font-size: 17px; line-height: 1.45; resize: none; overflow: hidden; }
+.wyshead .tags { border: 0; background: transparent; padding: 2px 6px; }
+.cardhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.cardhead h2 { margin: 0 !important; }
+.cardhead .switch { margin: 0; font-size: 12px; color: var(--grey); }
+.hl .fm { color: var(--grey); }
+.hl .fmkey { color: var(--dim); }
+/*
+// Delete button on images and diagrams in visual mode.
+*/
+.wys figure { position: relative; }
+.figdel { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(29,32,33,.75); color: #fff; font-size: 15px; display: grid; place-items: center; cursor: pointer; }
+.figdel:hover, .figdel:focus-visible { background: var(--red); }
+.figedit { position: absolute; top: 6px; right: 44px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(29,32,33,.75); color: #fff; font-size: 14px; display: grid; place-items: center; cursor: pointer; z-index: 1; }
+.figedit:hover, .figedit:focus-visible { background: var(--action); }
+.figdel { z-index: 1; }
+.wys figure:not(.diagram) img, .wys figure.diagram svg { cursor: pointer; }
+@media (pointer: coarse) { .figdel, .figedit { width: 44px; height: 44px; } .figedit { right: 56px; } }
+details.meta summary { cursor: pointer; font-weight: 700; padding: 14px 0; list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+details.meta summary::-webkit-details-marker { display: none; }
+details.meta summary .hint { font-weight: 400; color: var(--darkgrey); font-size: 12px; }
+details.meta .metatitle { font-family: var(--serif); font-weight: 700; margin-left: 6px; }
+details.meta[open] .metatitle { display: none; }
+details.meta:not([open]) summary .hint { display: none; }
+details.meta[open] summary .fa-caret-right { transform: rotate(90deg); }
+.grid { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 10px 14px; align-items: start; padding-bottom: 18px; }
+.grid label { font-weight: 700; padding-top: 7px; }
+.grid label small { display: block; font-weight: 400; color: var(--darkgrey); font-size: 11px; }
+.grid input[type=text], .grid textarea { width: 100%; border: 1px solid #9AA1A6; border-radius: 3px; padding: 6px 9px; background: #fff; }
+.grid textarea { font-family: var(--serif); resize: vertical; min-height: 66px; line-height: 1.5; }
+.grid input:focus, .grid textarea:focus { outline: 2px solid var(--bluegreen); outline-offset: -1px; }
+.titlefield { font-family: var(--serif); font-weight: 700; }
+.count { font-size: 12px; color: var(--ok); }
+.count.warn { color: #8A4B00; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tag { background: var(--orange-light); border: 1px solid var(--orange); border-radius: 11px; padding: 1px 4px 1px 10px; font-size: 13px; display: inline-flex; align-items: center; gap: 2px; }
+.tag button { border: 0; background: none; padding: 0 4px; font-size: 13px; }
+.tags input { border: 0 !important; flex: 1 1 100px; padding: 3px !important; outline: none; }
+.count { padding-left: 6px; }
+/*
+// Image with the excerpt, part of the fixed article head.
+*/
+.wh-media { display: flex; gap: 16px; align-items: flex-start; margin: 8px 0 6px; }
+.wh-img { flex: 0 0 240px; display: flex; flex-direction: column; gap: 4px; }
+.wh-ex { flex: 1; min-width: 0; }
+.wh-thumb { flex: none; border: 1px solid var(--line); background: #fff; border-radius: 3px; padding: 3px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--action); }
+.wh-thumb img { width: 230px; height: 128px; object-fit: cover; background: #CFD8DA; border-radius: 2px; display: block; }
+.wh-thumb:hover { border-color: var(--action); }
+.wh-imgfields { display: flex; flex-direction: column; gap: 2px; }
+.wh-imgfields .wh-key, .wh-ex .wh-key { display: block; margin-top: 2px; }
+.wh-imgfields input { font-size: 13px; }
+@media (max-width: 700px) { .wh-media { flex-direction: column; } .wh-img { flex-basis: auto; width: 100%; } }
+/*
+// Small pictogram of where an image or diagram ends up in the article.
+*/
+.placeicon { display: block; margin: 0 auto 4px; }
+.placeicon .pg { fill: #fff; stroke: #9AA1A6; }
+.placeicon .ln { fill: #C4C9CC; }
+.placeicon .bl { fill: var(--black); }
+/*
+// Tables: menu below the 'Tabel' button and the context menu on a table cell.
+*/
+.menu { position: absolute; z-index: 25; background: #fff; border: 1px solid #9AA1A6; border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,.15); padding: 6px; min-width: 230px; font-size: 14px; }
+.menu .mh { font-size: 11px; font-weight: 700; color: var(--darkgrey); letter-spacing: .3px; padding: 6px 8px 4px; text-transform: uppercase; }
+.menu [role=menuitem] { display: flex; gap: 8px; align-items: center; width: 100%; border: 0; background: none; text-align: left; padding: 6px 8px; border-radius: 4px; min-height: 32px; }
+.menu [role=menuitem]:hover, .menu [role=menuitem]:focus { background: var(--bluegreen-light); outline: none; }
+.menu [role=menuitem][aria-disabled=true] { color: #8A9096; cursor: not-allowed; background: none; }
+.menu .cols { display: flex; gap: 4px; padding: 2px 4px 6px; }
+.menu .cols [role=menuitem] { flex-direction: column; gap: 2px; width: auto; padding: 4px 6px; font-size: 12px; }
+.menu .cols svg rect { fill: #fff; stroke: #6E7781; }
+.menu .cols svg rect.th { fill: var(--bluegreen-light); }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+@media (pointer: coarse) { .menu [role=menuitem] { min-height: 44px; } }
+.art table { margin: 16px 0; }
+.wys table td, .wys table th { min-width: 60px; height: 2em; }
+.wys table th { background: #F7FAFB; }
+.linkbtn { background: none; border: 0; color: var(--action); padding: 0; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+/*
+// Visible focus on everything reachable with the keyboard (WCAG 2.4.7).
+*/
+:focus-visible { outline: 3px solid var(--action); outline-offset: 2px; }
+.ed textarea:focus-visible { outline: none; }
+.ed:focus-within { box-shadow: inset 0 0 0 2px var(--action); }
+.skip { position: absolute; left: 8px; top: -60px; background: #fff; color: var(--action); padding: 8px 12px; border: 2px solid var(--action); z-index: 100; }
+.skip:focus { top: 8px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/*
+// Button in the checklist: clearly an action, not just a word.
+*/
+.gobtn { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--action); color: var(--action); background: #fff; border-radius: 14px; padding: 2px 10px; font-size: 12px; font-weight: 700; min-height: 26px; }
+.gobtn:hover { background: var(--action); color: #fff; }
+@media (pointer: coarse) { .gobtn { min-height: 44px; padding: 4px 14px; } }
+/*
+// Windows high contrast mode: show the real text field instead of the styled layer.
+*/
+@media (forced-colors: active) { .ed .hl { display: none; } .ed textarea { color: CanvasText; } }
+
+/*
+// Tabs and toolbar stay at the top of the viewport (sticky).
+*/
+.editbar { position: sticky; top: 0; z-index: 8; background: var(--work); padding-top: 12px; }
+/*
+// Visual cue for the new editor: a band in the brand colours above the toolbar.
+*/
+.toolbar { border-top: 4px solid transparent; border-image: linear-gradient(90deg, var(--orange) 0 50%, var(--bluegreen) 50% 100%) 1; }
+.toolbar { display: flex; align-items: center; gap: 2px; background: #fff; border: 1px solid var(--line); padding: 4px 6px; flex-wrap: nowrap; overflow: hidden; }
+/*
+// Buttons that do not fit on the one row of the toolbar move to the 'Meer' menu at its end.
+*/
+.toolbar .ovf { display: none !important; }
+.toolbar .tbmore { margin-left: auto; }
+.facts select { font: inherit; font-size: 12.5px; border: 1px solid var(--line); border-radius: 3px; padding: 1px 4px; background: #fff; color: var(--black); }
+.statute { border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px; margin: 0 0 12px; }
+.statute label { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; font-size: 14px; }
+.statute label small { display: block; color: var(--darkgrey); font-size: 12px; }
+.statute input { margin-top: 3px; width: 18px; height: 18px; flex: none; }
+@media (pointer: coarse) { .statute label { min-height: 44px; } }
+.reviews { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.reviews li { padding: 6px 0; border-top: 1px solid var(--line); }
+.reviews li:first-child { border-top: 0; }
+.reviews .void { color: var(--darkgrey); text-decoration: line-through; }
+.btn.outline.retract { color: var(--red); border-color: var(--red); }
+/*
+// Switch between visual editing and Markdown.
+*/
+.editmodebar { display: flex; gap: 8px; align-items: center; padding: 6px 16px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--grey); background: #fff; position: sticky; top: calc(var(--sticky-top, 120px) - 8px); z-index: 3; }
+.panes.side .editmodebar { top: 0; }
+.editmode { display: flex; background: #EEF0F1; border-radius: 4px; padding: 3px; }
+.editmode button { border: 0; background: none; padding: 5px 10px; border-radius: 3px; font-size: 12px; color: var(--grey); display: inline-flex; gap: 5px; align-items: center; min-height: 30px; }
+.editmode button[aria-pressed=true] { background: var(--action); color: #fff; font-weight: 700; }
+.toolbar .tb.md-only { }
+.toolbar.visual .md-only { display: none; }
+.toolbar .tb { border: 0; background: none; padding: 6px 8px; border-radius: 3px; min-height: 36px; display: inline-flex; gap: 5px; align-items: center; }
+.toolbar .tb:hover, .toolbar .tb:focus-visible { background: var(--bluegreen-light); outline: none; }
+.toolbar .sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; }
+.modes { display: flex; background: #EEF0F1; border-radius: 4px; padding: 3px; flex: none; }
+/*
+// The view switch sits at the right end of the toolbar, so no row above the toolbar is needed.
+*/
+.toolbar .modes { margin-left: auto; }
+.toolbar .tbmore:not([hidden]) + .modes { margin-left: 6px; }
+.modes button { border: 0; background: none; padding: 5px 10px; border-radius: 3px; font-size: 12px; color: var(--grey); display: inline-flex; gap: 5px; align-items: center; }
+.modes button[aria-pressed=true] { background: #fff; color: var(--black); font-weight: 700; box-shadow: 0 0 0 1px var(--line); }
+
+/*
+// Writing area: a text field above a styled layer with the same font, so Markdown characters
+// can be dimmed without shifting the text.
+*/
+.panes { display: grid; grid-template-columns: minmax(0, 1fr); border: 1px solid var(--line); border-top: 0; background: #fff; min-height: 460px; }
+.panes.side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); height: calc(100vh - 130px); min-height: 420px; }
+.panes.side .editorpane, .panes.side .previewpane { overflow: auto; }
+.panes.side .previewpane { border-left: 1px solid var(--line); }
+.editorpane { position: relative; }
+.panes.preview-only .editorpane, .panes.write-only .previewpane { display: none; }
+/*
+// Visual mode: editing like in a word processor.
+*/
+.wys { min-height: 460px; padding: 24px 36px 40px; outline: none; }
+.wys:focus-visible { box-shadow: inset 0 0 0 2px var(--action); }
+.editorpane .wys { display: none; }
+.editorpane.visual .wys { display: block; }
+.editorpane.visual .ed { display: none; }
+.wys figure.diagram { cursor: default; user-select: none; border: 1px dashed var(--line); padding: 6px; }
+.wys .wikilink { background: var(--bluegreen-light); border-radius: 3px; padding: 0 3px; text-decoration: underline; text-underline-offset: 2px; }
+.ed { position: relative; margin: 0; }
+.ed textarea, .ed .hl { font-family: var(--serif); font-size: 17px; line-height: 1.65; padding: 24px 36px 40px; margin: 0; border: 0; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; tab-size: 4; letter-spacing: 0; }
+.ed .hl { position: absolute; inset: 0; pointer-events: none; color: var(--black); }
+.ed textarea { position: relative; display: block; width: 100%; resize: none; background: transparent; color: transparent; caret-color: var(--black); outline: none; overflow: hidden; min-height: 460px; }
+.ed textarea::selection { background: rgba(12,133,153,.25); color: transparent; }
+.hl .mk { color: var(--dim); }
+.hl .h { color: var(--formheaderback); }
+.hl .strong { color: #000; text-shadow: .35px 0 0 #000; }
+.hl .em { font-style: italic; }
+.hl .link { color: var(--action); }
+.hl .bad { color: var(--red); text-decoration: underline wavy var(--red); }
+.hl .code { color: #5A4A8A; }
+.hl .callout { color: var(--formheaderback); }
+.hl .mark { background: #FFF3B0; }
+.hl .comment { color: var(--dim); font-style: italic; }
+
+
+/*
+// Preview in the style of the public article page.
+*/
+.previewpane { padding: 0; overflow: auto; background: #fff; }
+.devicebar { display: flex; gap: 8px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--grey); position: sticky; top: 0; background: #fff; z-index: 2; }
+.devicebar button { border: 1px solid var(--line); background: #fff; border-radius: 3px; padding: 4px 10px; }
+.devicebar button[aria-pressed=true] { border-color: var(--bluegreen); color: var(--action); font-weight: 700; }
+.frame { padding: 24px; }
+.frame.phone, .frame.phone-land { margin: 16px auto; border: 12px solid var(--black); border-radius: 36px; padding: 18px 16px; transform-origin: top left; }
+.frame.phone { width: 414px; }
+.frame.phone-land { width: 868px; border-width: 12px 24px; }
+.frame.phone .art, .frame.phone-land .art { font-size: 17px; }
+.art { max-width: 720px; margin: 0 auto; font-family: var(--serif); font-size: 17px; line-height: 1.65; }
+.art header p { margin: 0 0 8px; }
+.art .diagram-src { text-align: left; font-size: 13px; background: #F7F8F8; padding: 10px; white-space: pre-wrap; }
+.art figure.diagram figcaption { text-align: center; }
+.art .kicker { font-family: var(--sans); color: var(--action); font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+.art h1 { font-size: 32px; line-height: 1.25; margin: 6px 0 12px; }
+.art .intro { font-weight: 700; font-size: 18px; line-height: 1.45; }
+.art .byline { font-family: var(--sans); font-size: 13px; color: var(--grey); border-bottom: 1px solid var(--lightgrey); padding-bottom: 10px; margin-bottom: 16px; }
+.art figure { margin: 18px 0; }
+.art img { max-width: 100%; height: auto; }
+.art figure img { width: 100%; display: block; background: #CFD8DA; }
+.art figure.klein-rechts { float: right; width: 40%; margin: 4px 0 10px 18px; }
+.art figure.in-de-tekst { width: 75%; }
+.art figcaption { font-family: var(--sans); font-size: 13px; color: var(--grey); margin-top: 6px; }
+.art h3 { font-family: var(--sans); font-size: 20px; margin: 28px 0 8px; }
+.art h4 { font-family: var(--sans); font-size: 17px; margin: 22px 0 6px; }
+.art a { color: var(--action); }
+.art a.missing { color: var(--red); text-decoration: underline wavy var(--red); }
+.art a.ext::after { content: ' ↗'; font-size: .8em; }
+.art mark { background: #FFF3B0; }
+.art .callout { background: var(--bluegreen-light); border-left: 4px solid var(--bluegreen); padding: 12px 18px; margin: 18px 0; font-family: var(--sans); font-size: 15px; line-height: 1.55; }
+.art .callout .ct { font-weight: 700; color: var(--formheaderback); margin-bottom: 4px; }
+.art .callout.warning, .art .callout.let-op { background: var(--orange-light); border-color: var(--orange); }
+.art .callout.quote { background: none; border: 0; border-top: 4px solid var(--orange); padding: 10px 0 0; font-family: var(--serif); font-style: italic; font-size: 22px; line-height: 1.4; max-width: 520px; }
+.art .callout.quote .ct { display: none; }
+.art .footnotes { font-size: 14px; border-top: 1px solid var(--lightgrey); margin-top: 24px; }
+.art .bijsluiter { font-family: var(--sans); font-size: 14px; border-top: 1px solid var(--lightgrey); margin-top: 28px; padding-top: 8px; }
+.art .bijsluiter h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; margin: 6px 0; }
+.art .support { background: var(--lightgrey); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; margin-top: 18px; gap: 12px; flex-wrap: wrap; }
+.art .support strong { font-family: var(--serif); }
+.art .diagram { margin: 20px 0; text-align: center; }
+.art .diagram svg { max-width: 100%; height: auto; }
+.art .diagram .diagerr { text-align: left; background: var(--orange-light); border: 1px solid var(--orange); padding: 10px 14px; font-family: var(--sans); font-size: 14px; }
+.art table { border-collapse: collapse; font-family: var(--sans); font-size: 14px; }
+/*
+// Formulas (MathML from Temml) and code with colours per language, in the colours of the house style
+// (contrast at least 4.5:1 on the light background).
+*/
+.art .math-block { display: block; margin: 14px 0; overflow-x: auto; text-align: center; }
+.art math { font-size: 1.05em; }
+.art .math-err { color: var(--red); font-family: var(--mono); font-size: 14px; }
+.wys .math, .wys .math-block { cursor: pointer; border-radius: 3px; }
+.wys .math:hover, .wys .math-block:hover { background: var(--bluegreen-light); }
+.art pre.code { background: #F7F8F8; border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; overflow-x: auto; font-size: 14px; line-height: 1.5; }
+.art pre.code code { font-family: var(--mono); }
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in { color: #0B7285; font-weight: 700; }
+.hljs-string, .hljs-attr + .hljs-string { color: #237A35; }
+.hljs-number, .hljs-literal { color: #8A4B00; }
+.hljs-comment { color: #5F656A; font-style: italic; }
+.hljs-title, .hljs-function, .hljs-section { color: #226765; font-weight: 700; }
+.hljs-attr, .hljs-variable, .hljs-template-variable { color: #8A4B00; }
+.hljs-meta, .hljs-tag { color: #5F656A; }
+.art th, .art td { border: 1px solid var(--lightgrey); padding: 6px 10px; }
+
+/*
+// Side column.
+*/
+aside.side { display: flex; flex-direction: column; gap: 16px; }
+/*
+// The side column (checklist and structure) stays in view while the article scrolls, like the tabs and toolbar;
+// a long column scrolls by itself.
+*/
+aside.side { position: sticky; top: 8px; align-self: start; max-height: calc(100vh - 16px); overflow-y: auto; overscroll-behavior: contain; }
+aside.side .card { padding: 14px 18px; }
+aside.side h2 { font-size: 15px; margin: 0 0 10px; }
+.checks { list-style: none; margin: 0; padding: 0; font-size: 13.5px; }
+.checks li { display: flex; gap: 8px; align-items: flex-start; padding: 3px 0; }
+.checks .fa-check { color: var(--ok); }
+.checks .fa-times { color: var(--red); }
+.checks .fa-exclamation-triangle { color: #B36B00; }
+.facts { list-style: disc; margin: 0 0 12px; padding-left: 18px; font-size: 13px; color: var(--grey); }
+.facts li { padding: 1px 0; }
+.facts li.save { color: var(--ok); font-weight: 700; }
+.facts li.save.unsaved { color: #8A4B00; }
+.switch { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 0 0 10px; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { width: 34px; height: 20px; border-radius: 10px; background: #8A9096; position: relative; flex: none; transition: background .15s; }
+.switch .track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s; }
+.switch input:checked + .track { background: var(--action); }
+.switch input:checked + .track::after { left: 16px; }
+.switch input:focus-visible + .track { outline: 3px solid var(--action); outline-offset: 2px; }
+.allgood { font-size: 13px; color: var(--ok); margin: 2px 0 8px; }
+.checks li button { margin-left: auto; }
+.summary { font-weight: 700; font-size: 13px; margin-top: 8px; }
+.summary.ok { color: var(--ok); }
+.summary.no { color: var(--red); }
+.outline a { display: block; color: var(--black); text-decoration: none; padding: 3px 0; font-size: 14px; }
+.outline a.sub { padding-left: 14px; color: var(--grey); font-size: 13px; }
+.outline a:hover { color: var(--action); }
+.small { font-size: 12px; color: var(--darkgrey); }
+
+/*
+// Menus and dialogs.
+*/
+.popup { position: absolute; z-index: 20; background: #fff; border: 1px solid #9AA1A6; border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,.15); min-width: 300px; max-width: 380px; padding: 6px; font-family: var(--sans); font-size: 15px; }
+.popup .ph { font-size: 11px; color: var(--darkgrey); font-weight: 700; padding: 6px 8px; letter-spacing: .3px; }
+.popup .it { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 4px; cursor: pointer; }
+.popup .it .fa { color: var(--formheaderback); }
+.popup .it code { margin-left: auto; font-size: 12px; color: var(--darkgrey); }
+.popup .it small { display: block; color: var(--darkgrey); font-size: 12px; }
+.popup .it.sel, .popup .it:hover { background: var(--bluegreen-light); }
+dialog { border: 1px solid var(--line); border-radius: 10px; padding: 0; width: min(900px, calc(100vw - 24px)); max-height: calc(100vh - 24px); }
+dialog::backdrop { background: rgba(29,32,33,.4); }
+dialog form { padding: 20px 24px; }
+dialog h2 { font-family: var(--serif); margin: 0 0 14px; display: flex; justify-content: space-between; }
+dialog h2 button { border: 0; background: none; font-size: 20px; color: var(--darkgrey); }
+.dlg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-weight: 700; margin-bottom: 4px; }
+.field input[type=text], .field textarea { width: 100%; border: 1px solid #9AA1A6; border-radius: 3px; padding: 7px 9px; }
+.field .help { font-size: 12px; color: var(--darkgrey); margin-top: 3px; }
+.place { display: flex; gap: 8px; }
+.place label { flex: 1; border: 1px solid var(--line); border-radius: 4px; padding: 8px 4px; text-align: center; font-weight: 400; cursor: pointer; font-size: 13px; }
+.place input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.place label:has(input:focus-visible) { outline: 3px solid var(--action); outline-offset: 2px; }
+.place label { position: relative; }
+.place label:has(input:checked) { border: 2px solid var(--bluegreen); background: var(--bluegreen-light); }
+.dropzone { width: 100%; cursor: pointer; font: inherit; border: 2px dashed var(--line); border-radius: 6px; min-height: 200px; display: grid; place-items: center; text-align: center; color: var(--grey); background: #F7F8F8; overflow: hidden; }
+.dropzone img { max-width: 100%; max-height: 260px; display: block; }
+.mdout { background: #F7F8F8; border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px; font-family: var(--mono); font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mdout b { font-family: var(--sans); font-size: 11px; color: var(--darkgrey); display: block; margin-bottom: 4px; }
+.dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.templates { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; position: relative; }
+.templates button { border: 1px solid #9AA1A6; background: #fff; border-radius: 16px; padding: 5px 14px; }
+.templates button[aria-pressed=true] { background: var(--action); border-color: var(--action); color: #fff; }
+/*
+// 'Meer soorten': list of diagram types with a preview of the example left of the list.
+*/
+.dpanel { position: absolute; top: 100%; right: 0; z-index: 30; margin-top: 4px; display: flex; background: #fff; border: 1px solid #9AA1A6; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.18); width: min(720px, calc(100vw - 48px)); max-height: 430px; }
+.dpanel[hidden] { display: none; }
+.dprev { flex: 1 1 55%; border-right: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dprev .dpv { flex: 1; display: grid; place-items: center; overflow: hidden; background: #FAFBFB; border-radius: 4px; min-height: 220px; }
+.dprev .dpv svg { max-width: 100%; max-height: 300px; height: auto; }
+.dprev .dpd { font-size: 13px; color: var(--grey); }
+.dlist { flex: 1 1 45%; list-style: none; margin: 0; padding: 6px; overflow: auto; }
+.dlist li { padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+.dlist li small { display: block; color: var(--darkgrey); font-size: 12px; }
+.dlist li[aria-selected=true], .dlist li:hover { background: var(--bluegreen-light); }
+@media (max-width: 700px) { .dpanel { flex-direction: column; max-height: 70vh; } .dprev { border-right: 0; border-bottom: 1px solid var(--line); } .dprev .dpv { min-height: 140px; } }
+#diagSrc { width: 100%; min-height: 220px; font-family: var(--mono); font-size: 14px; border: 1px solid #9AA1A6; border-radius: 3px; padding: 10px; }
+#diagView { border: 1px solid var(--line); border-radius: 4px; min-height: 220px; padding: 10px; display: grid; place-items: center; overflow: auto; }
+.diagerr { background: var(--orange-light); border: 1px solid var(--orange); border-radius: 4px; padding: 10px 12px; margin-top: 8px; font-size: 14px; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--black); color: #fff; padding: 10px 18px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+.toast.on { opacity: 1; }
+.toast.act { pointer-events: auto; }
+.toast button { margin-left: 10px; background: none; border: 1px solid #fff; color: #fff; border-radius: 4px; padding: 3px 10px; min-height: 30px; }
+.btn.danger { color: var(--red); border-color: var(--red); margin-right: auto; }
+.proto { background: var(--orange-light); border-bottom: 1px solid var(--orange); font-size: 13px; padding: 6px 24px; display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.proto button { border: 0; background: none; color: #075A69; text-decoration: underline; padding: 0; }
+.proto .protoctl { display: flex; gap: 12px; align-items: center; }
+.proto select { font: inherit; font-size: 13px; border: 1px solid var(--orange); border-radius: 3px; background: #fff; }
+
+/*
+// Phone and tablet.
+*/
+@media (max-width: 1020px) {
+	.layout { grid-template-columns: 1fr; }
+	aside.side { position: static; max-height: none; overflow: visible; }
+	.panes.side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+	main { padding: 10px 10px 90px; }
+	.site { padding: 6px 12px; }
+	.site img { height: 44px; }
+	.site nav span { font-size: 11px; padding: 4px 6px; }
+	.titlebar h1 { font-size: 21px; }
+	.grid { grid-template-columns: 1fr; gap: 4px; }
+	.grid label { padding-top: 6px; }
+	.ed textarea, .ed .hl { font-size: 18px; padding: 16px 16px 40px; }
+	.toolbar { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 30; border-left: 0; border-right: 0; justify-content: space-between; flex-wrap: nowrap; overflow-x: auto; padding: 2px 4px calc(2px + env(safe-area-inset-bottom)); }
+	.toolbar .tb { min-width: 44px; min-height: 44px; justify-content: center; }
+	.toolbar .tb span.lbl, .toolbar .sep, .toolbar .tbmore { display: none; }
+	.toolbar { overflow-x: auto; }
+	.editmodebar { padding: 4px 10px; }
+	.editbar { padding-top: 6px; }
+	.panes.side { grid-template-columns: minmax(0, 1fr); height: auto; }
+	.wys { padding: 16px; font-size: 18px; }
+	.toolbar .modes { order: -1; margin: 0 4px 0 0; }
+	.toolbar .modes span { display: none; }
+	.modes button[data-mode=side] { display: none; }
+	.dlg-grid { grid-template-columns: 1fr; }
+	.steps .step span.t { display: none; }
+	.steps .step.now span.t { display: inline; }
+}
+/*
+// Touch screens (Apple HIG): every control has a hit area of at least 44 x 44 pt.
+*/
+@media (pointer: coarse) {
+	.modes button, .editmode button, .devicebar button, .linkbtn, .switch { min-height: 44px; }
+	.switch .track { width: 51px; height: 31px; border-radius: 16px; }
+	.switch .track::after { width: 27px; height: 27px; }
+	.switch input:checked + .track::after { left: 22px; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#src">Naar de tekst</a>
+<div class="proto" role="note">
+	<span><i class="fa fa-info-circle" aria-hidden="true"></i> Prototype van de tekst-editor. Alles wordt alleen in deze browser bewaard (localStorage); er gaat niets naar een server.</span>
+	<span class="protoctl"><label for="roleSel">rol</label> <select id="roleSel" title="Bekijk het prototype als de auteur (Sanne) of als een collega die beoordeelt">
+		<option value="author">auteur (Sanne)</option><option value="colleague">collega (beoordelaar)</option><option value="admin">beheerder</option></select>
+	<button type="button" id="resetAll" title="Alle wijzigingen in dit prototype weggooien en opnieuw beginnen">terug naar het startpunt</button></span>
+</div>
+<header class="site">
+	<div class="user">Sanne (uitloggen)</div>
+	<img src="../img/logo-destadsbron.png" alt="De Stadsbron – Achtergronden bij het nieuws uit Amersfoort en omstreken" width="224" height="60">
+	<nav aria-label="Hoofdmenu"><span>ONDERZOEK</span><span>RUBRIEKEN</span><span>OPINIE</span><span>DOSSIERS</span><span>GEHEUGEN</span><span>ZOEK</span></nav>
+</header>
+
+<main>
+	<div class="titlebar">
+		<h1 id="pageTitle"></h1>
+		<div class="buttons">
+			<button class="btn grey" type="button" id="cancelBtn" title="Wijzigingen sinds de laatste keer opslaan weggooien">afbreken</button>
+			<button class="btn primary" type="button" id="saveBtn" title="Opslaan als nieuwe versie (⌘/Ctrl+S)">opslaan</button>
+		</div>
+	</div>
+
+	<div class="steps" id="steps" role="group" aria-label="Status van het artikel"></div>
+
+	<div class="layout">
+		<section>
+
+			<div class="editbar" id="editbar">
+			<div class="toolbar" role="toolbar" aria-label="Opmaak" id="toolbar">
+				<button class="tb" data-act="heading" title="Tussenkop"><i class="fa fa-header" aria-hidden="true"></i><span class="lbl">Tussenkop</span></button>
+				<span class="sep"></span>
+				<button class="tb" data-act="bold" title="Vet (⌘/Ctrl+B)" aria-label="Vet"><i class="fa fa-bold" aria-hidden="true"></i></button>
+				<button class="tb" data-act="italic" title="Schuin (⌘/Ctrl+I)" aria-label="Schuin"><i class="fa fa-italic" aria-hidden="true"></i></button>
+				<span class="sep"></span>
+				<button class="tb" data-act="list" title="Lijst"><i class="fa fa-list-ul" aria-hidden="true"></i><span class="lbl">Lijst</span></button>
+				<button class="tb" data-act="quote" title="Citaat (opvallende uitspraak)"><i class="fa fa-quote-left" aria-hidden="true"></i><span class="lbl">Citaat</span></button>
+				<button class="tb" data-act="callout" title="Kader met uitleg"><i class="fa fa-square-o" aria-hidden="true"></i><span class="lbl">Kader</span></button>
+				<button class="tb" data-act="table" id="tableBtn" title="Tabel invoegen of de tabel aanpassen waarin je staat" aria-haspopup="menu" aria-expanded="false"><i class="fa fa-table" aria-hidden="true"></i><span class="lbl">Tabel</span> <i class="fa fa-caret-down" aria-hidden="true"></i></button>
+				<span class="sep"></span>
+				<button class="tb" data-act="link" title="Link (⌘/Ctrl+K)"><i class="fa fa-link" aria-hidden="true"></i><span class="lbl">Link</span></button>
+				<button class="tb" data-act="image" title="Beeld invoegen… (opent een venster)" aria-haspopup="dialog"><i class="fa fa-picture-o" aria-hidden="true"></i><span class="lbl">Beeld…</span></button>
+				<button class="tb" data-act="math" title="Formule invoegen in LaTeX-notatie, zoals $\frac{4}{37}$ (bewerk later met een dubbelklik)"><i class="fa fa-calculator" aria-hidden="true"></i><span class="lbl">Formule</span></button>
+				<button class="tb" data-act="diagram" title="Diagram invoegen… (opent een venster)" aria-haspopup="dialog"><i class="fa fa-sitemap" aria-hidden="true"></i><span class="lbl">Diagram…</span></button>
+				<button class="tb md-only" data-act="slash" title="Alle blokken (typ / aan het begin van een regel)" aria-label="Meer blokken"><i class="fa fa-ellipsis-h" aria-hidden="true"></i></button>
+				<span class="sep"></span>
+				<button class="tb" data-act="download" title="Het artikel downloaden als Markdown-bestand (.md) op je eigen apparaat" aria-label="Download als .md"><i class="fa fa-download" aria-hidden="true"></i><span class="lbl">.md</span></button>
+				<button class="tb" data-act="openmd" title="Een Markdown-bestand (.md) openen" aria-label="Open .md-bestand"><i class="fa fa-file-text-o" aria-hidden="true"></i></button>
+				<button class="tb md-only" data-act="help" title="Spiekbriefje: de Markdown-tekens (alleen in Markdown; opent een venster)" aria-label="Spiekbriefje" aria-haspopup="dialog"><i class="fa fa-question-circle" aria-hidden="true"></i></button>
+				<button class="tb tbmore" id="tbMore" type="button" title="Knoppen die niet meer op de regel passen" aria-haspopup="menu" aria-expanded="false" hidden><span class="lbl">Meer</span> <i class="fa fa-caret-down" aria-hidden="true"></i></button>
+				<div class="modes" role="group" aria-label="Weergave">
+					<button type="button" data-mode="write" aria-pressed="true" title="Alleen de tekst" aria-label="Schrijven"><i class="fa fa-pencil" aria-hidden="true"></i><span>Schrijven</span></button>
+					<button type="button" data-mode="preview" aria-pressed="false" title="Zo ziet de lezer het" aria-label="Voorbeeld"><i class="fa fa-eye" aria-hidden="true"></i><span>Voorbeeld</span></button>
+					<button type="button" data-mode="side" aria-pressed="false" title="Tekst en voorbeeld naast elkaar" aria-label="Naast elkaar"><i class="fa fa-columns" aria-hidden="true"></i><span>Naast elkaar</span></button>
+				</div>
+			</div>
+			</div>
+			<div class="panes write-only" id="panes" role="region" aria-label="Artikel">
+				<div class="editorpane" id="editorpane">
+					<!--
+					// Switch between visual editing and Markdown, inside the frame of the text, like 'Bekijk als' in the preview.
+					-->
+					<div class="editmodebar" id="editmodebar"><span>Bewerken als:</span>
+						<div class="editmode" role="group" aria-label="Manier van bewerken">
+							<button type="button" data-edit="visual" aria-pressed="false" title="Bewerken zoals in een tekstverwerker (Word): je ziet direct de opmaak" aria-label="Opmaak"><i class="fa fa-font" aria-hidden="true"></i><span>Opmaak</span></button>
+							<button type="button" data-edit="markdown" aria-pressed="true" title="Bewerken met Markdown-tekens, zoals ### en **" aria-label="Markdown"><i class="fa fa-hashtag" aria-hidden="true"></i><span>Markdown</span></button>
+						</div>
+					</div>
+					<details class="wyshead" id="wyshead" open>
+						<summary class="wh-label" title="Artikelkop open- of dichtvouwen"><i class="fa fa-caret-right tw" aria-hidden="true"></i><i class="fa fa-pencil-square-o" aria-hidden="true"></i> artikelkop · vaste velden <span class="hint">– de vakken zijn bewerkbaar</span><span class="sumtext" id="sumHead"></span></summary>
+						<textarea id="fTitle" class="wh-title" rows="1" aria-label="Titel" placeholder="Titel" title="Titel van het artikel (in Markdown: regel 1 van de front matter)"></textarea>
+						<div class="count" id="titleCount"></div>
+						<div class="wh-row"><span class="wh-key">door</span><input type="text" id="fAuthor" aria-label="Auteur" placeholder="Auteur" autocomplete="off" title="Auteur van het artikel (in Markdown: regel 2)"></div>
+						<!--
+						// Image and excerpt on one row: left the image with its fields below it, right the excerpt.
+						-->
+						<div class="wh-media">
+							<div class="wh-img" role="group" aria-label="Afbeelding bij uittreksel">
+								<button type="button" class="wh-thumb" id="heroBtn" title="Andere foto kiezen voor de afbeelding bij het uittreksel (ook de grote foto boven het artikel)"><img id="heroThumb" alt=""><span><i class="fa fa-upload" aria-hidden="true"></i> andere foto</span></button>
+								<div class="wh-imgfields">
+									<div class="wh-row"><span class="small" id="heroName"></span><button type="button" class="linkbtn" id="heroDel" title="Afbeelding bij uittreksel weghalen" style="margin-left:auto">weghalen</button></div>
+									<label class="wh-key" for="fHeroAlt">beschrijving</label><input type="text" id="fHeroAlt" placeholder="Wat staat erop? (voor voorleessoftware)" title="Wat staat er op de foto? Voor mensen die de foto niet kunnen zien.">
+									<label class="wh-key" for="fHeroCap">bijschrift</label><input type="text" id="fHeroCap" placeholder="Bijschrift onder de foto" title="Bijschrift onder de foto">
+									<label class="wh-key" for="fHeroCredit">fotograaf</label><input type="text" id="fHeroCredit" placeholder="Foto Naam Fotograaf" title="Naam van de fotograaf of de bron van de foto">
+								</div>
+							</div>
+							<div class="wh-ex">
+								<label class="wh-key" for="fExcerpt">uittreksel (ankeiler)</label>
+								<textarea id="fExcerpt" class="wh-excerpt" lang="nl" spellcheck="true" rows="4" placeholder="De intro van 2 à 3 zinnen" title="Uittreksel: de intro van 2 à 3 zinnen, ook gebruikt in overzichten (in Markdown: regel 3)"></textarea>
+								<div class="count" id="excerptCount"></div>
+							</div>
+						</div>
+						<div class="tags" id="tagBox"><span class="wh-key">tags</span><select id="tagAdd" aria-label="Tag toevoegen" title="Tag toevoegen uit de vaste lijst van de site. De eerste tag is de rubriek. Alleen een beheerder maakt nieuwe tags."></select></div>
+					</details>
+					<div class="wys art" id="wys" contenteditable="true" lang="nl" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Tekst van het artikel, met opmaak"></div>
+					<!--
+					// Bijsluiter and bronnen: fixed fields at the end of the article, like the article head at the top.
+					-->
+					<div class="wysfoot" id="wysfoot">
+						<details class="fbox" id="footMethod" open>
+							<summary class="wh-label" id="lblMethod" title="Bijsluiter open- of dichtvouwen"><i class="fa fa-caret-right tw" aria-hidden="true"></i><i class="fa fa-pencil-square-o" aria-hidden="true"></i> bijsluiter · vast veld <span class="hint">(verplicht)</span><span class="sumtext" id="sumMethod"></span></summary>
+							<div class="wf-field" id="wysMethod" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Bijsluiter" lang="nl" spellcheck="true" title="Wie ben je, hoe kwam dit artikel tot stand, welke belangen spelen er? (in Markdown: bijsluiter in de front matter)" data-ph="Wie ben je, hoe kwam dit artikel tot stand, welke belangen spelen er?"></div>
+						</details>
+						<details class="fbox" id="footSources" open>
+							<summary class="wh-label" id="lblSources" title="Bronnen open- of dichtvouwen"><i class="fa fa-caret-right tw" aria-hidden="true"></i><i class="fa fa-pencil-square-o" aria-hidden="true"></i> bronnen · vast veld <span class="hint">(aanbevolen)</span><span class="sumtext" id="sumSources"></span></summary>
+							<div class="wf-field" id="wysSources" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Bronnen" lang="nl" spellcheck="true" title="Bronnen van het artikel, één per regel (in Markdown: bronnen in de front matter)" data-ph="Bron 1, bron 2, …"></div>
+						</details>
+					</div>
+					<div class="ed" id="ed">
+						<pre class="hl" id="hl" aria-hidden="true"></pre>
+						<textarea id="src" lang="nl" spellcheck="true" autocapitalize="sentences" aria-label="Tekst van het artikel" aria-autocomplete="list" aria-controls="popup" aria-describedby="srcHelp"></textarea>
+						<p class="sr" id="srcHelp">Typ een schuine streep aan het begin van een regel voor alle blokken, of twee blokhaken voor een link naar een pagina. Kies met de pijltjestoetsen en Enter.</p>
+					</div>
+				</div>
+				<div class="previewpane" id="previewPane">
+					<div class="devicebar"><span>Bekijk als:</span>
+						<button type="button" data-device="desktop" aria-pressed="true" title="Voorbeeld op een computerscherm"><i class="fa fa-desktop" aria-hidden="true"></i> Computer</button>
+						<button type="button" data-device="phone" aria-pressed="false" title="Voorbeeld op een telefoon, staand (390 px breed)"><i class="fa fa-mobile" aria-hidden="true"></i> Telefoon staand</button>
+						<button type="button" data-device="phone-land" aria-pressed="false" title="Voorbeeld op een telefoon, liggend (844 px breed)"><i class="fa fa-mobile fa-rotate-90" aria-hidden="true"></i> Telefoon liggend</button>
+					</div>
+					<div class="frame" id="frame"><article class="art" id="preview"></article></div>
+				</div>
+			</div>
+			<input type="file" id="importFile" accept=".md,text/markdown,text/plain" hidden>
+		</section>
+
+		<aside class="side">
+			<div class="card">
+				<div class="cardhead"><h2>beoordelingschecklist</h2><label class="switch" title="Toon ook wat in orde is"><span>toon alles</span><input type="checkbox" role="switch" id="showOk" aria-label="Toon ook wat in orde is"><span class="track" aria-hidden="true"></span></label></div>
+				<ul class="facts" id="facts"></ul>
+				<ul class="checks" id="checks"></ul>
+				<div class="summary" id="checkSummary"></div>
+				<div id="statuteBox" hidden>
+					<h2 style="margin-top:14px">redactiestatuut <span class="small">(bij beoordelen)</span></h2>
+					<ul class="checks" id="statute"></ul>
+				</div>
+				<div id="tipsBox">
+					<h2 style="margin-top:14px">extra tips <span class="small">(niet verplicht)</span></h2>
+					<ul class="checks" id="tips"></ul>
+				</div>
+			</div>
+			<div class="card" id="reviewCard" hidden>
+				<h2>beoordeling</h2>
+				<ul class="reviews" id="reviewList"></ul>
+			</div>
+			<details class="card" id="outlineBox" title="Structuur van het artikel: open om naar een kop of blok te springen">
+				<summary><i class="fa fa-caret-right" aria-hidden="true"></i><h2>structuur</h2></summary>
+				<nav class="outline" id="outline" aria-label="Structuur van het artikel"></nav>
+			</details>
+		</aside>
+	</div>
+</main>
+
+<div class="popup" id="popup" hidden role="listbox"></div>
+<div class="menu" id="tableMenu" role="menu" aria-label="Tabel" hidden></div>
+<div class="menu" id="moreMenu" role="menu" aria-label="Meer knoppen" hidden></div>
+
+<dialog id="imgDlg" aria-labelledby="imgDlgTitle">
+	<form method="dialog" id="imgForm">
+		<h2><span id="imgDlgTitle">Beeld invoegen</span><button value="cancel" aria-label="Sluiten" title="Sluiten zonder in te voegen">✕</button></h2>
+		<div class="dlg-grid">
+			<div>
+				<button type="button" class="dropzone" id="drop" title="Foto kiezen (of sleep een foto hierheen)"><span><i class="fa fa-upload fa-2x" aria-hidden="true"></i><br>Kies of sleep een foto<br><small>Op iPhone/iPad: Fotobibliotheek, Camera of Bestanden</small></span></button>
+				<input type="file" id="imgFile" accept="image/*" hidden>
+				<div class="small" id="imgInfo"></div>
+			</div>
+			<div>
+				<div class="field"><label for="imgAlt">Wat staat erop? <span style="color:var(--red)">*</span></label><input type="text" id="imgAlt" required><div class="help">Voor mensen die de foto niet kunnen zien (voorleessoftware).</div></div>
+				<div class="field"><label for="imgCap">Bijschrift</label><textarea id="imgCap" rows="2" lang="nl"></textarea></div>
+				<div class="field"><label for="imgCredit">Foto / bron</label><input type="text" id="imgCredit" placeholder="Foto Naam Fotograaf"></div>
+				<div class="field" id="placeField" role="radiogroup" aria-labelledby="placeLbl"><span class="lbl-like" id="placeLbl"><b>Plaatsing</b></span>
+					<div class="place" data-place="place"></div>
+				</div>
+			</div>
+		</div>
+		<div class="mdout" id="imgMd"></div>
+		<p class="small" id="imgNeed" aria-live="polite"></p>
+		<div class="dlg-actions"><button class="btn outline danger" value="delete" id="imgDel" hidden title="Deze foto uit de tekst verwijderen">verwijderen</button><button class="btn grey" value="cancel" title="Sluiten zonder in te voegen">annuleren</button><button class="btn primary" value="ok" id="imgOk" aria-describedby="imgNeed" title="Beeld in de tekst zetten">invoegen</button></div>
+	</form>
+</dialog>
+
+<dialog id="diagDlg" aria-labelledby="diagDlgTitle">
+	<form method="dialog">
+		<h2><span id="diagDlgTitle"><i class="fa fa-sitemap" aria-hidden="true"></i> Diagram – begin met een voorbeeld</span><button value="cancel" aria-label="Sluiten" title="Sluiten zonder in te voegen">✕</button></h2>
+		<div class="templates" id="templates">
+			<span id="topTemplates"></span>
+			<button type="button" id="moreTypes" aria-haspopup="listbox" aria-expanded="false" aria-controls="dpanel" title="Nog 20 soorten diagrammen, met een voorbeeld bij elk">meer soorten <i class="fa fa-caret-down" aria-hidden="true"></i></button>
+			<div class="dpanel" id="dpanel" hidden>
+				<div class="dprev" aria-hidden="true"><div class="dpv" id="dpv"></div><div class="dpd" id="dpd"></div></div>
+				<ul class="dlist" id="dlist" role="listbox" aria-label="Soorten diagrammen" tabindex="0"></ul>
+			</div>
+		</div>
+		<div class="dlg-grid">
+			<div>
+				<label class="small" for="diagSrc"><b>TEKST VAN HET DIAGRAM</b></label>
+				<textarea id="diagSrc" spellcheck="false" title="De tekst van het diagram in Mermaid-notatie; het voorbeeld rechts wordt meteen bijgewerkt"></textarea>
+				<div id="diagErr" class="diagerr" hidden></div>
+				<div class="field" style="margin-top:10px"><label for="diagAlt">Beschrijving voor voorlezen</label><input type="text" id="diagAlt" title="Korte beschrijving van wat het diagram laat zien, voor mensen die het niet kunnen zien"></div>
+				<div class="field" role="radiogroup" aria-labelledby="dplaceLbl"><span id="dplaceLbl"><b>Plaatsing</b></span>
+					<div class="place" data-place="dplace"></div>
+				</div>
+			</div>
+			<div>
+				<div class="small"><b>ZO ZIET DE LEZER HET</b> (laatste goede versie)</div>
+				<div id="diagView"></div>
+				<p class="small">Het diagram is gewone tekst tussen ```mermaid en ``` (Mermaid-notatie), dus ook in andere Markdown-programma's bruikbaar.</p>
+			</div>
+		</div>
+		<div class="dlg-actions"><button class="btn outline danger" value="delete" id="diagDel" hidden title="Dit diagram uit de tekst verwijderen">verwijderen</button><button class="btn grey" value="cancel" title="Sluiten zonder in te voegen">annuleren</button><button class="btn primary" value="ok" id="diagOk" title="Diagram in de tekst zetten">invoegen</button></div>
+	</form>
+</dialog>
+
+<dialog id="apprDlg" aria-labelledby="apprTitle">
+	<form method="dialog">
+		<h2><span id="apprTitle">Goedkeuring geven</span><button value="cancel" aria-label="Sluiten" title="Sluiten zonder goed te keuren">✕</button></h2>
+		<p class="small">Je geeft goedkeuring als beoordelaar. Het artikel is goedgekeurd na 3 goedkeuringen, als er geen breekpunten meer open staan.</p>
+		<fieldset class="statute"><legend><b>Redactiestatuut</b> – bevestig elk punt</legend><div id="statuteList"></div></fieldset>
+		<div class="field"><label for="apprComment">Opmerking bij je goedkeuring <span class="small">(niet verplicht)</span></label><textarea id="apprComment" rows="3" lang="nl" title="Komt bij de beoordelingsopmerkingen, zichtbaar voor de auteur en de andere beoordelaars"></textarea><div class="help">Komt bij de beoordelingsopmerkingen, zichtbaar voor de auteur en de andere beoordelaars.</div></div>
+		<p class="small" id="apprNeed" aria-live="polite"></p>
+		<div class="dlg-actions"><button class="btn grey" value="cancel" title="Sluiten zonder goed te keuren">annuleren</button><button class="btn primary" value="ok" id="apprOk" aria-describedby="apprNeed" title="Goedkeuring geven met de bevestigde punten en je opmerking">geef goedkeuring</button></div>
+	</form>
+</dialog>
+
+<dialog id="retractDlg" aria-labelledby="retractTitle">
+	<form method="dialog">
+		<h2><span id="retractTitle">Gepubliceerd artikel terugtrekken</span><button value="cancel" aria-label="Sluiten" title="Sluiten zonder terug te trekken">✕</button></h2>
+		<p>Het artikel verdwijnt uit overzichten en zoekresultaten. Het webadres blijft werken en toont de titel met een melding dat het artikel is teruggetrokken, met de datum en de reden. De tekst blijft bewaard; je kunt het artikel later opnieuw bewerken en weer laten beoordelen.</p>
+		<div class="field"><label for="retractReason">Reden <span style="color:var(--red)">*</span></label><textarea id="retractReason" rows="3" lang="nl" required title="De reden staat in de melding voor lezers"></textarea><div class="help">Bijvoorbeeld: „Het artikel bevatte een onjuiste bewering over …; we zoeken het opnieuw uit.”</div></div>
+		<p class="small" id="retractNeed" aria-live="polite"></p>
+		<div class="dlg-actions"><button class="btn grey" value="cancel" title="Sluiten zonder terug te trekken">annuleren</button><button class="btn primary" value="ok" id="retractOk" aria-describedby="retractNeed" title="Het artikel terugtrekken met deze reden">trek terug</button></div>
+	</form>
+</dialog>
+
+<dialog id="helpDlg" aria-labelledby="helpTitle">
+	<form method="dialog">
+		<h2><span id="helpTitle">Spiekbriefje: Markdown-tekens</span><button value="cancel" aria-label="Sluiten" title="Spiekbriefje sluiten">✕</button></h2>
+		<p>In <b>Markdown</b> schrijf je gewone tekst met een paar tekens voor opmaak. De tekens staan grijs in je tekst; de lezer ziet ze niet. Liever geen tekens? Kies <b>Bewerken als: Opmaak</b> boven de tekst: dan bewerk je zoals in Word. De knoppen in de werkbalk zetten de tekens ook voor je neer.</p>
+		<table style="width:100%;border-collapse:collapse;font-size:14px">
+			<tr><td style="font-family:var(--mono)">### Tussenkop</td><td>Tussenkop. Gebruik er een om de 4 à 6 alinea’s.</td></tr>
+			<tr><td style="font-family:var(--mono)">**vet** en *schuin*</td><td>Of gebruik ⌘/Ctrl+B en ⌘/Ctrl+I.</td></tr>
+			<tr><td style="font-family:var(--mono)">- punt</td><td>Opsomming; <span style="font-family:var(--mono)">1.</span> voor een genummerde lijst.</td></tr>
+			<tr><td style="font-family:var(--mono)">==markeren==</td><td>Markering in geel.</td></tr>
+			<tr><td style="font-family:var(--mono)">&gt; [!quote]</td><td>Citaat: een opvallende uitspraak, groot in de tekst.</td></tr>
+			<tr><td style="font-family:var(--mono)">&gt; [!info] Titel</td><td>Kader met achtergrond. Ook: [!tip], [!warning].</td></tr>
+			<tr><td style="font-family:var(--mono)">[[Pagina|tekst]]</td><td>Link naar een pagina op deze site. Typ [[ voor suggesties.</td></tr>
+			<tr><td style="font-family:var(--mono)">[tekst](https://…)</td><td>Link naar een andere website.</td></tr>
+			<tr><td style="font-family:var(--mono)">tekst[^1] … [^1]: bron</td><td>Voetnoot.</td></tr>
+			<tr><td style="font-family:var(--mono)">%% notitie %%</td><td>Notitie voor jezelf; de lezer ziet die niet.</td></tr>
+			<tr><td style="font-family:var(--mono)">$\frac{4}{37}$ en $$ … $$</td><td>Formule in LaTeX-notatie, in de zin of als blok.</td></tr>
+			<tr><td style="font-family:var(--mono)">```php … ```</td><td>Code, met kleuren voor de taal (php, js, sql, python, html, css, json, yaml, bash, xml, …).</td></tr>
+			<tr><td style="font-family:var(--mono)">/</td><td>Aan het begin van een regel: alle blokken (tabel, diagram, beeld, formule, code, …).</td></tr>
+			<tr><td style="font-family:var(--mono)">--- … ---</td><td>Bovenaan: de vaste velden (titel, auteur, uittreksel, tags, afbeelding, bijsluiter, bronnen).</td></tr>
+		</table>
+		<div class="dlg-actions"><button class="btn primary" value="ok">sluiten</button></div>
+	</form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+'use strict';
+const STORE = 'hypha-md-prototype-v6';
+const PH_HERO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300"><rect width="920" height="300" fill="#CFD8DA"/><path d="M0 300V230l280-50 230 40 230-60 180 40v100z" fill="#B7C4C7"/><circle cx="460" cy="125" r="48" fill="#9FAEB2"/><path d="M370 300q5-110 90-112 85 2 90 112z" fill="#9FAEB2"/><text x="20" y="40" font-family="sans-serif" font-size="22" fill="#fff">foto (voorbeeld)</text></svg>');
+
+//
+// Pages of the (fictional) site, for the [[ suggestions.
+//
+const PAGES = ['Raadsnieuws', 'Politiek en bestuur', 'Verkiezingen 2026', 'Het nieuwe college', 'Coalitieakkoord 2026-2030',
+	'Begroting 2027', 'Woningbouw in Eemstad-Noord', 'Het stadspark', 'Dossier openbaar bestuur', 'Dossier wijkraden',
+	'Open Eemstad', 'Over deze site', 'Redactie', 'Werkwijze'];
+const PRIVATE = new Set(['Dossier wijkraden']);
+
+//
+// Starting point: a fictional sample article; the people, parties and the town of Eemstad do not exist.
+//
+const START = {
+	title: 'Vertrekkend raadslid Bram Hoekstra: twintig jaar strijd voor open bestuur',
+	author: 'Sanne de Vries',
+	tags: ['Politiek en bestuur', 'Raadsnieuws'],
+	excerpt: 'Twintig jaar lang vroeg Bram Hoekstra in de raad van Eemstad om openbare stukken en debatten. Nu neemt de fractievoorzitter van Open Eemstad afscheid, met een paar adviezen voor zijn opvolgers.',
+	hero: { path: 'beeld/hoekstra.jpg', alt: 'Bram Hoekstra in de raadszaal van Eemstad', caption: 'Bram Hoekstra na twintig jaar in de raad van Eemstad.', credit: 'Foto (naam fotograaf)' },
+	status: 'draft', approvals: 0, lang: 'nl', reviews: [], retraction: null,
+	knownTags: ['Cultuur', 'Geschiedenis', 'Onderzoek', 'Opinie', 'Politiek en bestuur', 'Raadsnieuws'],
+	fields: {
+		text: `Bram Hoekstra (1962) was bibliothecaris in de wijk Eemstad-Noord toen buurtbewoners hem in 2005 vroegen of hij iets wilde doen met al hun klachten over het stadhuis. Stukken kwamen pas na de vergadering online, en wie wilde inspreken moest dat een week van tevoren per brief melden.
+
+Hij richtte met een paar buren de wijkpartij Open Eemstad op. Bij de verkiezingen van 2006 haalde die **meteen twee zetels**. Hoekstra werd fractievoorzitter, een functie die hij twintig jaar zou houden.
+
+### De eerste zetels
+
+De eerste jaren waren leerzaam, zegt hij. Hij leerde begrotingen lezen, vragen stellen die een wethouder niet met een algemeen antwoord kon afdoen, en vooral: zelf stukken opvragen als ze niet kwamen. Zijn eerste motie, om alle raadsstukken een week voor de vergadering te publiceren, werd in 2007 aangenomen.
+
+> [!quote] Citaat
+> Een raadslid dat de stukken niet leest, controleert niemand
+
+> [!info] Open Eemstad in het kort
+> Lokale partij uit Eemstad-Noord, opgericht in 2005. Twee zetels in 2006, vier in 2018. Speerpunten: openbaarheid en wijkbudgetten.
+
+### Wethouder voor één jaar
+
+In 2014 werd Hoekstra gevraagd als wethouder voor wonen. Na een jaar stopte hij weer. „Ik merkte dat ik als wethouder minder kon zeggen dan als raadslid”, vertelt hij. Hij keerde terug naar de raad.[^1]
+
+![Bram Hoekstra in de raadszaal](beeld/hoekstra-raadszaal.jpg){.in-de-tekst}
+*Bram Hoekstra tijdens zijn laatste raadsvergadering. Foto (naam fotograaf)*
+
+### Een nieuwe generatie
+
+Bij de verkiezingen van 2018 groeide Open Eemstad naar vier zetels, $\\tfrac{4}{37} \\approx 11\\%$ van de raad, vooral door jongere kiezers uit de nieuwe wijken. Hoekstra haalde twee nieuwe raadsleden binnen en begeleidde hen in hun eerste jaar.
+
+%% beschrijving: tijdlijn van Bram Hoekstra in de gemeenteraad van Eemstad, van 2005 tot 2026 %%
+\`\`\`mermaid
+timeline
+    title Bram Hoekstra in de raad van Eemstad
+    2005 : Open Eemstad opgericht
+    2006 : Twee zetels in de raad
+    2014 : Een jaar wethouder
+    2018 : Vier zetels
+    2026 : Afscheid van de raad
+\`\`\`
+
+### ‘Lees je gewoon in’
+
+Zijn advies aan nieuwe raadsleden is eenvoudig: lees de stukken voordat je naar een informatiebijeenkomst gaat. Een onderwerp is pas ==rijp voor besluit== als de raad het zelf heeft kunnen doorgronden, niet na een presentatie en drie vragen.
+
+### Coalitie en controle
+
+Wat hij het meest zal missen? Het debat zelf. Wat hij het minst zal missen: coalitiepartijen die elk voorstel van hun eigen wethouders steunen. Meer over de raad in de reeks [[Raadsnieuws]].
+
+### Wat nu?
+
+Hoekstra gaat terug naar de bibliotheek, als vrijwilliger. „Daar mag iedereen alles lezen.”
+
+[^1]: Raadsinformatie gemeente Eemstad, 2015 (voorbeeldbron).
+`,
+		method: 'Sanne de Vries is politiek verslaggever en schrijft elke week over de gemeenteraad. Dit artikel is een verzonnen voorbeeld voor het prototype van de tekst-editor.',
+		sources: ''
+	},
+	images: {}
+};
+START.images['beeld/hoekstra-raadszaal.jpg'] = PH_HERO;
+START.images['beeld/hoekstra.jpg'] = PH_HERO;
+
+//
+// Diagram examples, sorted by expected use in local journalism.
+// The first five are shown as buttons; the rest in the 'meer soorten' list.
+//
+const DIAGRAMS = [
+	{ k: 'Tijdlijn', d: 'Gebeurtenissen op volgorde van datum', s: 'timeline\n    title Titel van de tijdlijn\n    2014 : Eerste gebeurtenis\n    2018 : Tweede gebeurtenis\n    2026 : Derde gebeurtenis' },
+	{ k: 'Staafdiagram', d: 'Aantallen of percentages vergelijken', s: 'xychart\n    title "Opkomst per verkiezing"\n    x-axis [2014, 2018, 2022, 2026]\n    y-axis "procent" 0 --> 100\n    bar [55, 52, 48, 51]' },
+	{ k: 'Taartdiagram', d: 'Verdeling van een geheel, zoals zetels', s: 'pie title Zetels in de raad\n    "Partij A" : 9\n    "Partij B" : 7\n    "Partij C" : 5\n    "Overig" : 6' },
+	{ k: 'Lijndiagram', d: 'Ontwikkeling door de tijd', s: 'xychart\n    title "Gemiddelde huur per m² (euro)"\n    x-axis [2020, 2021, 2022, 2023, 2024, 2025]\n    y-axis "euro" 0 --> 25\n    line [14, 15, 17, 18, 20, 21]' },
+	{ k: 'Stroomschema', d: 'Hoe een besluit of procedure verloopt', s: 'flowchart LR\n    A[Voorstel college] --> B{Raad akkoord?}\n    B -->|ja| C[Besluit]\n    B -->|nee| D[Terug naar college]' },
+	{ k: 'Organogram', d: 'Wie valt onder wie', s: 'flowchart TD\n    R[Gemeenteraad] --> C[College van B en W]\n    C --> B[Burgemeester]\n    C --> W1[Wethouder wonen]\n    C --> W2[Wethouder financiën]' },
+	{ k: 'Beslisboom', d: 'Vragen met ja of nee naar een uitkomst', s: 'flowchart TD\n    A{Woont u in Eemstad?} -->|ja| B{Inkomen onder de grens?}\n    A -->|nee| X[Geen recht]\n    B -->|ja| C[Recht op toeslag]\n    B -->|nee| X' },
+	{ k: 'Planning', d: 'Fasen van een project in de tijd', s: 'gantt\n    title Nieuwe bibliotheek\n    dateFormat YYYY-MM-DD\n    section Voorbereiding\n    Ontwerp          :a1, 2026-01-01, 90d\n    Vergunning       :a2, after a1, 60d\n    section Bouw\n    Bouw             :b1, after a2, 270d\n    Opening          :milestone, after b1, 0d' },
+	{ k: 'Staaf en lijn', d: 'Twee reeksen in één grafiek', s: 'xychart\n    title "Woningen: gepland en gebouwd"\n    x-axis [2022, 2023, 2024, 2025]\n    y-axis "woningen" 0 --> 600\n    bar [400, 450, 500, 550]\n    line [310, 280, 390, 420]' },
+	{ k: 'Begroting in vlakken', d: 'Hoe groot elk deel is (treemap)', s: 'treemap-beta\n"Begroting"\n    "Sociaal domein"\n        "Zorg": 40\n        "Jeugd": 15\n    "Fysiek"\n        "Wonen": 20\n        "Verkeer": 10\n    "Overig": 15' },
+	{ k: 'Geldstromen', d: 'Waar het geld heen gaat (sankey)', s: 'sankey\n\nRijk,Gemeente,70\nBelasting,Gemeente,30\nGemeente,Zorg,40\nGemeente,Onderwijs,25\nGemeente,Wonen,20\nGemeente,Overig,15' },
+	{ k: 'Kwadrant', d: 'Plannen langs twee assen indelen', s: 'quadrantChart\n    title Plannen: kosten en draagvlak\n    x-axis Lage kosten --> Hoge kosten\n    y-axis Weinig draagvlak --> Veel draagvlak\n    quadrant-1 Afwegen\n    quadrant-2 Snel doen\n    quadrant-3 Laten liggen\n    quadrant-4 Heroverwegen\n    Fietspad: [0.3, 0.8]\n    Parkeergarage: [0.8, 0.3]\n    Stadspark: [0.6, 0.7]' },
+	{ k: 'Wie doet wat', d: 'Berichten tussen partijen op volgorde', s: 'sequenceDiagram\n    participant I as Inwoner\n    participant G as Gemeente\n    participant R as Raad\n    I->>G: Bezwaar indienen\n    G->>R: Advies\n    R-->>I: Besluit' },
+	{ k: 'Taakverdeling', d: 'Stappen per afdeling of rol (swimlane)', s: 'swimlane-beta LR\n  subgraph Inwoner\n    aanvraag[Aanvraag indienen]\n    ontvang[Besluit ontvangen]\n  end\n  subgraph Gemeente\n    toets[Aanvraag toetsen]\n    besluit[Besluit nemen]\n  end\n  aanvraag --> toets --> besluit --> ontvang' },
+	{ k: 'Statussen', d: 'De fasen die een aanvraag doorloopt', s: 'stateDiagram-v2\n    [*] --> Ingediend\n    Ingediend --> InBehandeling\n    InBehandeling --> Toegekend\n    InBehandeling --> Afgewezen\n    Afgewezen --> Bezwaar\n    Toegekend --> [*]' },
+	{ k: 'Vergelijking', d: 'Partijen of plannen op meerdere punten (radar)', s: 'radar-beta\n  title Verkiezingsprogramma’s\n  axis w["Wonen"], k["Klimaat"], z["Zorg"]\n  axis v["Verkeer"], o["Openbaarheid"]\n  curve a["Partij A"]{4, 2, 3, 3, 5}\n  curve b["Partij B"]{2, 5, 3, 2, 3}\n  max 5\n  min 0' },
+	{ k: 'Overlap', d: 'Wat groepen gemeen hebben (venn)', s: 'venn-beta\n  title Steun voor het plan\n  set A["Coalitie"]\n  set B["Oppositie"]\n  union A,B["Beide"]' },
+	{ k: 'Mindmap', d: 'Onderwerpen rond één thema', s: 'mindmap\n  root((Open bestuur))\n    Openbaarheid\n      Raadsstukken\n      Woo-verzoeken\n    Inspraak\n      Wijkraden\n      Burgerpanel' },
+	{ k: 'Oorzaken', d: 'Oorzaken van een probleem (visgraat)', s: 'ishikawa-beta\n    Lange wachtlijst\n    Personeel\n        Vacatures\n        Ziekteverzuim\n    Regels\n        Veel formulieren\n    Vraag\n        Meer aanvragen' },
+	{ k: 'Ervaring', d: 'Hoe iemand een traject beleeft', s: 'journey\n    title Een vergunning aanvragen\n    section Aanvragen\n      Formulier vinden: 2: Inwoner\n      Formulier invullen: 3: Inwoner\n    section Wachten\n      Ontvangstbevestiging: 4: Inwoner\n      Besluit: 3: Inwoner' },
+	{ k: 'Stand van zaken', d: 'Toezeggingen: open, bezig, klaar (kanban)', s: 'kanban\n  open[Open]\n    t1[Fietspad Noord]\n  bezig[Bezig]\n    t2[Nieuw zwembad]\n  klaar[Klaar]\n    t3[Raadsstukken online]' },
+	{ k: 'Samenstelling', d: 'Onderdelen naast elkaar (blokken)', s: 'block\n    columns 3\n    a["Raad (37)"]:3\n    b["Coalitie (20)"]:2 c["Oppositie (17)"]' },
+	{ k: 'Netwerk', d: 'Wie met wie verbonden is', s: 'flowchart LR\n    H[Hoekstra] --- O[Open Eemstad]\n    H --- B[Bibliotheek]\n    O --- W[Wijkraad Noord]\n    B --- W' },
+	{ k: 'Indeling', d: 'Hoofdstukken of onderdelen als boom', s: 'treeView-beta\n    Rapport/\n        Samenvatting\n        Hoofdstuk 1 Aanleiding\n        Hoofdstuk 2 Onderzoek\n        Bijlagen/\n            Cijfers' },
+	{ k: 'Gegevens', d: 'Hoe gegevens samenhangen (datajournalistiek)', s: 'erDiagram\n    PARTIJ ||--o{ RAADSLID : heeft\n    RAADSLID ||--o{ MOTIE : dient_in\n    MOTIE }o--|| VERGADERING : in' }
+];
+const TOP_DIAGRAMS = 5;
+
+
+const SLASH = [
+	{ icon: 'header', label: 'Tussenkop', md: '### ', act: 'heading' },
+	{ icon: 'header', label: 'Subkop', md: '#### ', act: 'subheading' },
+	{ icon: 'quote-left', label: 'Citaat (opvallende uitspraak)', md: '> [!quote]', act: 'quote' },
+	{ icon: 'square-o', label: 'Kader met uitleg', md: '> [!info]', act: 'callout' },
+	{ icon: 'exclamation-triangle', label: 'Kader: let op', md: '> [!warning]', act: 'warning' },
+	{ icon: 'list-ul', label: 'Opsomming', md: '- ', act: 'list' },
+	{ icon: 'superscript', label: 'Voetnoot', md: '[^1]', act: 'footnote' },
+	{ icon: 'table', label: 'Tabel (3 kolommen)', md: '| … |', act: 'table3' },
+	{ icon: 'picture-o', label: 'Beeld', md: '![…](…)', act: 'image' },
+	{ icon: 'sitemap', label: 'Diagram', md: '```mermaid', act: 'diagram' },
+	{ icon: 'calculator', label: 'Formule', md: '$$ … $$', act: 'math' },
+	{ icon: 'code', label: 'Code (met kleuren per taal)', md: '```php', act: 'code' },
+	{ icon: 'minus', label: 'Scheidingslijn', md: '---', act: 'rule' }
+];
+
+//
+// State.
+//
+let state, saved, field = 'text', mode = 'write', device = 'desktop', editMode = 'markdown';
+const $ = id => document.getElementById(id);
+const src = $('src'), hl = $('hl');
+
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function load() {
+	try {
+		const raw = localStorage.getItem(STORE);
+		if (raw) { const d = JSON.parse(raw); return { draft: d.draft, saved: d.saved, prefs: d.prefs || {} }; }
+	} catch (e) {
+		//
+		// No localStorage available: work in memory only.
+		//
+	}
+	return { draft: clone(START), saved: clone(START), prefs: {} };
+}
+let prefs = {};
+function persist() {
+	try { localStorage.setItem(STORE, JSON.stringify({ draft: state, saved, prefs })); return true; } catch (e) { return false; }
+}
+{ const l = load(); state = l.draft; saved = l.saved; prefs = l.prefs; }
+
+//
+// Helpers.
+//
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2200); }
+const time = () => new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+function words(s) { return (s.replace(/```[\s\S]*?```/g, '').replace(/%%[\s\S]*?%%/g, '').match(/[\p{L}\p{N}’'-]+/gu) || []).length; }
+function sentences(s) {
+	const plain = s.replace(/```[\s\S]*?```/g, '').replace(/^#+ .*$/gm, '').replace(/^>.*$/gm, '').replace(/[*=_\[\]]/g, '');
+	return plain.split(/(?<=[.!?])\s+|\n\n+/).map(x => x.trim()).filter(Boolean);
+}
+const longSentences = s => sentences(s).filter(x => words(x) > 30);
+
+//
+// Styled layer below the writing area.
+//
+function highlight(text) {
+	let fmHtml = '';
+	if (field === 'text') {
+		const m = text.match(/^---[ \t]*\n[\s\S]*?\n---[ \t]*(\n|$)/);
+		if (m) {
+			fmHtml = m[0].split('\n').map(l => {
+				const k = l.match(/^([\w-]+:)(.*)$/);
+				if (k) return `<span class="fmkey">${esc(k[1])}</span><span class="fm">${esc(k[2])}</span>`;
+				return `<span class="${/^---/.test(l) ? 'mk' : 'fm'}">${esc(l)}</span>`;
+			}).join('\n');
+			text = text.slice(m[0].length);
+		}
+	}
+	return fmHtml + highlightBody(text);
+}
+function highlightBody(text) {
+	let inFence = false;
+	const out = text.split('\n').map(line => {
+		if (/^```/.test(line)) { inFence = !inFence; return `<span class="mk">${esc(line)}</span>`; }
+		if (inFence) return `<span class="code">${esc(line)}</span>`;
+		let h = esc(line);
+		let m;
+		if ((m = h.match(/^(#{1,6} )(.*)$/))) return `<span class="mk">${m[1]}</span><span class="h">${inline(m[2])}</span>`;
+		if ((m = h.match(/^(&gt;\s?)(\[!\w[\w-]*\])(.*)$/))) return `<span class="mk">${m[1]}${m[2]}</span><span class="callout">${inline(m[3])}</span>`;
+		if ((m = h.match(/^(&gt;\s?)(.*)$/))) return `<span class="mk">${m[1]}</span>${inline(m[2])}`;
+		if ((m = h.match(/^(\s*(?:[-*+]|\d+\.) )(.*)$/))) return `<span class="mk">${m[1]}</span>${inline(m[2])}`;
+		if ((m = h.match(/^(\[\^\w+\]:)(.*)$/))) return `<span class="mk">${m[1]}</span>${inline(m[2])}`;
+		if (/^(-{3,}|\*{3,})$/.test(line)) return `<span class="mk">${h}</span>`;
+		return inline(h);
+	}).join('\n');
+	return out + '\n';
+}
+function inline(h) {
+	return h
+		.replace(/%%(.*?)%%/g, '<span class="comment">%%$1%%</span>')
+		.replace(/(!?\[\[)([^\]|]+?)((?:\|[^\]]*)?)(\]\])/g, (a, o, t, al, c) => `<span class="mk">${o}</span><span class="${PAGES.includes(t.split('#')[0].trim()) ? 'link' : 'bad'}">${t}</span><span class="mk">${al}${c}</span>`)
+		.replace(/(!?\[)([^\]]*)(\]\()([^)]*)(\))(\{[^}]*\})?/g, '<span class="mk">$1</span><span class="link">$2</span><span class="mk">$3$4$5$6</span>')
+		.replace(/(\*\*)(?=\S)(.+?)(\*\*)/g, '<span class="mk">$1</span><span class="strong">$2</span><span class="mk">$3</span>')
+		.replace(/(^|[^*])(\*)(?=\S)([^*]+?)(\*)(?!\*)/g, '$1<span class="mk">$2</span><span class="em">$3</span><span class="mk">$4</span>')
+		.replace(/(==)(.+?)(==)/g, '<span class="mk">$1</span><span class="mark">$2</span><span class="mk">$3</span>')
+		.replace(/(\[\^\w+\])/g, '<span class="mk">$1</span>');
+}
+function syncEditor() {
+	mdTops = null;
+	hl.innerHTML = highlight(src.value);
+	src.style.height = 'auto';
+	src.style.height = Math.max(460, src.scrollHeight) + 'px';
+}
+
+//
+// Markdown to HTML, as the server will do it.
+//
+function renderMarkdown(md, images) {
+	const notes = [];
+	//
+	// A '%% beschrijving: ... %%' comment right before a diagram becomes the accessible name of that diagram.
+	//
+	md = md.replace(/%%\s*beschrijving:\s*([\s\S]*?)%%\s*\n```mermaid([^\n]*)\n/g, (a, d, rest) => '```mermaid' + rest + ' alt=' + encodeURIComponent(d.trim()) + '\n');
+	md = md.replace(/%%[\s\S]*?%%/g, '');
+	md = md.replace(/^\[\^(\w+)\]:\s*(.*)$/gm, (a, id, t) => { notes.push([id, t]); return ''; });
+	//
+	// Callouts: > [!type] title.
+	//
+	const lines = md.split('\n'); const out = []; let inFence = false;
+	for (let i = 0; i < lines.length; i++) {
+		if (/^```/.test(lines[i])) inFence = !inFence;
+		const m = !inFence && lines[i].match(/^>\s?\[!(\w[\w-]*)\]\s*(.*)$/);
+		if (m) {
+			const body = [];
+			while (i + 1 < lines.length && /^>/.test(lines[i + 1])) body.push(lines[++i].replace(/^>\s?/, ''));
+			const type = m[1].toLowerCase();
+			out.push(type === 'quote'
+				? `<blockquote class="callout quote">\n\n${body.join('\n')}\n\n</blockquote>`
+				: `<aside class="callout ${esc(type)}" aria-label="${esc(m[2] || type)}"><div class="ct">${esc(m[2] || type)}</div>\n\n${body.join('\n')}\n\n</aside>`);
+		} else out.push(lines[i]);
+	}
+	md = out.join('\n');
+	//
+	// Image with the caption on the next line.
+	//
+	md = md.replace(/^!\[([^\]]*)\]\(([^)\s]+)\)(?:\{\.([\w-]+)\})?[ \t]*\n\*([^*\n]+)\*[ \t]*$/gm, (a, alt, s, cls, cap) =>
+		`<figure class="${esc(cls || 'breed')}"><img src="${esc(images[s] || s)}" alt="${esc(alt)}"><figcaption>${esc(cap)}</figcaption></figure>\n`);
+	md = md.replace(/^!\[([^\]]*)\]\(([^)\s]+)\)\{\.([\w-]+)\}[ \t]*$/gm, (a, alt, s, cls) =>
+		`<figure class="${esc(cls)}"><img src="${esc(images[s] || s)}" alt="${esc(alt)}"></figure>\n`);
+	//
+	// An image on a line of its own is a figure too, at the width of the text; otherwise it would show at its own size.
+	//
+	md = md.replace(/^!\[([^\]]*)\]\(([^)\s]+)\)[ \t]*$/gm, (a, alt, s) =>
+		`<figure class="breed"><img src="${esc(images[s] || s)}" alt="${esc(alt)}"></figure>\n`);
+	md = md.replace(/^!\[\[([^\]|]+)(?:\|[^\]]*)?\]\][ \t]*$/gm, (a, f) => `<figure class="breed"><img src="${esc(images['beeld/' + f] || PH_HERO)}" alt=""></figure>`);
+	md = md.replace(/\[\[([^\]|#]+)(#[^\]|]*)?(?:\|([^\]]+))?\]\]/g, (a, p, anchor, label) =>
+		`<a href="#" class="wikilink${PAGES.includes(p.trim()) ? '' : ' missing'}" data-page="${esc(p.trim())}" title="${PAGES.includes(p.trim()) ? 'pagina op deze site' : 'deze pagina bestaat (nog) niet'}">${esc(label || p)}</a>`);
+	md = processMath(md);
+	md = md.replace(/==([^=\n]+)==/g, '<mark>$1</mark>');
+	md = md.replace(/\[\^(\w+)\]/g, (a, id) => `<sup><a href="#fn-${esc(id)}" id="fnref-${esc(id)}">${esc(id)}</a></sup>`);
+	const renderer = new marked.Renderer();
+	renderer.code = function (code, lang) {
+		const text = typeof code === 'object' ? code.text : code;
+		const info = (typeof code === 'object' ? code.lang : lang) || '';
+		const l = info.split(/\s+/)[0];
+		if (l === 'mermaid') {
+			const m = /alt=(\S+)/.exec(info), c = /\{\.([\w-]+)\}/.exec(info);
+			return diagramFigure(text, m ? decodeURIComponent(m[1]) : '', c ? c[1] : '');
+		}
+		//
+		// Code with colours per language (highlight.js); an unknown language stays plain.
+		//
+		if (l && window.hljs && hljs.getLanguage(l))
+			return `<pre class="code" data-lang="${esc(l)}"><code class="hljs language-${esc(l)}">${hljs.highlight(text, { language: l, ignoreIllegals: true }).value}</code></pre>`;
+		return `<pre class="code"${l ? ` data-lang="${esc(l)}"` : ''}><code>${esc(text)}</code></pre>`;
+	};
+	renderer.link = function (href, title, text) {
+		const h = typeof href === 'object' ? href.href : href; const t = typeof href === 'object' ? href.text : text;
+		return `<a href="${esc(h)}" class="ext" rel="noopener" title="Andere website: ${esc(h)}">${t}</a>`;
+	};
+	renderer.image = function (href, title, text) {
+		const h = typeof href === 'object' ? href.href : href; const t = typeof href === 'object' ? href.text : text;
+		return `<img src="${esc(images[h] || h)}" alt="${esc(t)}">`;
+	};
+	let html = marked.parse(md, { renderer, gfm: true, breaks: false });
+	if (notes.length) html += '<section class="footnotes" aria-label="Voetnoten"><ol>' + notes.map(([id, t]) => `<li id="fn-${esc(id)}">${marked.parseInline(t)}</li>`).join('') + '</ol></section>';
+	return DOMPurify.sanitize(html, { ADD_ATTR: ['data-src', 'data-alt', 'data-page', 'target', 'data-tex', 'data-lang'] });
+}
+
+//
+// Formulas in LaTeX notation: $…$ in a sentence and $$…$$ on lines of their own, as in GitHub, HedgeDoc and Obsidian.
+// Temml turns them into MathML, which every current browser shows without JavaScript and screen readers read out.
+// Not inside code; an amount like $10 is no formula (the closing $ must not be followed by a digit).
+//
+let mathErrors = [];
+function mathHtml(tex, display) {
+	const enc = encodeURIComponent(tex), tag = display ? 'div' : 'span', cls = display ? 'math math-block' : 'math';
+	if (!window.temml) return `<${tag} class="${cls}" data-tex="${enc}"><code>${esc(tex)}</code></${tag}>`;
+	try {
+		return `<${tag} class="${cls}" data-tex="${enc}" title="Formule: ${esc(tex)}">${temml.renderToString(tex, { displayMode: display, throwOnError: true })}</${tag}>`;
+	} catch (e) {
+		mathErrors.push(tex);
+		return `<${tag} class="${cls} math-err" data-tex="${enc}" title="Deze formule klopt nog niet: ${esc(String(e.message || e).replace(/^Temml parse error: /, ''))}">$${esc(tex)}$</${tag}>`;
+	}
+}
+function processMath(md) {
+	return md.split(/(^```[^\n]*\n[\s\S]*?^```[ \t]*$)/m).map(part => {
+		if (/^```/.test(part)) return part;
+		const codes = [];
+		part = part.replace(/`[^`\n]+`/g, m => { codes.push(m); return `\u0000${codes.length - 1}\u0000`; });
+		part = part.replace(/^\$\$[ \t]*\n?([\s\S]+?)\n?\$\$[ \t]*$/gm, (a, tex) => `\n${mathHtml(tex.trim(), true)}\n`);
+		part = part.replace(/(^|[^\\$])\$(?=\S)([^$\n]*?\S)\$(?![\w$\d])/g, (a, pre, tex) => pre + mathHtml(tex, false));
+		return part.replace(/\u0000(\d+)\u0000/g, (a, k) => codes[+k]);
+	}).join('');
+}
+
+//
+// The diagram source stays in the HTML as text, for search engines, AI and readers without JavaScript.
+// In the data-src attribute it is URI-encoded: DOMPurify removes attribute values that contain '-->',
+// which every arrow in a flowchart does.
+//
+function diagramFigure(text, alt, place) {
+	return `<figure class="diagram${place ? ' ' + esc(place) : ''}" data-src="${encodeURIComponent(text)}" data-alt="${esc(alt)}"><pre class="diagram-src">${esc(text)}</pre>${alt ? `<figcaption>${esc(alt)}</figcaption>` : ''}</figure>`;
+}
+const diagramText = el => decodeURIComponent(el.getAttribute('data-src') || '');
+
+//
+// Draw diagrams with Pele (MIT): Mermaid notation to SVG, synchronous and much smaller than mermaid.js.
+//
+const PELE_URL = 'https://cdn.jsdelivr.net/npm/pele@1.10.1/dist/pele.global.js';
+let peleReady = null;
+function loadPele() {
+	if (!peleReady) peleReady = new Promise((ok, fail) => {
+		const sc = document.createElement('script');
+		sc.src = PELE_URL; sc.onload = () => window.pele ? ok() : fail(new Error('Pele niet geladen')); sc.onerror = fail;
+		document.head.appendChild(sc);
+	});
+	return peleReady;
+}
+function drawDiagram(text) {
+	return window.pele.render(text, { fontFamily: 'Lato, Helvetica, Arial, sans-serif', fontSize: 15, responsive: true }).svg;
+}
+function dutchError(e, text) {
+	//
+	// Pele reports line and column (PeleError.line, .column, .code).
+	//
+	const count = text.replace(/\n+$/, '').split('\n').length;
+	const raw = e && (e.line || (String(e.message || '').match(/line (\d+)/i) || [])[1]);
+	const line = raw ? Math.min(+raw, count) : null;
+	let hint = 'Controleer de tekens op deze regel.';
+	const l = line ? (text.split('\n')[line - 1] || '') : '';
+	if (e && e.code === 'unsupported-diagram') hint = 'Dit soort diagram kennen we niet. Begin met een van de voorbeelden hierboven.';
+	else if (/--\s+>|-\s+->/.test(l)) hint = 'Schrijf een pijl zonder spaties: -->.';
+	else if (/^\s*timeline/.test(text) && line && /^\s*\d{3,4}\s+[^:]/.test(l)) hint = 'Zet een dubbele punt ( : ) tussen het jaartal en de gebeurtenis.';
+	else if (/-->|---/.test(l)) hint = 'Een pijl schrijf je als --> tussen twee blokken.';
+	return { line, text: (line ? `Regel ${line} klopt nog niet. ` : 'Het diagram klopt nog niet. ') + hint, fix: /dubbele punt/.test(hint) ? line : null };
+}
+let diagCount = 0;
+//
+// Drawn diagrams by source text: an unchanged diagram is not drawn again.
+//
+const diagCache = new Map();
+window.diagTimes = [];
+async function renderDiagrams(root) {
+	const boxes = root.querySelectorAll('.diagram[data-src]');
+	if (!boxes.length) return;
+	try { await loadPele(); } catch (e) { boxes.forEach(b => b.textContent = 'Diagrammen kunnen niet geladen worden (geen verbinding).'); return; }
+	for (const b of boxes) {
+		const text = diagramText(b);
+		const lint = lintDiagram(text);
+		if (lint) { b.innerHTML = `<div class="diagerr"><i class="fa fa-exclamation-triangle" style="color:var(--orange)"></i> ${esc(lint.text)}</div>`; continue; }
+		const alt = b.getAttribute('data-alt') || 'diagram';
+		if (diagCache.has(text)) { const pre = b.querySelector('pre'); if (pre) pre.outerHTML = diagCache.get(text); else if (!b.querySelector('svg')) b.insertAdjacentHTML('afterbegin', diagCache.get(text)); continue; }
+		try {
+			const t0 = performance.now();
+			const svg = drawDiagram(text);
+			window.diagTimes.push(Math.round(performance.now() - t0));
+			const html = svg.replace('<svg ', `<svg role="img" aria-label="${esc(alt)}" `);
+			diagCache.set(text, html); b.querySelector('pre') ? b.querySelector('pre').outerHTML = html : (b.innerHTML = html);
+		}
+		catch (e) { b.innerHTML = `<div class="diagerr"><i class="fa fa-exclamation-triangle" style="color:var(--orange)"></i> ${esc(dutchError(e, text).text)}</div>`; }
+	}
+}
+
+function renderPreview() {
+	const p = $('preview');
+	const kicker = state.tags.length ? state.tags.join(' || ') : '';
+	const body = renderMarkdown(state.fields.text, state.images);
+	const method = state.fields.method.trim() ? renderMarkdown(state.fields.method, state.images) : '';
+	const sources = state.fields.sources.trim() ? renderMarkdown(state.fields.sources, state.images) : '';
+	const mins = Math.max(1, Math.round(words(state.fields.text) / 220));
+	const now = new Date();
+	const rt = state.status === 'retracted' && state.retraction;
+	const notice = rt ? `<p class="retracted" role="note"><b>Dit artikel is teruggetrokken</b> op ${new Date(rt.at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}. ${esc(rt.reason)}</p>` : '';
+	p.innerHTML = notice + `<header>${kicker ? `<p class="kicker">${esc(kicker)}</p>` : ''}
+		<h1>${esc(state.title || 'Zonder titel')}</h1>
+		${state.excerpt ? `<p class="intro">${esc(state.excerpt)}</p>` : ''}
+		<p class="byline">door <span class="author">${esc(state.author || '…')}</span> · ${state.status === 'published' ? `<time datetime="${now.toISOString().slice(0, 10)}">${now.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}</time>` : 'nog niet gepubliceerd'} · leestijd ${mins} ${mins === 1 ? 'minuut' : 'minuten'}</p></header>
+		${heroSrc() ? `<figure class="breed"><img src="${esc(heroSrc())}" alt="${esc(state.hero.alt || '')}"><figcaption>${esc(state.hero.caption || '')} <i>${esc(state.hero.credit || '')}</i></figcaption></figure>` : ''}
+		<div class="body" id="pbody">${body}</div>
+		${method ? `<div class="bijsluiter"><h2>Bijsluiter</h2>${method}</div>` : ''}
+		${sources ? `<div class="bijsluiter"><h2>Bronnen</h2>${sources}</div>` : ''}
+		<div class="support"><strong>Steun de Stadsbron!</strong><span class="btn primary">Draag bij!</span></div>`;
+	//
+	// Structured data (schema.org) for search engines and AI, as the public article page gets it too.
+	//
+	const ld = document.createElement('script'); ld.type = 'application/ld+json';
+	ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: state.title, description: state.excerpt,
+		author: { '@type': 'Person', name: state.author }, keywords: state.tags.join(', '), inLanguage: state.lang || 'nl', wordCount: words(state.fields.text),
+		articleSection: state.tags[0] || undefined, image: heroSrc() && state.hero.alt ? { '@type': 'ImageObject', caption: state.hero.caption, description: state.hero.alt } : undefined });
+	p.appendChild(ld);
+	renderDiagrams(p).then(followCaret);
+	fitFrame();
+}
+//
+// A phone in landscape is wider than the preview pane: scale the whole device to fit.
+//
+function fitFrame() {
+	const f = $('frame'); f.style.zoom = '';
+	if (device === 'desktop') return;
+	const avail = $('previewPane').clientWidth - 16, need = f.offsetWidth + 32;
+	if (need > avail) f.style.zoom = (avail / need).toFixed(3);
+}
+
+//
+// Preview follows the cursor.
+// Find the block holding the cursor and scroll the matching block of the preview into view.
+//
+function caretBlockIndex() {
+	if (editMode === 'visual') {
+		const sel = window.getSelection(); if (!sel.rangeCount) return -1;
+		let n = sel.anchorNode; const root = $('wys');
+		while (n && n.parentNode !== root) n = n.parentNode;
+		return n ? [...root.children].indexOf(n) : -1;
+	}
+	let before = src.value.slice(0, src.selectionStart);
+	if (field === 'text') {
+		const m = src.value.match(/^---[ \t]*\n[\s\S]*?\n---[ \t]*(\n|$)/);
+		if (m && src.selectionStart <= m[0].length) return -1;
+		if (m) before = before.slice(m[0].length);
+	}
+	before = before.replace(/%%[\s\S]*?%%/g, '').replace(/^\[\^\w+\]:.*$/gm, '');
+	before = before.replace(/```[\s\S]*?(```|$)/g, m => m.replace(/\n\s*\n/g, '\n'));
+	return before.split(/\n\s*\n/).filter(b => b.trim()).length - 1;
+}
+function followCaret() {
+	if (mode !== 'side' || field !== 'text') return;
+	const body = $('pbody'); if (!body) return;
+	const i = caretBlockIndex();
+	const el = i < 0 ? $('preview').querySelector('header') : body.children[i];
+	if (!el) return;
+	const pane = $('previewPane'), pr = pane.getBoundingClientRect(), er = el.getBoundingClientRect();
+	const bar = pane.querySelector('.devicebar').offsetHeight;
+	if (er.top < pr.top + bar + 8 || er.bottom > pr.bottom - 8)
+		//
+		// Jump directly: text and preview do not scroll at the same pace.
+		//
+		setScroll(pane, pane.scrollTop + er.top - pr.top - bar - pane.clientHeight / 3);
+}
+
+//
+// Side by side: the editor and the preview scroll together, as in HedgeDoc.
+// Both sides are cut into the same blocks (head, then paragraphs, headings, boxes, figures, tables);
+// between two block starts the position is interpolated. The Markdown positions are measured in a hidden copy
+// of the writing area with the same font and width.
+//
+let mdTops = null;
+function measureMdBlocks() {
+	const v = src.value, m = field === 'text' ? v.match(FRONT_RE) : null, base = m ? m[0].length : 0;
+	const rs = blockRanges(v.slice(base));
+	const mir = measureMdBlocks.el || (measureMdBlocks.el = document.createElement('div'));
+	const cs = getComputedStyle(src);
+	Object.assign(mir.style, { position: 'absolute', visibility: 'hidden', left: '-9999px', top: '0', width: src.offsetWidth + 'px', boxSizing: cs.boxSizing,
+		font: cs.font, lineHeight: cs.lineHeight, padding: cs.padding, letterSpacing: cs.letterSpacing, whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'normal', tabSize: cs.tabSize });
+	mir.textContent = '';
+	let last = 0; const marks = [];
+	const mark = to => { mir.append(document.createTextNode(v.slice(last, to))); last = to; const sp = document.createElement('span'); mir.append(sp); marks.push(sp); };
+	mark(base);
+	rs.forEach(([a]) => mark(base + a));
+	mir.append(document.createTextNode(v.slice(last)));
+	if (!mir.isConnected) document.body.append(mir);
+	const tops = marks.map(sp => sp.offsetTop);
+	mdTops = { head: tops[0], blocks: tops.slice(1) };
+}
+function scrollPairs() {
+	const ep = $('editorpane'), pp = $('previewPane'), body = $('pbody');
+	if (!body) return null;
+	const pTop = el => el.getBoundingClientRect().top - pp.getBoundingClientRect().top + pp.scrollTop;
+	const eTop = el => el.getBoundingClientRect().top - ep.getBoundingClientRect().top + ep.scrollTop;
+	let head, ed;
+	if (editMode === 'visual') { head = eTop(wys); ed = [...wys.children].map(eTop); }
+	else { if (!mdTops) measureMdBlocks(); const base = eTop(src); head = base + mdTops.head; ed = mdTops.blocks.map(y => base + y); }
+	const pr = [...body.children].map(pTop);
+	const pairs = [[0, 0], [head, pTop(body)]];
+	for (let i = 0; i < Math.min(ed.length, pr.length); i++) pairs.push([ed[i], pr[i]]);
+	pairs.push([ep.scrollHeight - ep.clientHeight + 1, pp.scrollHeight - pp.clientHeight + 1]);
+	//
+	// Keep only pairs that go down on both sides, so the mapping stays monotonic.
+	//
+	const out = [];
+	for (const q of pairs) if (!out.length || (q[0] > out[out.length - 1][0] && q[1] >= out[out.length - 1][1])) out.push(q);
+	return out;
+}
+function mapY(pairs, y, from) {
+	const to = 1 - from;
+	for (let i = 1; i < pairs.length; i++) {
+		const a = pairs[i - 1], b = pairs[i];
+		if (y <= b[from] || i === pairs.length - 1) return a[to] + Math.max(0, Math.min(1, (y - a[from]) / ((b[from] - a[from]) || 1))) * (b[to] - a[to]);
+	}
+	return 0;
+}
+//
+// A scroll set by the code itself must not be synchronised back.
+//
+let ignoreScroll = { el: null, until: 0 };
+function setScroll(el, top) { ignoreScroll = { el, until: performance.now() + 150 }; el.scrollTop = top; }
+function syncScroll(from) {
+	if (mode !== 'side' || field !== 'text') return;
+	if (ignoreScroll.el === from && performance.now() < ignoreScroll.until) return;
+	const pairs = scrollPairs(); if (!pairs) return;
+	const ep = $('editorpane'), pp = $('previewPane');
+	if (from === ep) setScroll(pp, mapY(pairs, ep.scrollTop, 0)); else setScroll(ep, mapY(pairs, pp.scrollTop, 1));
+}
+for (const id of ['editorpane', 'previewPane']) {
+	const el = $(id);
+	el.addEventListener('scroll', () => { cancelAnimationFrame(syncScroll.f); syncScroll.f = requestAnimationFrame(() => syncScroll(el)); }, { passive: true });
+}
+
+//
+// Checks.
+//
+function checks() {
+	const ok = (c, t) => ({ ok: c, t });
+	const list = [
+		{ ...ok(state.title.trim().length > 0, state.title.trim() ? 'heeft een titel' : 'een titel is verplicht'), req: true },
+		{ ...ok(state.fields.text.trim().length > 0, state.fields.text.trim() ? 'heeft artikelinhoud' : 'artikelinhoud is verplicht'), req: true },
+		{ ...ok(state.fields.method.trim().length > 0, state.fields.method.trim() ? 'heeft een bijsluiter' : 'een bijsluiter is verplicht'), req: true, go: 'method' },
+		{ ...ok(state.fields.sources.trim().length > 0, state.fields.sources.trim() ? 'heeft één of meer bronnen' : 'bronnen worden aangeraden'), req: false, go: 'sources' },
+		{ ...ok(state.excerpt.trim().length > 0, state.excerpt.trim() ? 'heeft een uittreksel' : 'een uittreksel is verplicht'), req: true },
+		{ ...ok(!!heroSrc(), heroSrc() ? 'heeft een afbeelding bij uittreksel' : 'een afbeelding bij het uittreksel wordt aangeraden'), req: false },
+		{ ...ok(state.tags.length > 0, state.tags.length ? 'heeft één of meer tags' : 'één of meer tags zijn verplicht'), req: true },
+		...state.tags.filter(t => !(state.knownTags || []).includes(t)).map(t => ({ ok: false, t: `tag „${t}” staat niet in de lijst van de site; kies een bestaande tag (alleen een beheerder maakt nieuwe)`, req: true }))
+	];
+	if (frontError) list.push({ ok: false, t: 'de gegevens bovenaan de tekst kloppen niet: ' + frontError, req: true });
+	if (state.status === 'review' || state.status === 'approved') list.push({ ...ok(state.approvals >= 3, `${state.approvals >= 3 ? 'heeft genoeg' : 'onvoldoende'} goedkeuringen (${state.approvals}/3)`), req: true });
+	return list;
+}
+function tips() {
+	const t = [];
+	const all = Object.values(state.fields).join('\n');
+	const noAlt = (all.match(/!\[\]\(/g) || []).length;
+	t.push(noAlt ? { kind: 'tip', t: `${noAlt} foto${noAlt > 1 ? "'s" : ''} zonder beschrijving` } : { kind: 'ok', t: 'alle foto’s hebben een beschrijving' });
+	if (state.title.length > 90) t.push({ kind: 'tip', t: `titel is ${state.title.length} tekens; liever korter dan 90` });
+	if (words(state.excerpt) > 60) t.push({ kind: 'tip', t: 'uittreksel is lang; 2 à 3 zinnen leest het best' });
+	const longs = longSentences(state.fields.text).length;
+	t.push(longs ? { kind: 'tip', t: `${longs} ${longs > 1 ? 'zinnen' : 'zin'} langer dan 30 woorden` } : { kind: 'ok', t: 'geen zinnen langer dan 30 woorden' });
+	const missing = [...all.matchAll(/\[\[([^\]|#]+)/g)].map(m => m[1].trim()).filter(p => !PAGES.includes(p));
+	t.push(missing.length ? { kind: 'tip', t: `link naar onbekende pagina: ${missing[0]}` } : { kind: 'ok', t: 'alle links werken' });
+	const diagrams = (all.match(/```mermaid/g) || []).length, descr = (all.match(/%%\s*beschrijving:/g) || []).length;
+	if (diagrams) t.push(descr >= diagrams ? { kind: 'ok', t: 'diagram heeft een beschrijving' } : { kind: 'tip', t: 'diagram zonder beschrijving voor voorlezen' });
+	mathErrors = []; renderMarkdown(state.fields.text, state.images);
+	if (mathErrors.length) t.push({ kind: 'tip', t: `formule klopt nog niet: $${mathErrors[0]}$` });
+	return t;
+}
+//
+// Red (missing) first, then yellow (advice), then green (fine); alphabetical within each colour.
+// Green is hidden by default: the switch 'toon ook wat in orde is' shows it.
+//
+const LEVEL = { fout: 0, tip: 1, ok: 2 };
+function sortChecks(list) { return list.sort((a, b) => LEVEL[a.lvl] - LEVEL[b.lvl] || a.t.localeCompare(b.t, 'nl')); }
+function checkItems(list) {
+	const showOk = $('showOk').checked;
+	const goName = { method: 'bijsluiter', sources: 'bronnen' };
+	const shown = sortChecks(list).filter(x => showOk || x.lvl !== 'ok');
+	if (!shown.length) return '<li class="allgood"><i class="fa fa-check" aria-hidden="true"></i><span>alles in orde</span></li>';
+	return shown.map(x => `<li><i class="fa ${x.lvl === 'ok' ? 'fa-check' : x.lvl === 'fout' ? 'fa-times' : 'fa-exclamation-triangle'}" aria-hidden="true"></i><span><span class="sr">${x.lvl === 'ok' ? 'In orde: ' : x.lvl === 'fout' ? 'Ontbreekt: ' : 'Advies: '}</span>${esc(x.t)}</span>${x.lvl !== 'ok' && x.go ? `<button type="button" class="gobtn" data-go="${x.go}" title="Open het tabblad ${goName[x.go]} om dit in te vullen">${goName[x.go]} invullen <i class="fa fa-arrow-right" aria-hidden="true"></i></button>` : ''}</li>`).join('');
+}
+function renderSummaries() {
+	const plain = md => md.replace(/[#*>\[\]_`=-]+/g, ' ').replace(/\s+/g, ' ').trim();
+	$('sumHead').textContent = '– ' + (state.title || 'zonder titel');
+	$('sumMethod').textContent = '– ' + (plain(state.fields.method).slice(0, 90) || 'nog leeg');
+	const n = state.fields.sources.split('\n').filter(l => l.trim()).length;
+	$('sumSources').textContent = '– ' + (n ? `${n} ${n === 1 ? 'bron' : 'bronnen'}` : 'nog leeg');
+}
+function renderChecks() {
+	renderSummaries();
+	const c = checks();
+	$('checks').innerHTML = checkItems(c.map(x => ({ ...x, lvl: x.ok ? 'ok' : x.req ? 'fout' : 'tip' })));
+	const complete = c.filter(x => x.req).every(x => x.ok);
+	const s = $('checkSummary');
+	if (state.status === 'draft') { s.textContent = complete ? 'Artikel is compleet, beoordeling kan gestart worden.' : 'Artikel is niet compleet, beoordeling kan nog niet gestart worden.'; }
+	//
+	// Published or retracted already shows in the process bar; no repeat here.
+	//
+	else if (state.status === 'published' || state.status === 'retracted') s.textContent = '';
+	else s.textContent = complete ? 'Beoordeling afgerond, artikel kan gepubliceerd worden.' : 'Beoordeling nog bezig, artikel kan nog niet gepubliceerd worden.';
+	s.className = 'summary ' + (complete ? 'ok' : 'no');
+	//
+	// Extra tips only show when there is something to improve, or when 'toon alles' is on.
+	//
+	const tipList = tips();
+	$('tips').innerHTML = checkItems(tipList.map(x => ({ ...x, lvl: x.kind })));
+	$('tipsBox').hidden = !$('showOk').checked && tipList.every(x => x.kind === 'ok');
+	return complete;
+}
+//
+// Editorial statute: the points a reviewer confirms when approving. These are examples based on common
+// journalistic codes; each site sets its own list from its editorial statute.
+//
+const STATUTE = [
+	['Feiten zijn gecontroleerd', 'bij een primaire bron of minstens twee onafhankelijke bronnen'],
+	['Hoor en wederhoor', 'wie wordt beschuldigd of bekritiseerd, kreeg de kans om te reageren'],
+	['Feit en mening zijn gescheiden', 'een mening staat duidelijk als mening in de tekst'],
+	['Belangen zijn gemeld', 'de bijsluiter noemt belangen van de auteur bij het onderwerp'],
+	['Privacy is gerespecteerd', 'geen onnodige persoonsgegevens; minderjarigen en slachtoffers onherkenbaar'],
+	['Citaten kloppen', 'letterlijk en, waar dat is afgesproken, geautoriseerd'],
+	['Beeld mag gebruikt worden', 'rechten geregeld en de maker genoemd']
+];
+const LANGS = { nl: 'Nederlands', en: 'English' };
+function renderReview() {
+	const inReview = ['review', 'approved', 'published'].includes(state.status), revs = state.reviews || [];
+	$('statuteBox').hidden = !(state.status === 'review' || state.status === 'approved');
+	const n = Math.min(state.approvals, 3), showOk = $('showOk').checked;
+	const items = STATUTE.map(([t]) => ({ t, ok: n >= 3 }));
+	$('statute').innerHTML = items.every(x => x.ok) && !showOk ? '<li class="allgood"><i class="fa fa-check" aria-hidden="true"></i><span>bevestigd door 3 beoordelaars</span></li>' :
+		items.filter(x => showOk || !x.ok).map(x => `<li><i class="fa ${x.ok ? 'fa-check' : 'fa-exclamation-triangle'}" aria-hidden="true"></i><span><span class="sr">${x.ok ? 'In orde: ' : 'Nog niet: '}</span>${esc(x.t)} <span class="small">(bevestigd door ${n} van 3)</span></span></li>`).join('');
+	$('reviewCard').hidden = !inReview && !revs.length;
+	$('reviewList').innerHTML = revs.length ? revs.map((r, i) => `<li${r.void ? ' class="void" title="Vervallen door terugtrekken"' : ''}><b>${r.approve ? '✓ goedkeuring' : 'opmerking'} ${i + 1}</b> · collega ${i + 1}${r.comment ? `<br>„${esc(r.comment)}”` : ''}</li>`).join('') : '<li class="small">Nog geen goedkeuringen of opmerkingen.</li>';
+}
+function openApproval() {
+	$('statuteList').innerHTML = STATUTE.map(([t, h], i) => `<label title="${esc(h)}"><input type="checkbox" class="stchk" id="st${i}"><span>${esc(t)}<small>${esc(h)}</small></span></label>`).join('');
+	$('apprComment').value = '';
+	updApproval();
+	$('apprDlg').showModal();
+}
+function updApproval() {
+	const open = [...document.querySelectorAll('.stchk')].filter(c => !c.checked).length;
+	$('apprOk').disabled = open > 0;
+	$('apprNeed').textContent = open ? `Bevestig nog ${open} ${open === 1 ? 'punt' : 'punten'} van het redactiestatuut.` : '';
+}
+$('statuteList').addEventListener('change', updApproval);
+onDialogAction('apprDlg', 'ok', () => {
+	state.approvals++;
+	(state.reviews = state.reviews || []).push({ approve: true, comment: $('apprComment').value.trim(), at: Date.now() });
+	if (state.approvals >= 3) state.status = 'approved';
+	saved = clone(state); dirty = false; persist(); renderAll();
+	toast(`Goedkeuring ${state.approvals} van 3 gegeven.`);
+});
+function updRetract() {
+	const ok = !!$('retractReason').value.trim();
+	$('retractOk').disabled = !ok; $('retractNeed').textContent = ok ? '' : 'Vul eerst de reden in; die staat in de melding voor lezers.';
+}
+$('retractReason').addEventListener('input', updRetract);
+onDialogAction('retractDlg', 'ok', () => {
+	state.status = 'retracted'; state.retraction = { reason: $('retractReason').value.trim(), at: Date.now(), by: prefs.role === 'admin' ? 'beheerder' : state.author };
+	saved = clone(state); dirty = false; persist(); renderAll();
+	toast('Teruggetrokken. Lezers zien op het webadres een melding met de reden.');
+});
+$('facts').addEventListener('change', e => {
+	if (e.target.id !== 'langSel') return;
+	state.lang = e.target.value; applyLang(); markDirty();
+	toast(`Taal: ${LANGS[state.lang]}. Het webadres wordt ${state.lang}/… en de spellingcontrole volgt de taal.`);
+	if (mode !== 'write') renderPreview();
+});
+function applyLang() {
+	const l = state.lang || 'nl';
+	for (const el of [src, wys, $('fTitle'), $('fExcerpt'), $('preview')]) el.setAttribute('lang', l);
+}
+function renderSteps() {
+	const order = ['draft', 'review', 'approved', 'published'];
+	const retracted = state.status === 'retracted';
+	const names = { draft: 'schets', review: 'in beoordeling', approved: `goedgekeurd (${Math.min(state.approvals, 3)} van 3)`, published: retracted ? 'teruggetrokken' : 'gepubliceerd' };
+	const idx = retracted ? 3 : order.indexOf(state.status);
+	const complete = checks().filter(x => x.req).every(x => x.ok);
+	let action = '';
+	if (state.status === 'draft') action = `<button class="btn primary" id="toReview" ${complete ? '' : 'disabled title="Maak eerst de checklist compleet"'}>start beoordeling ›</button>`;
+	//
+	// The author retracts and publishes, but never approves the own article; a colleague approves.
+	//
+	const author = (prefs.role || 'author') === 'author';
+	const retract = '<button class="btn outline retract" id="retract" title="Alleen de auteur: het artikel gaat terug naar schets; de goedkeuringen vervallen, de opmerkingen blijven">trek terug</button>';
+	const ownNote = '<span class="small" style="align-self:center" title="Drie goedkeuringen komen van drie andere mensen">je eigen artikel keurt een collega goed</span>';
+	if (state.status === 'review') action = author ? ownNote + retract : `<button class="btn primary" id="approve" aria-haspopup="dialog" title="Goedkeuring geven met het redactiestatuut en een opmerking (opent een venster)">geef goedkeuring…</button>`;
+	const admin = prefs.role === 'admin';
+	if (state.status === 'approved') action = author || admin ? (author ? retract : '') + `<button class="btn primary" id="publish">publiceer</button>` : '<span class="small" style="align-self:center">de auteur of een beheerder publiceert</span>';
+	if (state.status === 'published') action = author || admin ? '<button class="btn outline retract" id="retractPub" aria-haspopup="dialog" title="Het gepubliceerde artikel terugtrekken, met een reden voor lezers (opent een venster)">trek terug…</button>' : '';
+	if (retracted) action = author ? '<button class="btn primary" id="reopen" title="Het artikel weer als schets bewerken; daarna opnieuw beoordelen en publiceren">opnieuw bewerken</button>' : '';
+	const part = state.status === 'review' && state.approvals > 0 && state.approvals < 3 ? state.approvals / 3 : 0;
+	$('steps').innerHTML = order.map((s, i) => {
+		const partial = s === 'approved' && part;
+		const style = partial ? ` style="background: conic-gradient(var(--ok) 0 ${Math.round(part * 100)}%, #fff ${Math.round(part * 100)}% 100%)" title="${state.approvals} van 3 goedkeuringen"` : '';
+		const label = partial ? `<span class="sr">${state.approvals} van 3 goedkeuringen</span>` : (i < idx ? '<i class="fa fa-check" aria-hidden="true"></i>' : i + 1);
+		const lab = retracted && i === 3 ? '<i class="fa fa-times" aria-hidden="true"></i>' : label;
+		return `<div class="step ${i < idx ? 'done' : i === idx ? 'now' : ''}${partial ? ' partial' : ''}${retracted && i === 3 ? ' retracted' : ''}"><span class="dot"${style}>${lab}</span><span class="t">${names[s]}</span></div>${i < 3 ? '<span class="sep"></span>' : ''}`;
+	}).join('') + `<div class="action">${action}</div>`;
+}
+function renderOutline() {
+	const items = [];
+	let inFence = false;
+	state.fields.text.split('\n').forEach((l, i) => {
+		if (/^```/.test(l)) { inFence = !inFence; if (inFence) items.push({ i, t: '◇ diagram', sub: true }); }
+		if (inFence) return;
+		let m;
+		if ((m = l.match(/^#{3,4} (.+)/))) items.push({ i, t: '› ' + m[1], sub: l.startsWith('####') });
+		else if ((m = l.match(/^>\s?\[!(\w+)\]\s*(.*)/))) items.push({ i, t: (m[1] === 'quote' ? '❝ citaat' : '▢ ' + (m[2] || m[1])), sub: true });
+	});
+	$('outline').innerHTML = '<a href="#" data-line="0">titel · uittreksel · afbeelding</a>' + items.map(x => `<a href="#" class="${x.sub ? 'sub' : ''}" data-line="${x.i}">${esc(x.t)}</a>`).join('');
+}
+function renderStats() { renderFacts(); }
+let storedOk = true;
+function renderFacts() {
+	const w = words(state.fields.text);
+	const pub = state.status === 'published' || state.status === 'retracted';
+	$('facts').innerHTML = `<li>${w.toLocaleString('nl-NL')} woorden</li><li>± ${Math.max(1, Math.round(w / 220))} min lezen</li>` +
+		`<li><label for="langSel">taal</label> <select id="langSel" ${pub ? 'disabled ' : ''}title="${pub ? 'Na publicatie ligt de taal vast: het webadres zou veranderen' : 'Taal van het artikel: bepaalt het webadres (nl/… of en/…) en de spellingcontrole'}">` +
+		Object.entries(LANGS).map(([k, v]) => `<option value="${k}"${k === (state.lang || 'nl') ? ' selected' : ''}>${v}</option>`).join('') + '</select></li>';
+}
+//
+// Front matter: title, author, excerpt, tags and the image with the excerpt as fixed lines at the top
+// of the Markdown of the article.
+//
+function yamlStr(v) { v = String(v ?? ''); return /[:#\[\]{},'"\n]|^\s|\s$|^$/.test(v) ? JSON.stringify(v) : v; }
+const FRONT_RE = /^---[ \t]*\n[\s\S]*?\n---[ \t]*(\n|$)/;
+function heroSrc() { const h = state.hero || {}; return h.path ? state.images[h.path] || PH_HERO : ''; }
+function frontText(extra = []) {
+	const h = state.hero || {};
+	return ['---', `titel: ${yamlStr(state.title)}`, `auteur: ${yamlStr(state.author)}`, `uittreksel: ${yamlStr(state.excerpt)}`, 'tags:',
+		...state.tags.map(t => `  - ${yamlStr(t)}`),
+		`afbeelding: ${yamlStr(h.path)}`, `beschrijving: ${yamlStr(h.alt)}`, `bijschrift: ${yamlStr(h.caption)}`, `fotograaf: ${yamlStr(h.credit)}`,
+		...yamlBlock('bijsluiter', state.fields.method), ...yamlBlock('bronnen', state.fields.sources),
+		...extra, '---', '', ''].join('\n');
+}
+//
+// Bijsluiter and bronnen are Markdown of several lines: a YAML block (key: |) with the lines indented by two spaces.
+//
+function yamlBlock(key, v) {
+	v = String(v || '').replace(/\s+$/, '');
+	return v ? [`${key}: |`, ...v.split('\n').map(l => l ? '  ' + l : '')] : [`${key}: ""`];
+}
+//
+// Put a new value in the Markdown field while keeping the cursor at the same place in the text below the front matter.
+//
+function setSrcKeepCaret(v) {
+	const oldFm = (src.value.match(FRONT_RE) || [''])[0].length, newFm = (v.match(FRONT_RE) || [''])[0].length;
+	const p = src.selectionStart;
+	src.value = v;
+	const np = p >= oldFm ? p - oldFm + newFm : Math.min(p, newFm);
+	src.setSelectionRange(np, np);
+	syncEditor();
+}
+function unq(v) { v = v.trim(); if (/^".*"$/.test(v)) { try { return JSON.parse(v); } catch (e) { return v.slice(1, -1); } } return v.replace(/^'(.*)'$/, '$1'); }
+function parseFront(text) {
+	const m = text.match(/^---[ \t]*\n([\s\S]*?)\n---[ \t]*(\n|$)/);
+	if (!m) return { ok: false, body: text, reason: 'de eerste regel moet --- zijn en het blok moet met --- eindigen' };
+	const props = {}; let list = null, block = null;
+	for (const line of m[1].split('\n')) {
+		let k;
+		if (block && (/^ {2}/.test(line) || !line.trim())) { props[block].push(line.replace(/^ {2}/, '')); continue; }
+		if (block) { props[block] = props[block].join('\n').replace(/\s+$/, ''); block = null; }
+		if ((k = line.match(/^\s+-\s*(.*)$/)) && list) { props[list].push(unq(k[1])); continue; }
+		if ((k = line.match(/^([\w-]+):\s*(.*)$/))) {
+			const key = k[1], val = k[2].trim();
+			if (val === '|' || val === '|-') { props[key] = []; block = key; list = null; }
+			else if (val === '') { props[key] = []; list = key; }
+			else if (/^\[.*\]$/.test(val)) { props[key] = val.slice(1, -1).split(',').map(unq).filter(Boolean); list = null; }
+			else { props[key] = unq(val); list = null; }
+			continue;
+		}
+		if (line.trim()) return { ok: false, body: text.slice(m[0].length).replace(/^\n/, ''), reason: `deze regel klopt niet: ${line.trim()}` };
+	}
+	if (block) props[block] = props[block].join('\n').replace(/\s+$/, '');
+	return { ok: true, props, body: text.slice(m[0].length).replace(/^\n/, '') };
+}
+let frontError = '';
+function editorValue(f) { return frontText() + state.fields.text; }
+function frontLines() { return field === 'text' ? frontText().split('\n').length - 1 : 0; }
+//
+// Title and excerpt of the article head grow with their text instead of scrolling.
+//
+function autosize() { for (const id of ['fTitle', 'fExcerpt']) { const t = $(id); t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; } }
+['fTitle', 'fExcerpt'].forEach(id => $(id).addEventListener('input', autosize));
+$('fTitle').addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+function renderMeta() {
+	$('pageTitle').textContent = state.title || 'Zonder titel';
+	$('fTitle').value = state.title; $('fAuthor').value = state.author; $('fExcerpt').value = state.excerpt;
+	renderTags(); renderHero(); counts(); requestAnimationFrame(autosize);
+}
+function counts() {
+	const n = state.title.length;
+	$('titleCount').textContent = `${n} tekens` + (n > 90 ? ' · liever korter dan 90' : '');
+	$('titleCount').className = 'count' + (n > 90 ? ' warn' : '');
+	const w = words(state.excerpt);
+	$('excerptCount').textContent = `${w} woorden` + (w > 60 ? ' · een intro van 2 à 3 zinnen leest het best' : '');
+	$('excerptCount').className = 'count' + (w > 60 ? ' warn' : '');
+}
+function renderTags() {
+	setTimeout(renderTagChoice, 0);
+	if (field === 'text' && editMode === 'markdown' && document.activeElement !== src) setSrcKeepCaret(editorValue('text'));
+	const box = $('tagBox'); box.querySelectorAll('.tag').forEach(t => t.remove());
+	state.tags.forEach((t, i) => {
+		const s = document.createElement('span'); s.className = 'tag'; s.innerHTML = `${esc(t)}<button type="button" aria-label="Tag ${esc(t)} verwijderen" title="Tag ${esc(t)} verwijderen" data-i="${i}">✕</button>`;
+		box.insertBefore(s, $('tagAdd'));
+	});
+}
+function renderHero() {
+	const h = state.hero || {};
+	$('heroThumb').src = heroSrc() || PH_HERO;
+	$('heroThumb').alt = '';
+	$('heroName').textContent = h.path || 'nog geen foto gekozen';
+	$('heroDel').hidden = !h.path;
+	for (const [id, k] of [['fHeroAlt', 'alt'], ['fHeroCap', 'caption'], ['fHeroCredit', 'credit']]) if (document.activeElement !== $(id)) $(id).value = h[k] || '';
+}
+let dirty = false;
+function markDirty() {
+	dirty = JSON.stringify(state) !== JSON.stringify(saved);
+	clearTimeout(markDirty.t);
+	markDirty.t = setTimeout(() => { const ok = persist(); updateChip(ok); }, 600);
+}
+function updateChip(stored = true) { storedOk = stored; renderFacts(); }
+function renderAll() {
+	renderMeta(); renderSteps(); renderChecks(); renderOutline(); renderStats(); updateChip(); renderReview(); applyLang();
+	if (mode !== 'write') renderPreview();
+}
+
+//
+// Editing.
+//
+function setField(f) {
+	if (editMode === 'visual') syncFromVisual();
+	field = f;
+	$('editorpane').classList.toggle('head-on', f === 'text');
+	src.value = editorValue(f);
+	src.setAttribute('aria-label', { text: 'Tekst van het artikel', method: 'Bijsluiter', sources: 'Bronnen' }[f]);
+	src.placeholder = { text: 'Begin hier met schrijven…', method: 'Wie ben je, hoe is dit artikel tot stand gekomen, welke belangen spelen er?', sources: '- Bron 1\n- Bron 2' }[f];
+	src.setSelectionRange(0, 0);
+	syncEditor();
+	if (editMode === 'visual') loadVisual();
+}
+function onInput() {
+	if (field === 'text') {
+		const fm = parseFront(src.value);
+		frontError = fm.ok ? '' : fm.reason;
+		if (fm.ok) {
+			state.title = String(fm.props.titel ?? fm.props.title ?? state.title);
+			state.author = String(fm.props.auteur ?? fm.props.author ?? state.author);
+			state.excerpt = String(fm.props.uittreksel ?? fm.props.excerpt ?? state.excerpt);
+			if (Array.isArray(fm.props.tags)) state.tags = fm.props.tags.map(String);
+			const pr = fm.props;
+			state.hero = { path: String(pr.afbeelding ?? ''), alt: String(pr.beschrijving ?? ''), caption: String(pr.bijschrift ?? ''), credit: String(pr.fotograaf ?? '') };
+			state.fields.method = Array.isArray(pr.bijsluiter) ? pr.bijsluiter.join('\n') : String(pr.bijsluiter ?? '');
+			state.fields.sources = Array.isArray(pr.bronnen) ? pr.bronnen.join('\n') : String(pr.bronnen ?? '');
+			renderMeta();
+		}
+		state.fields.text = fm.body;
+	} else state.fields[field] = src.value;
+	syncEditor(); renderChecks(); renderOutline(); renderStats(); renderSteps(); markDirty();
+	clearTimeout(onInput.t); if (mode !== 'write') onInput.t = setTimeout(renderPreview, 250);
+	autocomplete();
+	followCaret();
+}
+function replaceSel(before, after = '', placeholder = '') {
+	src.focus();
+	const s = src.selectionStart, e = src.selectionEnd;
+	const sel = src.value.slice(s, e) || placeholder;
+	src.setRangeText(before + sel + after, s, e, 'end');
+	if (!src.value.slice(s, e).length && placeholder) { src.selectionStart = s + before.length; src.selectionEnd = s + before.length + sel.length; }
+	onInput();
+}
+function lineStart() { const v = src.value, p = src.selectionStart; return v.lastIndexOf('\n', p - 1) + 1; }
+function prefixLine(prefix) {
+	src.focus();
+	const ls = lineStart(), v = src.value;
+	const le = v.indexOf('\n', ls) < 0 ? v.length : v.indexOf('\n', ls);
+	const line = v.slice(ls, le).replace(/^(#{1,6} |> |- )/, '');
+	src.setRangeText(prefix + line, ls, le, 'end');
+	onInput();
+}
+//
+// Citaat and kader: selected text goes into the new block; without a selection the block gets a sample text.
+// Afterwards the title of a kader is selected, so it can be typed over at once.
+//
+function wrapOrInsert(head, sample, selectTitle) {
+	const s = src.selectionStart, e = src.selectionEnd, sel = src.value.slice(s, e).trim();
+	const titleAt = selectTitle ? head.indexOf(selectTitle) : -1;
+	if (!sel) { insertBlock(head + '\n> ' + sample, titleAt >= 0 ? titleAt : head.length + 3, titleAt >= 0 ? selectTitle.length : sample.length); return; }
+	const body = sel.split('\n').map(l => l.trim() ? '> ' + l.replace(/^>\s?/, '') : '>').join('\n');
+	const before = src.value.slice(0, s).replace(/[ \t]+$/, ''), after = src.value.slice(e).replace(/^[ \t]+/, '');
+	const pre = !before || /\n\n$/.test(before) ? '' : before.endsWith('\n') ? '\n' : '\n\n';
+	const post = !after || /^\n\n/.test(after) ? '' : after.startsWith('\n') ? '\n' : '\n\n';
+	src.focus();
+	src.value = before + pre + head + '\n' + body + post + after;
+	const at = before.length + pre.length;
+	if (titleAt >= 0) src.setSelectionRange(at + titleAt, at + titleAt + selectTitle.length);
+	else { const end = at + head.length + 1 + body.length; src.setSelectionRange(end, end); }
+	onInput();
+}
+function insertBlock(block, selectFrom = null, selectLen = 0) {
+	src.focus();
+	const p = src.selectionStart, v = src.value;
+	const ls = lineStart();
+	const cur = v.slice(ls, p);
+	const pre = (cur.trim() === '/' || cur.trim() === '') ? '' : '\n\n';
+	const start = (cur.trim() === '/') ? ls : p;
+	src.setRangeText(pre + block + '\n', start, cur.trim() === '/' ? p : p, 'end');
+	if (selectFrom !== null) { src.selectionStart = start + pre.length + selectFrom; src.selectionEnd = src.selectionStart + selectLen; }
+	onInput();
+}
+const ACTIONS = {
+	heading: () => prefixLine('### '),
+	subheading: () => prefixLine('#### '),
+	bold: () => replaceSel('**', '**', 'vet'),
+	italic: () => replaceSel('*', '*', 'schuin'),
+	list: () => prefixLine('- '),
+	quote: () => wrapOrInsert('> [!quote] Citaat', 'Opvallend citaat uit het artikel', null),
+	callout: () => wrapOrInsert('> [!info] Titel van het kader', 'Achtergrond, cijfers of „zo deden we het”.', 'Titel van het kader'),
+	warning: () => insertBlock('> [!warning] Let op\n> Tekst van het kader.', 13, 6),
+	footnote: () => {
+		const n = (state.fields[field].match(/\[\^(\d+)\]:/g) || []).length + 1;
+		replaceSel(`[^${n}]`);
+		src.value = src.value.replace(/\s*$/, '') + `\n\n[^${n}]: Bron of toelichting`;
+		onInput(); toast(`Voetnoot ${n} toegevoegd; vul de tekst onderaan in.`);
+	},
+	table: e => openTableMenuAt($('tableBtn').offsetParent ? $('tableBtn') : $('tbMore'), e && e.detail === 0),
+	table3: () => insertTable(3),
+	rule: () => insertBlock('---'),
+	math: () => {
+		const s0 = src.selectionStart, e0 = src.selectionEnd, sel = src.value.slice(s0, e0).trim();
+		if (sel) { replaceSel('$', '$'); return; }
+		insertBlock('$$\n\\frac{4}{37} \\approx 11\\%\n$$', 3, 25);
+	},
+	code: () => insertBlock('```php\n// code\n```', 7, 7),
+	link: () => {
+		const s = src.selectionStart, e = src.selectionEnd;
+		if (s !== e) { const url = prompt('Webadres (https://…) of laat leeg voor een pagina op deze site:', 'https://'); if (url === null) return; if (url && url !== 'https://') replaceSel('[', `](${url})`); else replaceSel('[[', ']]'); }
+		else { replaceSel('[['); autocomplete(); }
+	},
+	image: () => { const b = mdBlockAt(src.selectionStart); if (b && b.type === 'image') { editCtx = { kind: 'md', ...b }; openImage('edit', b); } else openImage('text'); },
+	diagram: () => { const b = mdBlockAt(src.selectionStart); if (b && b.type === 'diagram') { editCtx = { kind: 'md', ...b }; openDiagram(b); } else openDiagram(); },
+	slash: () => { src.focus(); showSlash(true); },
+	download: () => downloadMd(),
+	openmd: () => $('importFile').click(),
+	help: () => $('helpDlg').showModal()
+};
+//
+// In visual mode the same buttons do the same, but in the formatted text.
+//
+const VACTIONS = {
+	heading: () => vexec('formatBlock', '<h3>'),
+	subheading: () => vexec('formatBlock', '<h4>'),
+	bold: () => vexec('bold'),
+	italic: () => vexec('italic'),
+	list: () => vexec('insertUnorderedList'),
+	quote: () => vWrapSelection(() => { const b = document.createElement('blockquote'); b.className = 'callout quote'; return b; }) ||
+		vinsert('<blockquote class="callout quote"><p>Opvallend citaat uit het artikel</p></blockquote><p><br></p>'),
+	callout: () => vWrapSelection(() => { const a = document.createElement('aside'); a.className = 'callout info'; a.setAttribute('aria-label', 'Titel van het kader'); a.innerHTML = '<div class="ct">Titel van het kader</div>'; return a; }) ||
+		vinsert('<aside class="callout info" aria-label="Titel van het kader"><div class="ct">Titel van het kader</div><p>Achtergrond, cijfers of „zo deden we het”.</p></aside><p><br></p>'),
+	link: () => {
+		const url = prompt('Webadres (https://…), of de naam van een pagina op deze site:', 'https://');
+		if (!url || url === 'https://') return;
+		if (/^https?:/.test(url)) vexec('createLink', url);
+		else vinsert(`<a href="#" class="wikilink" data-page="${esc(url)}">${esc(window.getSelection().toString() || url)}</a>&nbsp;`);
+	},
+	image: () => { saveRange(); openImage('text'); },
+	diagram: () => { saveRange(); openDiagram(); },
+	table: ACTIONS.table, table3: ACTIONS.table3,
+	math: () => {
+		saveRange();
+		const tex = prompt('Formule in LaTeX-notatie, bijvoorbeeld \\frac{4}{37} \\approx 11\\%:', '');
+		if (!tex || !tex.trim()) return;
+		vinsert(mathHtml(tex.trim(), false) + '&nbsp;'); decorateMath(wys);
+	},
+	download: ACTIONS.download, openmd: ACTIONS.openmd, help: ACTIONS.help
+};
+document.querySelectorAll('[data-act]').forEach(b => b.addEventListener('mousedown', e => e.preventDefault()));
+$('toolbar').addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b) (editMode === 'visual' ? VACTIONS : ACTIONS)[b.dataset.act](e); });
+
+//
+// Visual mode (like in Word).
+// The same Markdown source shown as formatted text; every change is converted back to Markdown.
+//
+const wys = $('wys');
+let vRange = null;
+function saveRange() { const s = window.getSelection(); if (s.rangeCount && wys.contains(s.anchorNode)) vRange = s.getRangeAt(0).cloneRange(); }
+function vexec(cmd, val) { wys.focus(); document.execCommand(cmd, false, val); onVisualInput(); }
+function vinsert(html) {
+	wys.focus();
+	if (vRange) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(vRange); vRange = null; }
+	document.execCommand('insertHTML', false, html); decorateFigures(); onVisualInput();
+}
+//
+// Put the selected text in a new block (citaat or kader): a part of one paragraph, or several whole paragraphs.
+// Returns false without a selection, so the caller inserts a block with sample text instead.
+//
+function vWrapSelection(make) {
+	const sel = getSelection();
+	if (!sel.rangeCount) return false;
+	const r = sel.getRangeAt(0);
+	if (r.collapsed || !wys.contains(r.commonAncestorContainer) || !r.toString().trim()) return false;
+	let blk = r.startContainer; while (blk && blk.parentNode !== wys) blk = blk.parentNode;
+	const frag = r.extractContents(), box = make();
+	const isBlock = n => n.nodeType === 1 && /^(P|DIV|UL|OL|H[1-6]|TABLE)$/.test(n.tagName);
+	if ([...frag.childNodes].some(isBlock)) {
+		[...frag.childNodes].forEach(n => {
+			if (isBlock(n)) { if (n.textContent.trim()) { const pp = /^H[1-6]$/.test(n.tagName) ? document.createElement('p') : n; if (pp !== n) pp.append(...n.childNodes); box.append(pp); } }
+			else if (n.textContent.trim()) { const pp = document.createElement('p'); pp.append(n); box.append(pp); }
+		});
+	} else { const pp = document.createElement('p'); pp.append(frag); box.append(pp); }
+	if (blk && blk.parentNode === wys) blk.after(box); else wys.append(box);
+	//
+	// Paragraphs emptied by the move disappear; the paragraph after the block keeps the cursor.
+	//
+	[...wys.children].forEach(c => { if (c !== box && /^(P|H[1-6])$/.test(c.tagName) && !c.textContent.trim() && !c.querySelector('img, br')) c.remove(); });
+	let next = box.nextElementSibling;
+	if (!next) { next = document.createElement('p'); next.innerHTML = '<br>'; box.after(next); }
+	const ct = box.querySelector('.ct');
+	if (ct) placeIn(ct); else { const rg = document.createRange(); rg.setStart(next, 0); rg.collapse(true); sel.removeAllRanges(); sel.addRange(rg); }
+	onVisualInput();
+	return true;
+}
+//
+// Insert a block (figure, diagram, table) after the paragraph holding the cursor, through the DOM:
+// insertHTML of the browser may unwrap a figure into a loose image, which then shows at its own size.
+//
+function vinsertBlock(html) {
+	let r = vRange; vRange = null;
+	if (!r) { const s = getSelection(); if (s.rangeCount && wys.contains(s.anchorNode)) r = s.getRangeAt(0); }
+	if (!r && lastWysRange) r = lastWysRange;
+	let blk = r ? r.startContainer : null;
+	while (blk && blk.parentNode !== wys) blk = blk.parentNode;
+	const t = document.createElement('template'); t.innerHTML = html.trim();
+	const nodes = [...t.content.childNodes].filter(n => n.nodeType === 1);
+	const empty = blk && blk.nodeType === 1 && blk.tagName === 'P' && !blk.textContent.trim() && !blk.querySelector('img');
+	if (empty) blk.replaceWith(...nodes); else if (blk) blk.after(...nodes); else wys.append(...nodes);
+	let next = nodes[nodes.length - 1].nextElementSibling;
+	if (!next || next.tagName !== 'P') { const np = document.createElement('p'); np.innerHTML = '<br>'; nodes[nodes.length - 1].after(np); next = np; }
+	wys.focus();
+	const rg = document.createRange(); rg.setStart(next, 0); rg.collapse(true); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg);
+	decorateFigures(); onVisualInput();
+	return nodes;
+}
+//
+// Images and diagrams are blocks in visual mode: not editable inline, but with a delete button.
+// The caption of an image stays editable.
+//
+function decorateMath(root) {
+	root.querySelectorAll('.math').forEach(m => { m.contentEditable = 'false'; m.title = (m.title || 'Formule') + ' – dubbelklik om te bewerken'; });
+}
+function editMath(m) {
+	const tex = prompt('Formule in LaTeX-notatie (bijvoorbeeld \\frac{4}{37}):', decodeURIComponent(m.dataset.tex || ''));
+	if (tex === null) return;
+	const t = document.createElement('template');
+	t.innerHTML = tex.trim() ? mathHtml(tex.trim(), m.classList.contains('math-block')) : '';
+	const nm = t.content.firstElementChild;
+	if (nm) { m.replaceWith(nm); decorateMath(wys); } else m.remove();
+	onVisualInput();
+}
+wys.addEventListener('dblclick', e => { const m = e.target.closest('.math'); if (m) { e.preventDefault(); editMath(m); } });
+function decorateFigures() {
+	wys.querySelectorAll('figure').forEach(f => {
+		if (f.querySelector('.figdel')) return;
+		f.contentEditable = 'false';
+		const cap = f.querySelector('figcaption'); if (cap && !f.classList.contains('diagram')) cap.contentEditable = 'true';
+		const what = f.classList.contains('diagram') ? 'Diagram' : 'Foto';
+		const ed = document.createElement('button');
+		ed.type = 'button'; ed.className = 'figedit'; ed.innerHTML = '<i class="fa fa-pencil" aria-hidden="true"></i>';
+		ed.title = what + ' bewerken (of dubbelklik)'; ed.setAttribute('aria-label', what + ' bewerken');
+		const b = document.createElement('button');
+		b.type = 'button'; b.className = 'figdel'; b.textContent = '✕';
+		b.title = what + ' verwijderen'; b.setAttribute('aria-label', what + ' verwijderen');
+		f.prepend(ed, b);
+	});
+}
+wys.addEventListener('click', e => {
+	const ed = e.target.closest('.figedit');
+	if (ed) { e.preventDefault(); editFigure(ed.closest('figure')); return; }
+	const b = e.target.closest('.figdel'); if (!b) return;
+	e.preventDefault();
+	const f = b.closest('figure'), what = f.classList.contains('diagram') ? 'Diagram' : 'Foto';
+	const undo = snapshot();
+	const next = f.nextElementSibling; f.remove();
+	if (next) { const rg = document.createRange(); rg.setStart(next, 0); rg.collapse(true); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg); }
+	onVisualInput();
+	toastUndo(what + ' verwijderd.', undo);
+});
+wys.addEventListener('dblclick', e => {
+	const f = e.target.closest('figure');
+	if (f && !e.target.closest('figcaption')) { e.preventDefault(); editFigure(f); }
+});
+function loadVisual() {
+	lastWysRange = null;
+	wys.innerHTML = renderMarkdown(state.fields[field], state.images);
+	wys.setAttribute('aria-label', { text: 'Tekst van het artikel, met opmaak', method: 'Bijsluiter, met opmaak', sources: 'Bronnen, met opmaak' }[field]);
+	decorateFigures();
+	wys.querySelectorAll('section.footnotes').forEach(f => f.contentEditable = 'false');
+	decorateMath(wys);
+	renderDiagrams(wys);
+	$('wysMethod').innerHTML = state.fields.method.trim() ? renderMarkdown(state.fields.method, state.images) : '';
+	$('wysSources').innerHTML = state.fields.sources.trim() ? renderMarkdown(state.fields.sources, state.images) : '';
+}
+const footMd = el => el.textContent.trim() ? htmlToMd(el).replace(/\s+$/, '') : '';
+function syncFromVisual() {
+	state.fields[field] = htmlToMd(wys);
+	state.fields.method = footMd($('wysMethod')); state.fields.sources = footMd($('wysSources'));
+	src.value = editorValue(field);
+}
+for (const [id, f] of [['wysMethod', 'method'], ['wysSources', 'sources']])
+	$(id).addEventListener('input', () => {
+		clearTimeout(footMd.t);
+		footMd.t = setTimeout(() => { state.fields[f] = footMd($(id)); src.value = editorValue('text'); refreshAfterEdit(); }, 250);
+	});
+//
+// 'bijsluiter invullen' and 'bronnen invullen' in the checklist go to the field: the block at the end in visual mode,
+// the property in the front matter in Markdown.
+//
+function goToField(f) {
+	if (mode === 'preview') setMode('write');
+	if (editMode === 'visual') { const el = $(f === 'method' ? 'wysMethod' : 'wysSources'); el.closest('details').open = true; el.focus(); el.scrollIntoView({ block: 'center' }); return; }
+	const mm = new RegExp('^' + (f === 'method' ? 'bijsluiter' : 'bronnen') + ':.*$', 'm').exec(src.value);
+	src.focus();
+	if (mm) { const at = mm.index + mm[0].length; src.setSelectionRange(at, at); const { y } = caretXY(); window.scrollTo({ top: y - window.innerHeight / 3 }); }
+}
+function onVisualInput() {
+	clearTimeout(onVisualInput.t);
+	onVisualInput.t = setTimeout(() => {
+		syncFromVisual(); renderChecks(); renderOutline(); renderStats(); renderSteps(); markDirty();
+		if (mode !== 'write') renderPreview();
+	}, 250);
+	followCaret();
+}
+wys.addEventListener('input', onVisualInput);
+wys.addEventListener('keyup', followCaret);
+wys.addEventListener('click', followCaret);
+wys.addEventListener('keydown', e => {
+	const mod = e.metaKey || e.ctrlKey;
+	if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); VACTIONS.link(); }
+});
+//
+// HTML back to Markdown, for the elements the editor creates itself.
+//
+function htmlToMd(root) {
+	const notes = [];
+	const inl = n => [...n.childNodes].map(inlineMd).join('');
+	function inlineMd(n) {
+		if (n.nodeType === 3) return n.nodeValue.replace(/\u00a0/g, ' ');
+		if (n.nodeType !== 1) return '';
+		const t = n.tagName.toLowerCase();
+		if (t === 'strong' || t === 'b') return `**${inl(n)}**`;
+		if (t === 'em' || t === 'i') return `*${inl(n)}*`;
+		if (t === 'mark') return `==${inl(n)}==`;
+		if (t === 'span' && n.classList.contains('math')) return `$${decodeURIComponent(n.dataset.tex || '')}$`;
+		if (t === 'br') return '\n';
+		if (t === 'sup' && n.querySelector('a[href^="#fn-"]')) return `[^${n.textContent.trim()}]`;
+		if (t === 'a' && n.classList.contains('wikilink')) { const pg = n.dataset.page || n.textContent; return n.textContent === pg ? `[[${pg}]]` : `[[${pg}|${n.textContent}]]`; }
+		if (t === 'a') return `[${inl(n)}](${n.getAttribute('href')})`;
+		if (t === 'img') return `![${n.alt}](${imageKey(n.getAttribute('src'))})`;
+		return inl(n);
+	}
+	function imageKey(srcv) { for (const [k, v] of Object.entries(state.images)) if (v === srcv) return k; return srcv; }
+	function block(n) {
+		if (n.nodeType === 3) return n.nodeValue.trim() ? n.nodeValue.trim() : '';
+		if (n.nodeType !== 1) return '';
+		const t = n.tagName.toLowerCase();
+		if (/^h[1-6]$/.test(t)) return '#'.repeat(Math.max(3, +t[1])) + ' ' + inl(n).trim();
+		if (t === 'span' && n.classList.contains('math')) return inlineMd(n);
+		if (t === 'div' && n.classList.contains('math-block')) return '$$\n' + decodeURIComponent(n.dataset.tex || '') + '\n$$';
+		if (t === 'p' || t === 'div') return inl(n).trim();
+		if (t === 'ul') return [...n.children].map(li => '- ' + inl(li).trim()).join('\n');
+		if (t === 'ol') return [...n.children].map((li, i) => `${i + 1}. ` + inl(li).trim()).join('\n');
+		if (t === 'hr') return '---';
+		if (t === 'blockquote' && n.classList.contains('quote')) return '> [!quote] Citaat\n' + [...n.children].map(c => '> ' + inl(c).trim()).join('\n>\n');
+		if (t === 'blockquote') return [...n.children].map(c => '> ' + inl(c).trim()).join('\n');
+		if (t === 'aside' && n.classList.contains('callout')) {
+			const type = [...n.classList].find(c => c !== 'callout') || 'info';
+			const title = (n.querySelector('.ct') || {}).textContent || '';
+			return `> [!${type}] ${title}`.trim() + '\n' + [...n.children].filter(c => !c.classList.contains('ct')).map(c => '> ' + inl(c).trim()).join('\n>\n');
+		}
+		if (t === 'figure' && n.classList.contains('diagram')) {
+			const alt = n.dataset.alt;
+			const place = [...n.classList].find(c => c !== 'diagram');
+			return (alt ? `%% beschrijving: ${alt} %%\n` : '') + '```mermaid' + (place ? ` {.${place}}` : '') + '\n' + diagramText(n) + '\n```';
+		}
+		if (t === 'figure') {
+			const img = n.querySelector('img'), cap = n.querySelector('figcaption');
+			const cls = [...n.classList].find(c => c !== 'breed');
+			return `![${img ? img.alt : ''}](${img ? imageKey(img.getAttribute('src')) : ''})${cls ? `{.${cls}}` : ''}` + (cap && cap.textContent.trim() ? `\n*${cap.textContent.trim()}*` : '');
+		}
+		if (t === 'section' && n.classList.contains('footnotes')) { n.querySelectorAll('li').forEach(li => notes.push(`[^${li.id.replace('fn-', '')}]: ${inl(li).trim()}`)); return ''; }
+		if (t === 'pre') return '```' + (n.dataset.lang || '') + '\n' + n.textContent.replace(/\n$/, '') + '\n```';
+		if (t === 'table') {
+			const trs = [...n.querySelectorAll('tr')];
+			if (!trs.length) return '';
+			const cell = c => inl(c).replace(/\n/g, ' ').replace(/\|/g, '\\|').trim();
+			const rows = trs.map(tr => '| ' + [...tr.cells].map(cell).join(' | ') + ' |');
+			rows.splice(1, 0, '| ' + [...trs[0].cells].map(c => ALIGN[c.getAttribute('align') || c.style.textAlign] || '---').join(' | ') + ' |');
+			return rows.join('\n');
+		}
+		return inl(n).trim();
+	}
+	const out = [...root.childNodes].map(block).filter(b => b !== '');
+	if (notes.length) out.push(notes.join('\n'));
+	return out.join('\n\n') + '\n';
+}
+function setEditMode(m) {
+	if (m === editMode) return;
+	const caret = captureCaret();
+	if (editMode === 'visual') syncFromVisual();
+	editMode = m;
+	document.querySelectorAll('[data-edit]').forEach(b => b.setAttribute('aria-pressed', b.dataset.edit === m));
+	$('editorpane').classList.toggle('visual', m === 'visual');
+	$('toolbar').classList.toggle('visual', m === 'visual');
+	if (m === 'visual') { loadVisual(); requestAnimationFrame(autosize); } else syncEditor();
+	applyPanes();
+	prefs.editMode = m; persist();
+	applyCaret(caret);
+	updEditLabels();
+	fitToolbar();
+}
+document.querySelectorAll('[data-edit]').forEach(b => {
+	b.addEventListener('mousedown', e => e.preventDefault());
+	b.addEventListener('click', () => setEditMode(b.dataset.edit));
+});
+
+//
+// Keep the cursor in the same place when switching between Markdown and visual mode.
+// Blocks (paragraphs, headings, boxes, figures, tables) are counted the same way in both. Within a block the
+// visible characters are matched one by one, skipping the Markdown characters such as ** and ###.
+// In the front matter the cursor goes to the matching field of the article head, and back.
+//
+let lastWysRange = null, lastEdit = 'text';
+document.addEventListener('selectionchange', () => {
+	const sel = getSelection();
+	if (sel.rangeCount && wys.contains(sel.anchorNode)) { lastWysRange = sel.getRangeAt(0).cloneRange(); if (wys.contains(document.activeElement)) lastEdit = 'text'; }
+});
+$('wyshead').addEventListener('focusin', e => { if (e.target.id) { lastEdit = e.target.id; } });
+$('wysfoot').addEventListener('focusin', e => { if (e.target.id) { lastEdit = e.target.id; } });
+wys.addEventListener('focusin', () => { lastEdit = 'text'; });
+const HEAD_KEYS = { titel: 'fTitle', auteur: 'fAuthor', uittreksel: 'fExcerpt', tags: 'tagAdd', afbeelding: 'heroBtn', beschrijving: 'fHeroAlt', bijschrift: 'fHeroCap', fotograaf: 'fHeroCredit', bijsluiter: 'wysMethod', bronnen: 'wysSources' };
+function blockRanges(text) {
+	const res = []; let pos = 0, start = -1, inFence = false;
+	for (const line of text.split('\n')) {
+		const blank = !inFence && !line.trim();
+		if (/^```/.test(line)) inFence = !inFence;
+		if (!blank && start < 0) start = pos;
+		if (blank && start >= 0) { res.push([start, pos - 1]); start = -1; }
+		pos += line.length + 1;
+	}
+	if (start >= 0) res.push([start, text.length]);
+	return res.filter(([a, b]) => text.slice(a, b).replace(/%%[\s\S]*?%%/g, '').replace(/^\[\^\w+\]:.*$/gm, '').trim());
+}
+function captureCaret() {
+	if (editMode === 'markdown') {
+		const v = src.value, p = src.selectionStart;
+		const m = field === 'text' ? v.match(FRONT_RE) : null;
+		if (m && p < m[0].length) {
+			const ls = v.lastIndexOf('\n', p - 1) + 1, le = v.indexOf('\n', ls), line = v.slice(ls, le < 0 ? v.length : le);
+			const k = line.match(/^([\w-]+):[ \t]*"?/);
+			//
+			// An indented line belongs to the nearest property above it (a tag, or a line of bijsluiter or bronnen).
+			//
+			let key = k ? k[1] : 'titel';
+			if (!k) { const above = v.slice(0, ls).split('\n').reverse().map(l => l.match(/^([\w-]+):/)).find(Boolean); if (above) key = above[1]; }
+			return { head: HEAD_KEYS[key] || 'fTitle', off: k ? Math.max(0, p - ls - k[0].length) : 0 };
+		}
+		const base = m ? m[0].length : 0, body = v.slice(base), bp = p - base, rs = blockRanges(body);
+		let i = rs.findIndex(([, b]) => bp <= b);
+		if (i < 0) i = rs.length - 1;
+		return i < 0 ? null : { block: i, raw: body.slice(rs[i][0], Math.max(rs[i][0], bp)) };
+	}
+	const act = document.activeElement;
+	const inFixed = el => $('wyshead').contains(el) || $('wysfoot').contains(el);
+	const headId = act && act.id && inFixed(act) ? act.id : !wys.contains(act) && lastEdit !== 'text' ? lastEdit : null;
+	if (field === 'text' && headId && $(headId)) { const el = $(headId); return { head: headId, off: typeof el.selectionStart === 'number' ? el.selectionStart : 0 }; }
+	const r = lastWysRange; if (!r) return null;
+	let n = r.startContainer; while (n && n.parentNode !== wys) n = n.parentNode;
+	if (!n || n.nodeType !== 1) return null;
+	const fig = n.tagName === 'FIGURE';
+	let plainOff = 0;
+	if (!fig) { const pr = document.createRange(); pr.selectNodeContents(n); pr.setEnd(r.startContainer, r.startOffset); plainOff = pr.toString().length; }
+	return { block: [...wys.children].indexOf(n), plain: fig ? '' : n.textContent, plainOff };
+}
+function applyCaret(c) {
+	if (editMode === 'markdown') {
+		const v = src.value, m = field === 'text' ? v.match(FRONT_RE) : null;
+		let pos = m ? m[0].length : 0;
+		if (c && c.head && m) {
+			const key = Object.keys(HEAD_KEYS).find(k => HEAD_KEYS[k] === c.head) || 'titel';
+			const mm = new RegExp('^' + key + ':[ \\t]*"?', 'm').exec(v);
+			if (mm) { const le = v.indexOf('\n', mm.index); pos = Math.min(mm.index + mm[0].length + c.off, le < 0 ? v.length : le); }
+		} else if (c && c.block != null) {
+			const base = m ? m[0].length : 0, body = v.slice(base), rs = blockRanges(body), r = rs[Math.min(c.block, rs.length - 1)];
+			if (r) {
+				const raw = body.slice(r[0], r[1]); let k = 0, j = 0;
+				for (; j < raw.length && k < c.plainOff; j++) if (raw[j] === c.plain[k]) k++;
+				pos = base + r[0] + j;
+			}
+		}
+		src.focus(); src.setSelectionRange(pos, pos);
+		const { y } = caretXY();
+		if (y < window.scrollY + 160 || y > window.scrollY + window.innerHeight - 40) window.scrollTo({ top: y - window.innerHeight / 3 });
+		return;
+	}
+	if (c && c.head) {
+		const el = $(c.head) || $('fTitle'); const d = el.closest('details'); if (d) d.open = true; el.focus();
+		if (typeof el.value === 'string' && el.setSelectionRange) { const o = Math.min(c.off, el.value.length); try { el.setSelectionRange(o, o); } catch (e) { /* not a text field */ } }
+		el.scrollIntoView({ block: 'center' });
+		return;
+	}
+	wys.focus();
+	if (!c || c.block == null) return;
+	const el = wys.children[Math.min(c.block, wys.children.length - 1)]; if (!el) return;
+	const rg = document.createRange();
+	if (el.tagName === 'FIGURE') rg.setStartAfter(el);
+	else {
+		const plain = el.textContent; let k = 0;
+		for (let j = 0; j < c.raw.length; j++) if (k < plain.length && c.raw[j] === plain[k]) k++;
+		const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n, left = k, done = false;
+		while ((n = tw.nextNode())) { if (left <= n.length) { rg.setStart(n, left); done = true; break; } left -= n.length; }
+		if (!done) { rg.selectNodeContents(el); rg.collapse(false); }
+	}
+	rg.collapse(true); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg);
+	const er = el.getBoundingClientRect();
+	if (er.top < 160 || er.bottom > window.innerHeight) window.scrollTo({ top: window.scrollY + er.top - window.innerHeight / 3 });
+}
+
+//
+// Tables, like in a word processor: a new table with 2 to 6 columns, then per column left, centred or right
+// aligned, and rows and columns added or removed. Through the 'Tabel' button or the right mouse button.
+//
+const ALIGN = { left: ':---', center: ':---:', right: '---:' };
+function tableIcon(n) {
+	const w = 6, cells = [];
+	for (let r = 0; r < 3; r++) for (let c = 0; c < n; c++) cells.push(`<rect${r ? '' : ' class="th"'} x="${1 + c * w}" y="${1 + r * 5}" width="${w}" height="5"/>`);
+	return `<svg width="${n * w + 2}" height="17" viewBox="0 0 ${n * w + 2} 17" aria-hidden="true">${cells.join('')}</svg>`;
+}
+const newTableMd = n => ['| ' + Array.from({ length: n }, (_, i) => `Kolom ${i + 1}`).join(' | ') + ' |', '|' + ' --- |'.repeat(n), '|' + '  |'.repeat(n), '|' + '  |'.repeat(n)].join('\n');
+const newTableHtml = n => `<table><thead><tr>${Array.from({ length: n }, (_, i) => `<th>Kolom ${i + 1}</th>`).join('')}</tr></thead><tbody>${('<tr>' + '<td><br></td>'.repeat(n) + '</tr>').repeat(2)}</tbody></table>`;
+function placeIn(cell) { if (!cell) return; const rg = document.createRange(); rg.selectNodeContents(cell); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg); }
+function insertTable(n) {
+	if (editMode === 'visual') { const [t] = vinsertBlock(newTableHtml(n)); placeIn(t.querySelector('th')); }
+	else insertBlock(newTableMd(n), 2, 7);
+}
+function vCell() {
+	let n = vRange ? vRange.startContainer : getSelection().rangeCount ? getSelection().anchorNode : null;
+	while (n && n !== wys) { if (n.nodeType === 1 && /^T[HD]$/.test(n.tagName)) return n; n = n.parentNode; }
+	return null;
+}
+const splitRow = l => l.trim().replace(/^\|/, '').replace(/(?<!\\)\|$/, '').split(/(?<!\\)\|/).map(c => c.trim());
+function mdTable() {
+	const v = src.value, p = src.selectionStart, lines = v.split('\n');
+	let pos = 0, li = 0;
+	for (; li < lines.length; li++) { if (p <= pos + lines[li].length) break; pos += lines[li].length + 1; }
+	if (!/^\s*\|/.test(lines[li] || '')) return null;
+	let a = li, b = li;
+	while (a > 0 && /^\s*\|/.test(lines[a - 1])) a--;
+	while (b + 1 < lines.length && /^\s*\|/.test(lines[b + 1])) b++;
+	if (b === a || !/^\s*\|?\s*:?-{3,}/.test(lines[a + 1])) return null;
+	const start = lines.slice(0, a).join('\n').length + (a ? 1 : 0), end = start + lines.slice(a, b + 1).join('\n').length;
+	return { rows: lines.slice(a, b + 1).map(splitRow), r: li - a, col: Math.max(0, (lines[li].slice(0, p - pos).match(/(?<!\\)\|/g) || []).length - 1), start, end };
+}
+function mdTableOp(op, arg) {
+	const t = mdTable(); if (!t) return;
+	const rows = t.rows, n = rows[0].length, col = Math.min(t.col, n - 1);
+	let r = t.r;
+	if (op === 'align') rows[1][col] = ALIGN[arg];
+	if (op === 'addRow') { r = Math.max(r, 1) + 1; rows.splice(r, 0, Array(n).fill('')); }
+	if (op === 'delRow' && r >= 2) { rows.splice(r, 1); r = Math.min(r, rows.length - 1); }
+	if (op === 'addCol') rows.forEach((row, i) => row.splice(col + 1, 0, i === 0 ? `Kolom ${n + 1}` : i === 1 ? '---' : ''));
+	if (op === 'delCol' && n > 1) rows.forEach(row => row.splice(col, 1));
+	const text = op === 'delTable' ? '' : rows.map(row => '| ' + row.join(' | ') + ' |').join('\n');
+	src.focus();
+	src.setRangeText(text, t.start, t.end, 'start');
+	const caret = t.start + text.split('\n').slice(0, r).join('\n').length + (r ? 1 : 0) + 2;
+	src.setSelectionRange(Math.min(caret, t.start + text.length), Math.min(caret, t.start + text.length));
+	onInput();
+}
+function vTableOp(op, arg) {
+	const cell = vCell(); vRange = null; if (!cell) return;
+	const table = cell.closest('table'), row = cell.parentNode, col = cell.cellIndex, rows = [...table.rows];
+	const head = row.parentNode.tagName === 'THEAD';
+	if (op === 'align') rows.forEach(r => r.cells[col] && r.cells[col].setAttribute('align', arg));
+	if (op === 'addRow') {
+		const nr = document.createElement('tr');
+		[...rows[0].cells].forEach(h => { const td = document.createElement('td'); td.innerHTML = '<br>'; if (h.getAttribute('align')) td.setAttribute('align', h.getAttribute('align')); nr.append(td); });
+		if (head) (table.tBodies[0] || table.createTBody()).prepend(nr); else row.after(nr);
+		placeIn(nr.cells[Math.min(col, nr.cells.length - 1)]);
+	}
+	if (op === 'delRow' && !head) { const nx = row.nextElementSibling || row.previousElementSibling || rows[0]; row.remove(); placeIn(nx.cells[Math.min(col, nx.cells.length - 1)]); }
+	if (op === 'addCol') rows.forEach(r => { const th = r.parentNode.tagName === 'THEAD', c = document.createElement(th ? 'th' : 'td'); c.innerHTML = th ? `Kolom ${r.cells.length + 1}` : '<br>'; r.cells[col].after(c); });
+	if (op === 'delCol' && row.cells.length > 1) rows.forEach(r => r.cells[col] && r.cells[col].remove());
+	if (op === 'delTable') { const nx = table.nextElementSibling; table.remove(); if (nx) placeIn(nx); }
+	onVisualInput();
+}
+const inTable = () => editMode === 'visual' ? !!vCell() : !!mdTable();
+function openTableMenu(x, y, focusFirst) {
+	if (editMode === 'visual') saveRange();
+	const on = inTable();
+	const it = (op, arg, icon, label, tip) => `<button type="button" role="menuitem" data-op="${op}" data-arg="${arg}" title="${tip}"${on ? '' : ' aria-disabled="true"'}><i class="fa fa-${icon}" aria-hidden="true"></i>${label}</button>`;
+	const m = $('tableMenu');
+	m.innerHTML = `<div class="mh">nieuwe tabel · aantal kolommen</div>
+		<div class="cols">${[2, 3, 4, 5, 6].map(n => `<button type="button" role="menuitem" data-op="new" data-arg="${n}" title="Tabel met ${n} kolommen invoegen" aria-label="Tabel met ${n} kolommen">${tableIcon(n)}${n}</button>`).join('')}</div><hr>
+		<div class="mh">deze tabel${on ? '' : ' <span style="font-weight:400;text-transform:none">– zet eerst de cursor in een tabel</span>'}</div>
+		${it('align', 'left', 'align-left', 'Kolom links uitlijnen', 'Tekst in deze kolom links uitlijnen')}
+		${it('align', 'center', 'align-center', 'Kolom centreren', 'Tekst in deze kolom centreren')}
+		${it('align', 'right', 'align-right', 'Kolom rechts uitlijnen', 'Tekst in deze kolom rechts uitlijnen; handig voor bedragen')}<hr>
+		${it('addRow', '', 'plus', 'Rij toevoegen', 'Een lege rij onder deze rij toevoegen')}
+		${it('addCol', '', 'plus', 'Kolom toevoegen', 'Een lege kolom rechts van deze kolom toevoegen')}
+		${it('delRow', '', 'minus', 'Rij verwijderen', 'Deze rij verwijderen (niet de kopregel)')}
+		${it('delCol', '', 'minus', 'Kolom verwijderen', 'Deze kolom verwijderen')}
+		${it('delTable', '', 'trash-o', 'Tabel verwijderen', 'De hele tabel verwijderen')}`;
+	m.hidden = false;
+	m.style.left = (Math.max(8, Math.min(x, window.innerWidth - m.offsetWidth - 8)) + window.scrollX) + 'px';
+	m.style.top = (Math.min(y, window.innerHeight - m.offsetHeight - 8) + window.scrollY) + 'px';
+	$('tableBtn').setAttribute('aria-expanded', 'true');
+	if (focusFirst) m.querySelector('[role=menuitem]').focus();
+}
+function openTableMenuAt(btn, focusFirst) { const r = btn.getBoundingClientRect(); openTableMenu(r.left, r.bottom + 4, focusFirst); }
+function closeTableMenu(focusBtn) {
+	if ($('tableMenu').hidden) return;
+	$('tableMenu').hidden = true; $('tableBtn').setAttribute('aria-expanded', 'false');
+	if (focusBtn) $('tableBtn').focus();
+}
+$('tableMenu').addEventListener('mousedown', e => e.preventDefault());
+$('tableMenu').addEventListener('click', e => {
+	const b = e.target.closest('[role=menuitem]'); if (!b || b.getAttribute('aria-disabled') === 'true') return;
+	closeTableMenu();
+	if (editMode === 'visual' && vRange && b.dataset.op !== 'new') { const sel = getSelection(); sel.removeAllRanges(); sel.addRange(vRange); }
+	if (b.dataset.op === 'new') insertTable(+b.dataset.arg);
+	else if (editMode === 'visual') vTableOp(b.dataset.op, b.dataset.arg);
+	else mdTableOp(b.dataset.op, b.dataset.arg);
+});
+$('tableMenu').addEventListener('keydown', e => {
+	const items = [...$('tableMenu').querySelectorAll('[role=menuitem]')], i = items.indexOf(document.activeElement);
+	if (['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(e.key)) { e.preventDefault(); items[(i + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length].focus(); }
+	if (e.key === 'Escape') { e.preventDefault(); closeTableMenu(true); }
+	if (e.key === 'Tab') closeTableMenu();
+});
+document.addEventListener('mousedown', e => { if (!e.target.closest('#tableMenu, #tableBtn')) closeTableMenu(); });
+wys.addEventListener('contextmenu', e => { if (!e.target.closest('td, th')) return; e.preventDefault(); openTableMenu(e.clientX, e.clientY); });
+src.addEventListener('contextmenu', e => { if (!mdTable()) return; e.preventDefault(); openTableMenu(e.clientX, e.clientY); });
+//
+// Tab and Shift+Tab move between the cells of a table; Tab in the last cell adds a row.
+//
+wys.addEventListener('keydown', e => {
+	if (e.key !== 'Tab') return;
+	const cell = vCell(); if (!cell) return;
+	e.preventDefault();
+	const cells = [...cell.closest('table').querySelectorAll('th, td')], i = cells.indexOf(cell);
+	if (!e.shiftKey && i === cells.length - 1) { vTableOp('addRow'); return; }
+	placeIn(cells[Math.max(0, Math.min(cells.length - 1, i + (e.shiftKey ? -1 : 1)))]);
+});
+
+//
+// Slash menu and [[ suggestions.
+//
+let pop = { open: false, items: [], sel: 0, kind: null, start: 0 };
+function caretXY() {
+	const v = src.value, p = src.selectionStart;
+	hl.innerHTML = highlight(v.slice(0, p)).replace(/\n$/, '') + '<span id="caretMark">​</span>';
+	const m = $('caretMark'); const r = m.getBoundingClientRect();
+	const res = { x: r.left + window.scrollX, y: r.bottom + window.scrollY };
+	syncEditor();
+	return res;
+}
+function showPopup(kind, items, title) {
+	pop = { open: true, items, sel: 0, kind, start: pop.start };
+	const el = $('popup');
+	el.innerHTML = `<div class="ph" aria-hidden="true">${title}</div>` + items.map((it, i) => `<div class="it ${i === 0 ? 'sel' : ''}" role="option" id="opt-${i}" aria-selected="${i === 0}" data-i="${i}">${it.html}</div>`).join('');
+	el.setAttribute('aria-label', title.replace(/<[^>]+>/g, ''));
+	src.setAttribute('aria-activedescendant', 'opt-0');
+	const { x, y } = caretXY();
+	el.hidden = false;
+	const w = Math.min(380, window.innerWidth - 16);
+	el.style.left = Math.max(8, Math.min(x, window.innerWidth - w - 8)) + 'px';
+	el.style.top = (y + 6) + 'px';
+}
+function hidePopup() { pop.open = false; $('popup').hidden = true; src.removeAttribute('aria-activedescendant'); }
+function showSlash(fromButton) {
+	const v = src.value, p = src.selectionStart, ls = lineStart();
+	const q = v.slice(ls, p).replace(/^\//, '').toLowerCase();
+	const items = SLASH.filter(s => !q || s.label.toLowerCase().includes(q)).map(s => ({ ...s, html: `<i class="fa fa-${s.icon}" aria-hidden="true"></i><span>${esc(s.label)}</span><code>${esc(s.md)}</code>` }));
+	if (!items.length) return hidePopup();
+	pop.start = ls;
+	showPopup('slash', items, 'BLOK INVOEGEN — typ om te zoeken');
+	pop.fromButton = fromButton;
+}
+function autocomplete() {
+	const v = src.value, p = src.selectionStart, ls = lineStart();
+	const before = v.slice(ls, p);
+	const m = before.match(/\[\[([^\]\n]*)$/);
+	if (m) {
+		const q = m[1].toLowerCase();
+		const items = PAGES.filter(x => x.toLowerCase().includes(q)).slice(0, 6).map(x => ({ page: x, html: `<span><b>${esc(x)}</b>${PRIVATE.has(x) ? ' *' : ''}<small>nl/${esc(x.replace(/ /g, '_'))}</small></span>` }));
+		if (m[1].trim()) items.push({ page: m[1].trim(), create: true, html: `<span style="color:var(--darkgrey)">+ nieuwe pagina „${esc(m[1].trim())}” aanmaken</span>` });
+		pop.start = p - m[1].length;
+		return showPopup('link', items, "PAGINA'S OP DEZE SITE <span style='font-weight:400'>· * = besloten</span>");
+	}
+	if (/^\/[\w\s]*$/.test(before)) return showSlash(false);
+	if (pop.open) hidePopup();
+}
+function choose(i) {
+	const it = pop.items[i]; if (!it) return;
+	if (pop.kind === 'slash') {
+		const v = src.value, p = src.selectionStart, ls = lineStart();
+		if (/^\/[\w\s]*$/.test(v.slice(ls, p))) { src.setRangeText('', ls, p, 'end'); }
+		hidePopup(); ACTIONS[it.act]();
+	} else {
+		const p = src.selectionStart;
+		const after = src.value.slice(p, p + 2) === ']]' ? '' : ']]';
+		src.setRangeText(it.page + after, pop.start, p, 'end');
+		if (it.create) toast(`Pagina „${it.page}” wordt aangemaakt als je opslaat (prototype: alleen een melding).`);
+		hidePopup(); onInput();
+	}
+}
+$('popup').addEventListener('mousedown', e => { e.preventDefault(); const it = e.target.closest('.it'); if (it) choose(+it.dataset.i); });
+src.addEventListener('keydown', e => {
+	const mod = e.metaKey || e.ctrlKey;
+	if (pop.open) {
+		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); pop.sel = (pop.sel + (e.key === 'ArrowDown' ? 1 : -1) + pop.items.length) % pop.items.length; $('popup').querySelectorAll('.it').forEach((x, i) => { x.classList.toggle('sel', i === pop.sel); x.setAttribute('aria-selected', i === pop.sel); }); src.setAttribute('aria-activedescendant', 'opt-' + pop.sel); return; }
+		if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); choose(pop.sel); return; }
+		if (e.key === 'Escape') { hidePopup(); return; }
+	}
+	if (mod && e.key.toLowerCase() === 'b') { e.preventDefault(); ACTIONS.bold(); }
+	if (mod && e.key.toLowerCase() === 'i') { e.preventDefault(); ACTIONS.italic(); }
+	if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); ACTIONS.link(); }
+});
+src.addEventListener('input', onInput);
+src.addEventListener('blur', () => setTimeout(hidePopup, 150));
+window.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); } });
+
+//
+// React to the 'invoegen' button through the submit event of the form: the close event of <dialog>
+// does not arrive reliably in every browser. The action runs after closing, so the text field can get focus again.
+//
+function onDialogOk(id, fn) {
+	$(id).querySelector('form').addEventListener('submit', e => { if (e.submitter && e.submitter.value === 'ok') setTimeout(fn, 0); });
+}
+
+//
+// Undo after deleting: the message offers 'ongedaan maken' for a few seconds.
+//
+function toastUndo(msg, undo) {
+	const t = $('toast');
+	t.innerHTML = `${esc(msg)} <button type="button">ongedaan maken</button>`;
+	t.classList.add('on', 'act');
+	t.querySelector('button').onclick = () => { undo(); t.classList.remove('on', 'act'); toast('Teruggezet.'); };
+	clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on', 'act'), 7000);
+}
+function refreshAfterEdit() { renderChecks(); renderOutline(); renderStats(); renderSteps(); markDirty(); if (mode !== 'write') renderPreview(); }
+function snapshot() {
+	if (editMode === 'visual') syncFromVisual();
+	const f = field, text = state.fields[f];
+	return () => {
+		state.fields[f] = text;
+		if (f === field) { src.value = editorValue(f); if (editMode === 'visual') loadVisual(); else syncEditor(); }
+		refreshAfterEdit();
+	};
+}
+
+//
+// Editing an existing photo or diagram.
+// In visual mode through the pencil on the figure or a double-click; in Markdown with the cursor in the photo line or
+// the diagram block and then 'Beeld' or 'Diagram'. The same dialog opens, filled in, with a delete button.
+//
+let editCtx = null;
+function imageKeyOf(srcv) { for (const [k, v] of Object.entries(state.images)) if (v === srcv) return k; return srcv; }
+function mdBlockAt(pos) {
+	const lines = src.value.split('\n');
+	let at = 0, li = 0;
+	for (; li < lines.length; li++) { if (pos <= at + lines[li].length) break; at += lines[li].length + 1; }
+	const off = i => lines.slice(0, i).join('\n').length + (i ? 1 : 0);
+	for (let a = li; a >= 0; a--) {
+		if (a < li && /^```\s*$/.test(lines[a])) break;
+		const m = lines[a].match(/^```mermaid(.*)$/);
+		if (!m) continue;
+		let b = a + 1; while (b < lines.length && !/^```\s*$/.test(lines[b])) b++;
+		if (b >= lines.length || li > b) break;
+		let s0 = a, alt = '';
+		const d = a > 0 && lines[a - 1].match(/^%%\s*beschrijving:\s*(.*?)\s*%%\s*$/);
+		if (d) { s0 = a - 1; alt = d[1]; }
+		const c = m[1].match(/\{\.([\w-]+)\}/);
+		return { type: 'diagram', start: off(s0), end: off(b) + lines[b].length, text: lines.slice(a + 1, b).join('\n'), alt, place: c ? c[1] : 'breed' };
+	}
+	for (const i of [li, li - 1]) {
+		const m = i >= 0 && (lines[i] || '').match(/^!\[([^\]]*)\]\(([^)\s]+)\)(?:\{\.([\w-]+)\})?[ \t]*$/);
+		if (!m) continue;
+		const cap = (lines[i + 1] || '').match(/^\*([^*\n]+)\*[ \t]*$/);
+		if (i === li - 1 && !cap) continue;
+		return { type: 'image', start: off(i), end: cap ? off(i + 1) + lines[i + 1].length : off(i) + lines[i].length,
+			alt: m[1], path: m[2], src: state.images[m[2]] || m[2], place: m[3] || 'breed', caption: cap ? cap[1] : '' };
+	}
+	return null;
+}
+function figData(f) {
+	if (f.classList.contains('diagram')) return { type: 'diagram', text: diagramText(f), alt: f.dataset.alt || '', place: [...f.classList].find(c => c !== 'diagram') || 'breed' };
+	const img = f.querySelector('img'), cap = f.querySelector('figcaption');
+	return { type: 'image', src: img.getAttribute('src'), path: imageKeyOf(img.getAttribute('src')), alt: img.alt,
+		caption: cap ? cap.textContent.trim() : '', place: [...f.classList].find(c => c !== 'breed') || 'breed' };
+}
+function editFigure(f) {
+	syncFromVisual();
+	const d = figData(f);
+	editCtx = { kind: 'fig', fig: f };
+	if (d.type === 'diagram') openDiagram(d); else openImage('edit', d);
+}
+//
+// Put the edited Markdown of a photo or diagram in the place of the old one, or remove it.
+//
+function replaceEdited(md, afterInsert) {
+	const ctx = editCtx; editCtx = null;
+	if (!ctx) return false;
+	if (ctx.kind === 'fig') {
+		if (md) {
+			const t = document.createElement('template'); t.innerHTML = renderMarkdown(md, state.images).trim();
+			const nf = t.content.querySelector('figure') || t.content.firstElementChild;
+			ctx.fig.replaceWith(nf); decorateFigures(); if (afterInsert) afterInsert();
+		} else ctx.fig.remove();
+		onVisualInput();
+	} else {
+		src.focus();
+		src.setRangeText(md, ctx.start, ctx.end, 'end');
+		onInput();
+	}
+	return true;
+}
+function deleteEdited(what) {
+	const undo = snapshot();
+	if (replaceEdited('')) toastUndo(what + ' verwijderd.', undo);
+}
+function updEditLabels() {
+	const b = editMode === 'markdown' ? mdBlockAt(src.selectionStart) : null;
+	for (const [act, kind, plain] of [['image', 'image', 'Beeld'], ['diagram', 'diagram', 'Diagram']]) {
+		const btn = $('toolbar').querySelector(`[data-act=${act}]`), on = !!(b && b.type === kind);
+		btn.querySelector('.lbl').textContent = on ? plain + ' bewerken…' : plain + '…';
+		btn.title = (on ? (kind === 'image' ? 'De foto waarin de cursor staat bewerken of verwijderen…' : 'Het diagram waarin de cursor staat bewerken of verwijderen…') : (kind === 'image' ? 'Beeld invoegen…' : 'Diagram invoegen…')) + ' (opent een venster)';
+	}
+	fitToolbar();
+}
+src.addEventListener('keyup', updEditLabels);
+src.addEventListener('click', updEditLabels);
+function onDialogAction(id, value, fn) {
+	$(id).querySelector('form').addEventListener('submit', e => { if (e.submitter && e.submitter.value === value) setTimeout(fn, 0); });
+}
+onDialogAction('imgDlg', 'delete', () => deleteEdited('Foto'));
+onDialogAction('diagDlg', 'delete', () => deleteEdited('Diagram'));
+
+//
+// Images.
+//
+//
+// Placement of an image or diagram, each with a small pictogram of where it ends up in the article.
+//
+const PLACES = {
+	breed: ['Breed', 'Over de hele breedte van de tekst'],
+	'in-de-tekst': ['In de tekst', 'Iets smaller, tussen de alinea’s'],
+	'klein-rechts': ['Klein rechts', 'Klein, rechts naast de tekst'],
+	bovenaan: ['Bovenaan', 'Als afbeelding bij het uittreksel, boven het artikel']
+};
+function placeIcon(k) {
+	const ln = (ys, x = 4, w = 36) => ys.map(y => `<rect class="ln" x="${x}" y="${y}" width="${w}" height="2"/>`).join('');
+	const body = {
+		breed: ln([4]) + '<rect class="bl" x="4" y="8" width="36" height="14"/>' + ln([25]),
+		'in-de-tekst': ln([4]) + '<rect class="bl" x="4" y="8" width="26" height="14"/>' + ln([25]),
+		'klein-rechts': ln([4, 8, 12, 16], 4, 19) + '<rect class="bl" x="27" y="4" width="13" height="13"/>' + ln([21, 25]),
+		bovenaan: '<rect x="4" y="3" width="30" height="3" fill="#6E7781"/><rect class="bl" x="4" y="9" width="36" height="12"/>' + ln([24, 27])
+	}[k];
+	return `<svg class="placeicon" width="44" height="32" viewBox="0 0 44 32" aria-hidden="true"><rect class="pg" x=".5" y=".5" width="43" height="31" rx="2"/>${body}</svg>`;
+}
+document.querySelectorAll('.place[data-place]').forEach(box => {
+	const name = box.dataset.place, keys = name === 'place' ? ['breed', 'in-de-tekst', 'klein-rechts', 'bovenaan'] : ['breed', 'in-de-tekst', 'klein-rechts'];
+	box.innerHTML = keys.map((k, i) => `<label title="${esc(PLACES[k][1])}"><input type="radio" name="${name}" value="${k}"${i ? '' : ' checked'}>${placeIcon(k)}${esc(PLACES[k][0])}</label>`).join('');
+});
+const placeValue = name => (document.querySelector(`input[name=${name}]:checked`) || {}).value || 'breed';
+function setPlace(name, v) { const r = document.querySelector(`input[name=${name}][value="${v}"]`); if (r) r.checked = true; }
+
+let imgTarget = 'text', imgData = null, imgName = '';
+function imgMarkdown() {
+	const alt = $('imgAlt').value.trim(), cap = $('imgCap').value.trim(), cr = $('imgCredit').value.trim();
+	const place = placeValue('place');
+	const path = imgName.startsWith('beeld/') ? imgName : 'beeld/' + (imgName || 'foto.jpg').toLowerCase().replace(/[^a-z0-9.\-]+/g, '-');
+	return { path, md: `![${alt}](${path})${place === 'breed' ? '' : `{.${place}}`}` + ((cap || cr) ? `\n*${[cap, cr].filter(Boolean).join(' ')}*` : '') };
+}
+function updImgMd() {
+	if (placeValue('place') === 'bovenaan') {
+		const { path } = imgMarkdown();
+		$('imgMd').innerHTML = '<b>DIT KOMT IN DE FRONT MATTER (AFBEELDING BIJ UITTREKSEL)</b>' + esc([`afbeelding: ${yamlStr(path)}`, `beschrijving: ${yamlStr($('imgAlt').value.trim())}`, `bijschrift: ${yamlStr($('imgCap').value.trim())}`, `fotograaf: ${yamlStr($('imgCredit').value.trim())}`].join('\n'));
+	} else $('imgMd').innerHTML = '<b>DIT KOMT IN JE TEKST TE STAAN</b>' + esc(imgMarkdown().md);
+	$('imgOk').disabled = !$('imgAlt').value.trim() || !imgData;
+	$('imgNeed').textContent = !imgData ? 'Kies eerst een foto.' : !$('imgAlt').value.trim() ? 'Vul eerst in wat er op de foto staat.' : '';
+}
+function openImage(target, existing) {
+	imgTarget = target;
+	if (target !== 'edit') editCtx = null;
+	const h = target === 'hero' ? state.hero || {} : target === 'edit' ? existing : {};
+	imgData = target === 'hero' ? heroSrc() || null : target === 'edit' ? existing.src : null; imgName = h.path || '';
+	$('imgDlgTitle').textContent = target === 'hero' ? 'Afbeelding bij uittreksel' : target === 'edit' ? 'Foto bewerken' : 'Beeld invoegen';
+	$('imgAlt').value = h.alt || ''; $('imgCap').value = h.caption || ''; $('imgCredit').value = h.credit || '';
+	setPlace('place', target === 'hero' ? 'bovenaan' : target === 'edit' ? existing.place : 'breed');
+	$('imgDel').hidden = target !== 'edit';
+	$('imgOk').textContent = target === 'edit' ? 'bijwerken' : target === 'hero' ? 'opslaan' : 'invoegen';
+	$('drop').innerHTML = imgData ? `<img src="${esc(imgData)}" alt="">` : '<span><i class="fa fa-upload fa-2x" aria-hidden="true"></i><br>Kies of sleep een foto<br><small>Op iPhone/iPad: Fotobibliotheek, Camera of Bestanden</small></span>';
+	$('imgInfo').textContent = imgName;
+	updImgMd();
+	$('imgOk').disabled = !imgData;
+	$('imgDlg').showModal();
+}
+function readImage(file) {
+	if (!file || !/^image\//.test(file.type)) return;
+	const fr = new FileReader();
+	fr.onload = () => {
+		//
+		// Scale down to at most 1600 px, so it fits in localStorage.
+		//
+		const im = new Image();
+		im.onload = () => {
+			const k = Math.min(1, 1600 / Math.max(im.width, im.height));
+			const c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+			c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+			imgData = c.toDataURL('image/jpeg', 0.82); imgName = file.name;
+			$('drop').innerHTML = `<img src="${imgData}" alt="">`;
+			$('imgInfo').textContent = `${file.name} · verkleind tot ${c.width} × ${c.height} px`;
+			updImgMd();
+		};
+		im.src = fr.result;
+	};
+	fr.readAsDataURL(file);
+}
+$('imgFile').addEventListener('change', e => readImage(e.target.files[0]));
+$('drop').addEventListener('click', () => $('imgFile').click());
+['dragover', 'drop'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); if (ev === 'drop') readImage(e.dataTransfer.files[0]); }));
+['imgAlt', 'imgCap', 'imgCredit'].forEach(id => $(id).addEventListener('input', updImgMd));
+document.querySelectorAll('input[name=place]').forEach(r => r.addEventListener('change', updImgMd));
+onDialogOk('imgDlg', () => {
+	const { path, md } = imgMarkdown();
+	state.images[path] = imgData;
+	if (placeValue('place') === 'bovenaan') {
+		state.hero = { path, alt: $('imgAlt').value.trim(), caption: $('imgCap').value.trim(), credit: $('imgCredit').value.trim() };
+		heroChanged(); toast('Afbeelding bij het uittreksel aangepast.');
+		if (editCtx) replaceEdited('');
+		return;
+	}
+	if (replaceEdited(md)) return;
+	if (editMode === 'visual') { vinsertBlock(renderMarkdown(md, state.images)); return; }
+	src.focus();
+	insertBlock(md);
+});
+$('heroBtn').addEventListener('click', () => openImage('hero'));
+//
+// Image with the excerpt in the article head: the same four properties as in the front matter.
+//
+function heroChanged() {
+	if (field === 'text' && editMode === 'markdown') setSrcKeepCaret(editorValue('text'));
+	else if (field === 'text') src.value = editorValue('text');
+	renderHero(); renderChecks(); renderSteps(); markDirty(); if (mode !== 'write') renderPreview();
+}
+for (const [id, k] of [['fHeroAlt', 'alt'], ['fHeroCap', 'caption'], ['fHeroCredit', 'credit']])
+	$(id).addEventListener('input', e => { state.hero = { ...(state.hero || {}), [k]: e.target.value }; heroChanged(); });
+$('heroDel').addEventListener('click', () => { state.hero = { path: '', alt: '', caption: '', credit: '' }; heroChanged(); toast('Afbeelding bij het uittreksel weggehaald.'); });
+
+//
+// Diagrams.
+//
+let lastGood = '';
+function renderTemplates(active) {
+	$('topTemplates').innerHTML = DIAGRAMS.slice(0, TOP_DIAGRAMS).map(x => `<button type="button" aria-pressed="${x.k === active}" data-t="${esc(x.k)}" title="${esc(x.d)}">${esc(x.k)}</button>`).join(' ');
+	const more = DIAGRAMS.slice(TOP_DIAGRAMS).find(x => x.k === active);
+	$('moreTypes').setAttribute('aria-pressed', !!more);
+	$('moreTypes').firstChild.nodeValue = more ? more.k + ' ' : 'meer soorten ';
+}
+//
+// The list shows the example of the type under the mouse or the keyboard selection, left of the list.
+//
+let dSel = 0;
+const dSvg = new Map();
+function dPreview(i) {
+	const x = DIAGRAMS[TOP_DIAGRAMS + i]; if (!x) return;
+	dSel = i;
+	$('dlist').querySelectorAll('li').forEach((li, j) => li.setAttribute('aria-selected', j === i));
+	$('dlist').setAttribute('aria-activedescendant', 'dt-' + i);
+	$('dpd').innerHTML = `<b>${esc(x.k)}</b> – ${esc(x.d)}`;
+	if (!dSvg.has(x.k)) { try { dSvg.set(x.k, drawDiagram(x.s)); } catch (e) { dSvg.set(x.k, '<span class="small">geen voorbeeld beschikbaar</span>'); } }
+	$('dpv').innerHTML = dSvg.get(x.k);
+}
+function openTypes() {
+	$('dlist').innerHTML = DIAGRAMS.slice(TOP_DIAGRAMS).map((x, i) => `<li role="option" id="dt-${i}" data-i="${i}" aria-selected="false" title="${esc(x.d)}"><b>${esc(x.k)}</b><small>${esc(x.d)}</small></li>`).join('');
+	$('dpanel').hidden = false; $('moreTypes').setAttribute('aria-expanded', 'true');
+	$('dlist').focus();
+	loadPele().then(() => dPreview(0), () => { $('dpv').textContent = 'Diagrammen kunnen niet geladen worden (geen verbinding).'; });
+}
+function closeTypes(focusBtn) {
+	$('dpanel').hidden = true; $('moreTypes').setAttribute('aria-expanded', 'false');
+	if (focusBtn) $('moreTypes').focus();
+}
+function useTemplate(x) { renderTemplates(x.k); $('diagSrc').value = x.s; diagPreview(); }
+$('moreTypes').addEventListener('click', () => $('dpanel').hidden ? openTypes() : closeTypes());
+$('dlist').addEventListener('mouseover', e => { const li = e.target.closest('li'); if (li && +li.dataset.i !== dSel) dPreview(+li.dataset.i); });
+$('dlist').addEventListener('click', e => { const li = e.target.closest('li'); if (li) { useTemplate(DIAGRAMS[TOP_DIAGRAMS + +li.dataset.i]); closeTypes(true); } });
+$('dlist').addEventListener('keydown', e => {
+	const n = DIAGRAMS.length - TOP_DIAGRAMS;
+	if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); dPreview((dSel + (e.key === 'ArrowDown' ? 1 : -1) + n) % n); $('dt-' + dSel).scrollIntoView({ block: 'nearest' }); }
+	else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); useTemplate(DIAGRAMS[TOP_DIAGRAMS + dSel]); closeTypes(true); }
+	else if (e.key === 'Escape') { e.preventDefault(); closeTypes(true); }
+});
+$('diagDlg').addEventListener('mousedown', e => { if (!$('dpanel').hidden && !e.target.closest('#dpanel, #moreTypes')) closeTypes(); });
+$('diagDlg').addEventListener('cancel', e => { if (!$('dpanel').hidden) { e.preventDefault(); closeTypes(true); } });
+//
+// A timeline line without a colon is accepted but drops the event silently: report it ourselves.
+//
+function lintDiagram(text) {
+	if (!/^\s*timeline/.test(text)) return null;
+	const lines = text.split('\n');
+	for (let i = 1; i < lines.length; i++)
+		if (/^\s*\d{3,4}\s+[^:\s]/.test(lines[i])) return { line: i + 1, text: `Regel ${i + 1} klopt nog niet. Zet een dubbele punt ( : ) tussen het jaartal en de gebeurtenis.`, fix: i + 1 };
+	return null;
+}
+function showDiagErr(d) {
+	$('diagErr').hidden = false;
+	$('diagErr').innerHTML = `<b><i class="fa fa-exclamation-triangle" style="color:var(--orange)"></i> ${esc(d.text.split('. ')[0])}.</b><br>${esc(d.text.split('. ').slice(1).join('. '))}${d.fix ? ' <button type="button" class="linkbtn" id="fixIt">Herstel voor mij</button>' : ''}`;
+	if (d.fix) $('fixIt').onclick = () => { const ls = $('diagSrc').value.split('\n'); ls[d.fix - 1] = ls[d.fix - 1].replace(/^(\s*\d{3,4})\s+/, '$1 : '); $('diagSrc').value = ls.join('\n'); diagPreview(); };
+}
+async function diagPreview() {
+	const text = $('diagSrc').value;
+	const lint = lintDiagram(text);
+	if (lint) { showDiagErr(lint); return; }
+	try { await loadPele(); } catch (e) { $('diagView').textContent = 'Diagrammen kunnen niet geladen worden (geen verbinding).'; return; }
+	try {
+		const svg = drawDiagram(text);
+		$('diagView').innerHTML = svg; lastGood = text; $('diagErr').hidden = true;
+	} catch (e) {
+		showDiagErr(dutchError(e, text));
+	}
+}
+function openDiagram(existing) {
+	if (!existing) editCtx = null;
+	renderTemplates(existing ? null : DIAGRAMS[0].k); closeTypes();
+	$('diagSrc').value = existing ? existing.text : DIAGRAMS[0].s; $('diagAlt').value = existing ? existing.alt : ''; setPlace('dplace', existing ? existing.place : 'breed');
+	$('diagDlgTitle').innerHTML = `<i class="fa fa-sitemap" aria-hidden="true"></i> ${existing ? 'Diagram bewerken' : 'Diagram – begin met een voorbeeld'}`;
+	$('diagDel').hidden = !existing;
+	$('diagOk').textContent = existing ? 'bijwerken' : 'invoegen';
+	$('diagView').innerHTML = '<span class="small">laden…</span>';
+	$('diagDlg').showModal(); diagPreview();
+}
+$('topTemplates').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (b) useTemplate(DIAGRAMS.find(x => x.k === b.dataset.t)); });
+//
+// Pele draws in less than a millisecond: a short wait after the last key is enough.
+//
+$('diagSrc').addEventListener('input', () => { clearTimeout(diagPreview.t); diagPreview.t = setTimeout(diagPreview, 120); });
+onDialogOk('diagDlg', () => {
+	const alt = $('diagAlt').value.trim(), text = $('diagSrc').value.trim(), place = placeValue('dplace') === 'breed' ? '' : placeValue('dplace');
+	const md = (alt ? `%% beschrijving: ${alt} %%\n` : '') + '```mermaid' + (place ? ` {.${place}}` : '') + '\n' + text + '\n```';
+	if (replaceEdited(md, () => renderDiagrams(wys))) return;
+	if (editMode === 'visual') { vinsertBlock(diagramFigure(text, alt, place)); renderDiagrams(wys); return; }
+	src.focus();
+	insertBlock((alt ? `%% beschrijving: ${alt} %%\n` : '') + '```mermaid' + (place ? ` {.${place}}` : '') + '\n' + text + '\n```');
+});
+
+//
+// Article properties.
+//
+$('fTitle').addEventListener('input', e => { state.title = e.target.value; src.value = editorValue(field); $('pageTitle').textContent = state.title || 'Zonder titel'; counts(); markDirty(); if (mode !== 'write') renderPreview(); });
+$('fAuthor').addEventListener('input', e => { state.author = e.target.value; src.value = editorValue(field); markDirty(); if (mode !== 'write') renderPreview(); });
+$('fExcerpt').addEventListener('input', e => { state.excerpt = e.target.value; src.value = editorValue(field); counts(); renderChecks(); renderSteps(); markDirty(); if (mode !== 'write') renderPreview(); });
+//
+// Tags come from the fixed list of the site; only an administrator adds a new tag to that list.
+//
+function renderTagChoice() {
+	const known = state.knownTags || [], admin = prefs.role === 'admin';
+	$('tagAdd').innerHTML = '<option value="" selected>+ tag</option>' + known.filter(t => !state.tags.includes(t)).map(t => `<option>${esc(t)}</option>`).join('') +
+		(admin ? '<option value="__new">nieuwe tag… (beheerder)</option>' : '');
+}
+$('tagAdd').addEventListener('change', e => {
+	let t = e.target.value;
+	if (t === '__new') {
+		t = (prompt('Naam van de nieuwe tag (alleen een beheerder kan tags toevoegen):') || '').trim();
+		if (!t) { renderTagChoice(); return; }
+		if (!state.knownTags.includes(t)) state.knownTags.push(t);
+		toast(`Tag „${t}” toegevoegd aan de lijst van de site.`);
+	}
+	if (t && !state.tags.includes(t)) state.tags.push(t);
+	renderTags(); renderChecks(); renderSteps(); markDirty(); if (mode !== 'write') renderPreview();
+});
+$('tagBox').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) { state.tags.splice(+b.dataset.i, 1); renderTags(); renderChecks(); renderSteps(); markDirty(); if (mode !== 'write') renderPreview(); } });
+
+//
+// Views, tabs and side column.
+//
+//
+// Compact width (iPhone in portrait): never text and preview side by side; switch between them instead.
+//
+const compact = window.matchMedia('(max-width: 700px)');
+function setMode(m) {
+	if (m === 'side' && compact.matches) m = 'write';
+	mode = m;
+	document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+	applyPanes();
+	if (m !== 'write') renderPreview();
+	prefs.mode = m; persist();
+}
+//
+// Write, preview or side by side.
+//
+function applyPanes() {
+	$('panes').className = 'panes ' + ({ write: 'write-only', preview: 'preview-only', side: 'side' }[mode]);
+}
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+document.querySelectorAll('[data-device]').forEach(b => b.addEventListener('click', () => {
+	device = b.dataset.device;
+	document.querySelectorAll('[data-device]').forEach(x => x.setAttribute('aria-pressed', x === b));
+	$('frame').className = 'frame' + (device === 'desktop' ? '' : ' ' + device);
+	fitFrame(); followCaret();
+}));
+window.addEventListener('resize', fitFrame);
+//
+// Height of the sticky toolbar, so the switch 'Bewerken als' hangs just below it.
+//
+function stickyTop() { document.documentElement.style.setProperty('--sticky-top', ($('editbar').offsetHeight + 8) + 'px'); }
+window.addEventListener('resize', stickyTop); stickyTop();
+if (window.ResizeObserver) new ResizeObserver(stickyTop).observe($('editbar'));
+compact.addEventListener('change', () => { if (compact.matches && mode === 'side') setMode('write'); });
+$('showOk').addEventListener('change', () => { prefs.showOk = $('showOk').checked; persist(); renderChecks(); renderReview(); });
+src.addEventListener('keyup', e => { if (!['Shift', 'Control', 'Meta', 'Alt'].includes(e.key)) followCaret(); });
+src.addEventListener('click', followCaret);
+document.querySelector('aside.side').addEventListener('click', e => {
+	const g = e.target.closest('[data-go]'); if (g) { goToField(g.dataset.go); return; }
+	const a = e.target.closest('[data-line]');
+	if (a) {
+		e.preventDefault(); if (field !== 'text') setField('text'); if (mode === 'preview') setMode('write');
+		const n = +a.dataset.line;
+		if (n === 0) {
+			if (editMode === 'visual') { $('fTitle').focus(); $('wyshead').scrollIntoView({ block: 'center' }); }
+			else { src.focus(); src.setSelectionRange(4, 4); window.scrollTo({ top: $('editbar').getBoundingClientRect().top + window.scrollY - 8 }); }
+			return;
+		}
+		const pos = src.value.split('\n').slice(0, n + frontLines()).join('\n').length + 1;
+		src.focus(); src.setSelectionRange(pos, pos);
+		const { y } = caretXY(); window.scrollTo({ top: y - 160, behavior: 'smooth' });
+	}
+});
+
+
+//
+// Status and saving.
+//
+function save() {
+	if (editMode === 'visual') syncFromVisual();
+	saved = clone(state); dirty = false;
+	const ok = persist(); updateChip(ok);
+	toast(ok ? 'Opgeslagen in deze browser (prototype).' : 'Kon niet opslaan: deze browser staat geen opslag toe.');
+}
+$('saveBtn').addEventListener('click', save);
+$('cancelBtn').addEventListener('click', () => {
+	if (dirty && !confirm('Wijzigingen sinds de laatste keer opslaan weggooien?')) return;
+	state = clone(saved); dirty = false; persist(); setField(field); renderAll();
+	if (editMode === 'visual') loadVisual();
+});
+$('steps').addEventListener('click', e => {
+	if (e.target.closest('#toReview')) { state.status = 'review'; toast('Beoordeling gestart. Collega’s krijgen een mail (prototype: alleen deze melding).'); }
+	else if (e.target.closest('#approve')) { openApproval(); return; }
+	else if (e.target.closest('#retractPub')) { $('retractReason').value = ''; updRetract(); $('retractDlg').showModal(); return; }
+	else if (e.target.closest('#reopen')) { state.status = 'draft'; state.approvals = 0; state.reviews = (state.reviews || []).map(r => ({ ...r, void: true })); toast('Het artikel is weer een schets.'); }
+	else if (e.target.closest('#retract')) {
+		if (!confirm('Artikel terugtrekken? Het gaat terug naar schets; de goedkeuringen vervallen, de opmerkingen blijven.')) return;
+		state.status = 'draft'; state.approvals = 0; state.reviews = (state.reviews || []).map(r => ({ ...r, void: true }));
+		toast('Teruggetrokken: het artikel is weer een schets.');
+	}
+	else if (e.target.closest('#publish')) { state.status = 'published'; toast('Gepubliceerd (prototype: alleen in deze browser).'); }
+	else return;
+	saved = clone(state); dirty = false; persist(); renderAll();
+});
+$('roleSel').value = prefs.role || 'author';
+$('roleSel').addEventListener('change', e => { prefs.role = e.target.value; persist(); renderSteps(); renderTagChoice(); toast({ author: 'Je bekijkt het artikel als auteur.', colleague: 'Je bekijkt het artikel als collega die beoordeelt.', admin: 'Je bekijkt het artikel als beheerder.' }[e.target.value]); });
+$('resetAll').addEventListener('click', () => {
+	if (!confirm('Alles terugzetten naar het startartikel? Je eigen wijzigingen in dit prototype gaan verloren.')) return;
+	state = clone(START); saved = clone(START); dirty = false; persist(); setField('text'); renderAll(); if (editMode === 'visual') loadVisual(); toast('Terug bij het startpunt.');
+});
+
+//
+// Import and export of .md files.
+//
+function toMarkdownFile() {
+	const fm = frontText([`status: ${state.status}`]);
+	return fm + state.fields.text.trim() + '\n';
+}
+function downloadMd() {
+	if (editMode === 'visual') syncFromVisual();
+	const blob = new Blob([toMarkdownFile()], { type: 'text/markdown;charset=utf-8' });
+	const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+	a.download = (state.title || 'artikel').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').slice(0, 60) + '.md';
+	a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('importFile').addEventListener('change', e => {
+	const f = e.target.files[0]; if (!f) return;
+	f.text().then(t => {
+		const fm = parseFront(t);
+		const props = fm.ok ? fm.props : {};
+		let body = fm.ok ? fm.body : t;
+		const part = name => { const r = new RegExp(`^## ${name}\\s*$`, 'mi'); const i = body.search(r); if (i < 0) return ''; const rest = body.slice(i).replace(r, ''); const j = rest.search(/^## /m); const v = (j < 0 ? rest : rest.slice(0, j)).trim(); body = body.slice(0, i) + (j < 0 ? '' : rest.slice(j)); return v; };
+		const blockOf = v => Array.isArray(v) ? v.join('\n') : v;
+		const method = blockOf(props.bijsluiter) || part('Bijsluiter'), sources = blockOf(props.bronnen) || part('Bronnen');
+		body = body.replace(/!\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/g, (a, x) => `![](beeld/${x})`);
+		state.title = props.titel || props.title || f.name.replace(/\.md$/, '');
+		state.author = props.auteur || props.author || state.author;
+		state.tags = Array.isArray(props.tags) ? props.tags.map(String) : [];
+		state.excerpt = props.uittreksel || '';
+		state.hero = { path: String(props.afbeelding || ''), alt: String(props.beschrijving || ''), caption: String(props.bijschrift || ''), credit: String(props.fotograaf || '') };
+		state.fields = { text: body.trim(), method, sources };
+		state.status = 'draft'; state.approvals = 0;
+		setField('text'); renderAll(); markDirty(); if (editMode === 'visual') loadVisual(); toast(`„${f.name}” geopend. Vergeet niet op te slaan.`);
+	});
+	e.target.value = '';
+});
+
+//
+// iPhone: keep the toolbar above the on-screen keyboard.
+//
+if (window.visualViewport) {
+	const vv = window.visualViewport;
+	const place = () => { if (window.innerWidth > 700) { $('toolbar').style.bottom = ''; return; } $('toolbar').style.bottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop) + 'px'; };
+	vv.addEventListener('resize', place); vv.addEventListener('scroll', place);
+}
+
+//
+// The toolbar stays on one row: whatever does not fit goes into the 'Meer' menu at the end, in the same order.
+// Not on a phone, where the toolbar sits above the keyboard and scrolls sideways.
+//
+function fitToolbar() {
+	const tb = $('toolbar'), more = $('tbMore'), modesEl = tb.querySelector('.modes');
+	//
+	// The view switch and, in Markdown, the cheat sheet button (?) always stay on the row.
+	//
+	const helpBtn = tb.querySelector('[data-act=help]');
+	const items = [...tb.children].filter(el => el !== more && el !== modesEl && el !== helpBtn);
+	items.forEach(el => el.classList.remove('ovf'));
+	more.hidden = true;
+	modesEl.classList.remove('compact');
+	if (window.innerWidth <= 700 || tb.scrollWidth <= tb.clientWidth) { buildMoreMenu([]); return; }
+	modesEl.classList.add('compact');
+	if (tb.scrollWidth <= tb.clientWidth) { buildMoreMenu([]); return; }
+	more.hidden = false;
+	const avail = tb.clientWidth - more.offsetWidth - modesEl.offsetWidth - (helpBtn.offsetParent ? helpBtn.offsetWidth : 0) - 24;
+	let used = 0, cut = false;
+	const hidden = [];
+	for (const el of items) {
+		if (el.offsetParent === null && !el.classList.contains('ovf')) continue;
+		const w = el.offsetWidth + 2;
+		if (cut || used + w > avail) { cut = true; el.classList.add('ovf'); if (el.matches('button')) hidden.push(el); }
+		else used += w;
+	}
+	//
+	// No separator at the very end of the visible row.
+	//
+	const vis = items.filter(el => !el.classList.contains('ovf') && el.offsetParent !== null);
+	if (vis.length && vis[vis.length - 1].classList.contains('sep')) vis[vis.length - 1].classList.add('ovf');
+	buildMoreMenu(hidden);
+}
+function buildMoreMenu(hidden) {
+	$('moreMenu').innerHTML = hidden.map(b => `<button type="button" role="menuitem" data-act="${b.dataset.act}" title="${esc(b.title)}">${b.querySelector('i').outerHTML}${esc((b.querySelector('.lbl') || {}).textContent || b.getAttribute('aria-label') || b.title)}</button>`).join('');
+}
+function closeMoreMenu(focusBtn) { if ($('moreMenu').hidden) return; $('moreMenu').hidden = true; $('tbMore').setAttribute('aria-expanded', 'false'); if (focusBtn) $('tbMore').focus(); }
+$('tbMore').addEventListener('mousedown', e => e.preventDefault());
+$('tbMore').addEventListener('click', e => {
+	e.stopPropagation();
+	if (!$('moreMenu').hidden) { closeMoreMenu(); return; }
+	if (editMode === 'visual') saveRange();
+	const r = $('tbMore').getBoundingClientRect(), m = $('moreMenu');
+	m.hidden = false; $('tbMore').setAttribute('aria-expanded', 'true');
+	m.style.left = (Math.max(8, Math.min(r.right - m.offsetWidth, window.innerWidth - m.offsetWidth - 8)) + window.scrollX) + 'px';
+	m.style.top = (r.bottom + 4 + window.scrollY) + 'px';
+	if (e.detail === 0) { const f = m.querySelector('[role=menuitem]'); if (f) f.focus(); }
+});
+$('moreMenu').addEventListener('mousedown', e => e.preventDefault());
+$('moreMenu').addEventListener('click', e => {
+	const b = e.target.closest('[data-act]'); if (!b) return;
+	closeMoreMenu();
+	if (editMode === 'visual' && vRange) { const sel = getSelection(); sel.removeAllRanges(); sel.addRange(vRange); }
+	(editMode === 'visual' ? VACTIONS : ACTIONS)[b.dataset.act](e);
+});
+$('moreMenu').addEventListener('keydown', e => {
+	const items = [...$('moreMenu').querySelectorAll('[role=menuitem]')], i = items.indexOf(document.activeElement);
+	if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus(); }
+	if (e.key === 'Escape') { e.preventDefault(); closeMoreMenu(true); }
+	if (e.key === 'Tab') closeMoreMenu();
+});
+document.addEventListener('mousedown', e => { if (!e.target.closest('#moreMenu, #tbMore')) closeMoreMenu(); });
+if (window.ResizeObserver) new ResizeObserver(() => { clearTimeout(fitToolbar.t); fitToolbar.t = setTimeout(fitToolbar, 30); }).observe($('toolbar'));
+window.addEventListener('resize', fitToolbar);
+
+//
+// Every control gets a tooltip (title): the accessible name or the visible text, unless a more helpful one is set.
+// The writing areas themselves get none: a tooltip over the text would be in the way.
+//
+function ensureTitles() {
+	document.querySelectorAll('button, a[href], input, textarea, select, summary, [role=option], [role=menuitem], [role=tab]').forEach(el => {
+		if (el.title || el === src || el.type === 'file' || el.type === 'hidden') return;
+		const lab = el.labels && el.labels[0] ? el.labels[0].textContent : '';
+		const t = (el.getAttribute('aria-label') || lab || el.placeholder || el.textContent || '').replace(/\s+/g, ' ').trim();
+		if (t) el.title = t;
+	});
+}
+new MutationObserver(() => { clearTimeout(ensureTitles.t); ensureTitles.t = setTimeout(ensureTitles, 50); }).observe(document.body, { childList: true, subtree: true });
+ensureTitles();
+
+//
+// Start.
+// The height of the writing area depends on font and width: measure again when they change.
+//
+if (document.fonts) document.fonts.ready.then(syncEditor);
+if (window.ResizeObserver) new ResizeObserver(() => { clearTimeout(syncEditor.t); syncEditor.t = setTimeout(syncEditor, 50); }).observe($('ed'));
+$('showOk').checked = !!prefs.showOk;
+$('outlineBox').open = !!prefs.outlineOpen;
+for (const id of ['wyshead', 'footMethod', 'footSources']) {
+	$(id).open = (prefs.folded || {})[id] !== true;
+	$(id).addEventListener('toggle', () => { prefs.folded = { ...(prefs.folded || {}), [id]: !$(id).open }; persist(); });
+}
+$('outlineBox').addEventListener('toggle', () => { prefs.outlineOpen = $('outlineBox').open; persist(); });
+setField('text');
+renderAll();
+setMode(prefs.mode || 'write');
+if ((prefs.editMode || 'visual') === 'visual') setEditMode('visual');
+dirty = JSON.stringify(state) !== JSON.stringify(saved); updateChip();
+</script>
+</body>
+</html>
