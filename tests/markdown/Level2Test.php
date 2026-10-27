@@ -68,6 +68,17 @@
 		contains("<script>uit.textContent = 'x';</script>", $iframe->getAttribute('srcdoc'));
 	});
 
+	test('level 2: interactive block without a height reports its height; with one it does not (design 10.1, rule 2)', function () {
+		$auto = md("%% beschrijving: kwis %%\n```html interactief\n<p>Vraag</p>\n```\n");
+		contains('data-height="auto"', $auto);
+		$document = new DOMDocument();
+		check($document->loadXML('<text>' . $auto . '</text>'));
+		contains('hyphaHeight', $document->getElementsByTagName('iframe')->item(0)->getAttribute('srcdoc'));
+		$fixed = md("%% beschrijving: kwis %%\n```html interactief {hoogte=300}\n<p>Vraag</p>\n```\n");
+		lacks('data-height', $fixed);
+		lacks('hyphaHeight', $fixed);
+	});
+
 	test('level 2: interactive block without description is refused (BR-07) and stays code', function () {
 		same(['interactive-without-description'], mdMessages("```html interactief\n<b>x</b>\n```"));
 		$out = md("```html interactief\n<script>alert(1)</script>\n```");

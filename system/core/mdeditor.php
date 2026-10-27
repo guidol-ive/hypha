@@ -418,6 +418,7 @@
 			$meta->setAttribute('content', preg_match('/^\X{0,300}/u', $description, $m) ? $m[0] : mb_substr($description, 0, 300));
 		}
 		if ($reader) $hyphaHtml->linkStyle('system/mdeditor/lezer.css?v=' . hypha_mdeditorVersion());
+		if ($reader) $hyphaHtml->linkScript('system/mdeditor/lezer.js?v=' . hypha_mdeditorVersion());
 		//
 		// Two gaps of the page template that Lighthouse and WCAG report (design section 13.15): the main region, and
 		// the share links, which are only an icon.

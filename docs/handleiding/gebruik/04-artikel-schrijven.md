@@ -133,6 +133,14 @@ fotograaf: Foto (naam fotograaf)
 | diagram | **Diagram…** | een tijdlijn, staafdiagram, stroomschema en meer; onder **Technisch** ook soorten als klassen, architectuur en versiebeheer; kies een voorbeeld en pas de tekst aan |
 | formule | **Formule** | een formule in LaTeX-notatie, zoals `$\tfrac{4}{37}$` |
 
+**Interactief blok.** Een rekenhulp, een kwis of een grafiek die reageert op de lezer, maak je met een interactief blok. Typ `/` aan het begin van een regel en kies **Interactief blok**, of kies **bewerken** bij een bestaand blok in Opmaak.
+
+1. Links schrijf je HTML, CSS en JavaScript; rechts zie je meteen hoe het werkt voor de lezer.
+2. Een **beschrijving** is verplicht. Voorleessoftware leest die voor, en lezers zonder JavaScript en zoekmachines zien die tekst in plaats van het blok.
+3. Laat je de **hoogte** leeg, dan past het blok zich aan zijn inhoud aan. Een vaste hoogte vul je in pixels in.
+4. Het blok draait afgeschermd: het kan niet bij de pagina, cookies, formulieren of het internet. Scripts en stijlen van buiten mogen alleen van de diensten die de beheerder heeft ingesteld.
+5. Een interactief blok kan alleen wie vrijheidsniveau 2 heeft; zie [Beheer](../techniek/06-beheer.md#instellingen-van-de-tekst-editor).
+
 Een foto of diagram **bewerk** je met het potlood of een dubbelklik, en **verwijder** je met het kruisje. Daarna kun je het verwijderen nog ongedaan maken.
 
 Een diagram is gewone tekst. Zo ziet een tijdlijn eruit:

@@ -370,7 +370,11 @@
 				$iframe->setAttribute('loading', 'lazy');
 				$iframe->setAttribute('referrerpolicy', 'no-referrer');
 				$iframe->setAttribute('height', (string)($block['height'] > 0 ? min($block['height'], 4000) : 400));
-				$iframe->setAttribute('srcdoc', $this->srcdoc($block['code']));
+				//
+				// Without {hoogte=…} the block reports its own height (design section 10.1, rule 2); lezer.js listens.
+				//
+				if ($block['height'] <= 0) $iframe->setAttribute('data-height', 'auto');
+				$iframe->setAttribute('srcdoc', $this->srcdoc($block['code'], $block['height'] <= 0));
 				$caption = $figure->appendChild($document->createElement('figcaption'));
 				$caption->appendChild($document->createTextNode($block['description']));
 				$placeholder->parentNode->replaceChild($figure, $placeholder);
@@ -379,11 +383,17 @@
 
 		//
 		// The document of an interactive block, with a Content-Security-Policy that only allows scripts from the list.
+		// With $report it tells the page its height ({hyphaHeight: n}) whenever that changes.
 		//
-		public function srcdoc(string $code): string {
+		public function srcdoc(string $code, bool $report = false): string {
 			$hosts = implode(' ', array_map(fn ($h) => 'https://' . $h, $this->options['scriptHosts']));
 			$csp = "default-src 'none'; script-src 'unsafe-inline' $hosts; style-src 'unsafe-inline' $hosts; img-src data: https:; font-src $hosts; connect-src 'none'; form-action 'none'";
 			return '<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="' . htmlspecialchars($csp) . '">'
-				. '<style>body{margin:0;font-family:Lato,Helvetica,Arial,sans-serif}</style>' . $code;
+				. '<style>body{margin:0;font-family:Lato,Helvetica,Arial,sans-serif}</style>' . ($report ? self::REPORT_HEIGHT : '') . $code;
 		}
+
+		//
+		// In an interactive block without a fixed height: report the height of the content to the page.
+		//
+		const REPORT_HEIGHT = "<script>addEventListener('load',function(){var r=function(){parent.postMessage({hyphaHeight:Math.ceil(document.documentElement.getBoundingClientRect().height)},'*')};r();if(window.ResizeObserver)new ResizeObserver(r).observe(document.documentElement)})</script>";
 	}

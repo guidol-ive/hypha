@@ -1000,7 +1000,7 @@
 		"mde-ia-code-help" => "De code draait afgeschermd: zonder toegang tot de pagina, cookies, formulieren of het internet",
 		"mde-ia-alt" => "Beschrijving",
 		"mde-ia-alt-help" => "Wat het blok laat zien of doet. Voorleessoftware leest dit voor; lezers zonder JavaScript en zoekmachines zien deze tekst.",
-		"mde-ia-height" => "Hoogte in pixels (leeg: 400)",
+		"mde-ia-height" => "Hoogte in pixels (leeg: past zich aan de inhoud aan)",
 		"mde-ia-preview" => "Zo werkt het voor de lezer",
 		"mde-ia-hosts" => "Scripts en stijlen van buiten alleen van: [[hosts]].",
 		"mde-ia-hosts-none" => "Scripts en stijlen van buiten zijn niet toegestaan.",

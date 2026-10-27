@@ -474,7 +474,7 @@ mde-ia-code	HTML, CSS en JavaScript	HTML, CSS and JavaScript
 mde-ia-code-help	De code draait afgeschermd: zonder toegang tot de pagina, cookies, formulieren of het internet	The code runs shielded: without access to the page, cookies, forms or the internet
 mde-ia-alt	Beschrijving	Description
 mde-ia-alt-help	Wat het blok laat zien of doet. Voorleessoftware leest dit voor; lezers zonder JavaScript en zoekmachines zien deze tekst.	What the block shows or does. Screen readers read this aloud; readers without JavaScript and search engines see this text.
-mde-ia-height	Hoogte in pixels (leeg: 400)	Height in pixels (empty: 400)
+mde-ia-height	Hoogte in pixels (leeg: past zich aan de inhoud aan)	Height in pixels (empty: fits the content)
 mde-ia-preview	Zo werkt het voor de lezer	How it works for the reader
 mde-ia-hosts	Scripts en stijlen van buiten alleen van: [[hosts]].	Scripts and styles from outside only from: [[hosts]].
 mde-ia-hosts-none	Scripts en stijlen van buiten zijn niet toegestaan.	Scripts and styles from outside are not allowed.

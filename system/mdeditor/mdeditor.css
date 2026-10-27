@@ -671,3 +671,4 @@
 	.mdeditor .toolbar .tbmore { margin-left: 0; }
 	.mdeditor .toolbar { overflow-x: visible; }
 }
+.mdeditor .ia-view { max-height: 600px; }

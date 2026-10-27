@@ -1005,7 +1005,7 @@
 		"mde-ia-code-help" => "The code runs shielded: without access to the page, cookies, forms or the internet",
 		"mde-ia-alt" => "Description",
 		"mde-ia-alt-help" => "What the block shows or does. Screen readers read this aloud; readers without JavaScript and search engines see this text.",
-		"mde-ia-height" => "Height in pixels (empty: 400)",
+		"mde-ia-height" => "Height in pixels (empty: fits the content)",
 		"mde-ia-preview" => "How it works for the reader",
 		"mde-ia-hosts" => "Scripts and styles from outside only from: [[hosts]].",
 		"mde-ia-hosts-none" => "Scripts and styles from outside are not allowed.",

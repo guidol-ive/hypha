@@ -27,6 +27,12 @@ export const load = name => lazy[name] ||= import(name).then(m => m.default || m
 let CM = null;
 
 //
+// In an interactive block without a fixed height: report the height of the content to the page (as REPORT_HEIGHT of
+// HyphaMarkdown on the server).
+//
+const REPORT_HEIGHT = "<script>addEventListener('load',function(){var r=function(){parent.postMessage({hyphaHeight:Math.ceil(document.documentElement.getBoundingClientRect().height)},'*')};r();if(window.ResizeObserver)new ResizeObserver(r).observe(document.documentElement)})</script>";
+
+//
 // SHA-256 for a page over plain http: browsers offer crypto.subtle only in a secure context (https or localhost), and
 // the drawings of diagrams and formulas are matched on the server by the SHA-256 of their source (found on an iPhone
 // on the local network: no article with a diagram could be saved).
@@ -119,7 +125,7 @@ export class Editor {
 			diagram: preview ? (text, description) => this.diagramSvg(text, description) : null,
 			math: preview ? (tex, display) => this.mathml(tex, display) : null,
 			highlight: preview ? (code, language) => lazy.hljsLoaded ? lazy.hljsLoaded.highlight(code, { language, ignoreIllegals: true }).value : null : null,
-			interactive: preview ? (code, height, description) => `<figure class="interactief"><iframe data-mde-own="${this.own}:${this.frames.push(this.srcdoc(code)) - 1}" sandbox="allow-scripts" title="${esc(description)}" loading="lazy" referrerpolicy="no-referrer" height="${Math.min(height || 400, 4000)}"></iframe><figcaption>${esc(description)}</figcaption></figure>` : null,
+			interactive: preview ? (code, height, description) => `<figure class="interactief"><iframe data-mde-own="${this.own}:${this.frames.push(this.srcdoc(code, !height)) - 1}" sandbox="allow-scripts" title="${esc(description)}" loading="lazy" referrerpolicy="no-referrer" height="${Math.min(height || 400, 4000)}"${height ? '' : ' data-height="auto"'}></iframe><figcaption>${esc(description)}</figcaption></figure>` : null,
 			imageSrc: src => /^(https?:|\/|data:)/.test(src) ? src : this.cfg.root + src,
 		};
 	}
@@ -134,10 +140,21 @@ export class Editor {
 		return this.ownToken;
 	}
 
-	srcdoc(code) {
+	srcdoc(code, report = false) {
 		const hosts = (this.cfg.settings?.scriptHosts || []).map(h => 'https://' + h).join(' ');
 		const csp = `default-src 'none'; script-src 'unsafe-inline' ${hosts}; style-src 'unsafe-inline' ${hosts}; img-src data: https:; font-src ${hosts}; connect-src 'none'; form-action 'none'`;
-		return `<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${esc(csp)}"><style>body{margin:0;font-family:Lato,Helvetica,Arial,sans-serif}</style>` + code;
+		return `<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${esc(csp)}"><style>body{margin:0;font-family:Lato,Helvetica,Arial,sans-serif}</style>` + (report ? REPORT_HEIGHT : '') + code;
+	}
+
+	//
+	// The height an interactive block reports (as lezer.js in the reading view), for the preview and its dialog.
+	//
+	followHeights() {
+		addEventListener('message', event => {
+			const height = event.data?.hyphaHeight;
+			if (typeof height !== 'number' || !Number.isFinite(height)) return;
+			for (const f of this.root.querySelectorAll('iframe[data-height="auto"]')) if (f.contentWindow === event.source) f.style.height = Math.max(50, Math.min(4000, Math.ceil(height))) + 'px';
+		});
 	}
 
 	//
@@ -165,6 +182,7 @@ export class Editor {
 		const editbar = $('.editbar', this.root);
 		if (editbar) new ResizeObserver(() => this.root.style.setProperty('--sticky-top', editbar.offsetHeight + 8 + 'px')).observe(editbar);
 		this.followKeyboard();
+		this.followHeights();
 		this.ready = true;
 		this.root.dispatchEvent(new CustomEvent('mde-ready'));
 	}

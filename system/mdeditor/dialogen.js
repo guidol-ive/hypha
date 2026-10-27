@@ -386,7 +386,11 @@ export class Dialogs {
 			clearTimeout(timer);
 			timer = setTimeout(() => {
 				view.style.height = Math.min(Math.max(+height.value || 400, 50), 600) + 'px';
-				view.srcdoc = this.ed.srcdoc(src.value);
+				//
+				// Without a height the block reports its own, as for the reader.
+				//
+				if (+height.value > 0) view.removeAttribute('data-height'); else view.setAttribute('data-height', 'auto');
+				view.srcdoc = this.ed.srcdoc(src.value, !(+height.value > 0));
 			}, 400);
 		};
 		src.oninput = draw;

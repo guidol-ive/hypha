@@ -156,6 +156,20 @@ export default async function (t) {
 		await p2.context().close();
 	});
 
+	t.test('interactive block without a height: preview and reading view fit its content', async () => {
+		const p3 = await login(browser, base, 'sanne');
+		await newArticle(p3, base, 'Hoogte vanzelf');
+		const text = '%% beschrijving: een hoog blok %%\n```html interactief\n<div style="height:900px;background:#eee">Hoog</div>\n```\n';
+		await p3.evaluate(t => { const e = window.hyphaMdeditor.editor; e.fields.text = t; e.loadVisual(); e.changed(); }, text);
+		await p3.click('[data-mode="preview"]');
+		await p3.waitForFunction(() => { const f = document.querySelector('#mdePreview iframe[data-height="auto"]'); return f && f.getBoundingClientRect().height >= 890; }, null, { timeout: 8000 });
+		assert(await p3.evaluate(() => window.hyphaMdeditor.editor.save()), 'save');
+		const slug3 = p3.url().replace(/^.*\/nl\/([^/]+)\/edit.*$/, '$1');
+		await p3.goto(base + 'nl/' + slug3);
+		await p3.waitForFunction(() => { const f = document.querySelector('figure.interactief iframe[data-height="auto"]'); return f && f.getBoundingClientRect().height >= 890; }, null, { timeout: 8000 });
+		await p3.context().close();
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();
