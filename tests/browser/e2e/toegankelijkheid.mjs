@@ -61,4 +61,26 @@ export default async function (t) {
 		assert(overflow <= 0, 'horizontal scroll of ' + overflow + ' px at 393 pt');
 		await tp.context().close();
 	});
+	t.test('iPhone: the toolbar moves along with the on-screen keyboard and back (design section 12.12)', async () => {
+		//
+		// A browser without a real keyboard: a visual viewport of 852 pt that becomes 516 pt, as with the keyboard of iOS.
+		//
+		const extra = { isMobile: true, hasTouch: true, deviceScaleFactor: 3 };
+		const tp = await login(browser, base, 'sanne', { width: 393, height: 852 }, extra);
+		await tp.addInitScript(() => {
+			const vv = new EventTarget();
+			Object.assign(vv, { height: window.innerHeight, width: window.innerWidth, offsetTop: 0, offsetLeft: 0, scale: 1, pageTop: 0, pageLeft: 0 });
+			Object.defineProperty(window, 'visualViewport', { get: () => vv });
+			window.mdeKeyboard = h => { vv.height = window.innerHeight - h; vv.dispatchEvent(new Event('resize')); };
+		});
+		await newArticle(tp, base, 'Toetsenbord');
+		const bottom = () => tp.evaluate(() => Math.round(document.querySelector('#mdeditor .toolbar').getBoundingClientRect().bottom));
+		const before = await bottom();
+		await tp.evaluate(() => window.mdeKeyboard(336));
+		const above = await bottom();
+		assert(before === 852 && above === 852 - 336, `toolbar bottom ${before} -> ${above}`);
+		await tp.evaluate(() => window.mdeKeyboard(0));
+		assert(await bottom() === 852, 'toolbar back at the bottom');
+		await tp.context().close();
+	});
 }

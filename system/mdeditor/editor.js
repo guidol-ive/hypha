@@ -107,6 +107,7 @@ export class Editor {
 		document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); this.save(); } });
 		this.fitToolbar();
 		new ResizeObserver(() => this.fitToolbar()).observe($('.toolbar', this.root));
+		this.followKeyboard();
 		this.ready = true;
 		this.root.dispatchEvent(new CustomEvent('mde-ready'));
 	}
@@ -936,6 +937,28 @@ export class Editor {
 			more.hidden = false;
 		}
 		this.moved = hidden;
+	}
+
+	//
+	// On a phone the toolbar stays right above the on-screen keyboard (design section 12.12). It is fixed to the bottom
+	// of the layout viewport, which Safari on iOS does not make smaller for the keyboard, so it follows the visual
+	// viewport. Not while zoomed in: then the visual viewport is smaller for another reason.
+	//
+	followKeyboard() {
+		const vv = window.visualViewport;
+		if (!vv) return;
+		const bar = $('.toolbar', this.root);
+		const phone = window.matchMedia('(max-width: 700px)');
+		const place = () => {
+			const covered = Math.round(window.innerHeight - vv.height - vv.offsetTop);
+			const on = phone.matches && vv.scale < 1.01 && covered > 0;
+			bar.style.transform = on ? `translateY(${-covered}px)` : '';
+			bar.classList.toggle('above-keyboard', on);
+		};
+		vv.addEventListener('resize', place);
+		vv.addEventListener('scroll', place);
+		phone.addEventListener('change', place);
+		place();
 	}
 
 	storePreferences(prefs) {
