@@ -1018,6 +1018,12 @@
 		"mde-error-page-gone" => "This page was renamed or deleted meanwhile.",
 		"mde-paste-seen" => "seen",
 		"mde-status-retracted" => "withdrawn",
+		"mde-link-title" => "Link",
+		"mde-link-target" => "Address or page",
+		"mde-link-target-help" => "Type a web address (https://…) or search a page of this site.",
+		"mde-link-text" => "Text of the link (empty: the name of the page or the address)",
+		"mde-link-remove" => "Remove link",
+		"mde-link-pages" => "Pages of this site",
 		// End of the Markdown editor
 	);
 

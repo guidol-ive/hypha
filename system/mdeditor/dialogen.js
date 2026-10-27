@@ -72,6 +72,13 @@ export class Dialogs {
 			</div>
 			<div class="dlg-actions"><button type="button" class="btn outline danger" id="mdeIaDel" hidden>${t('delete')}</button><button type="button" class="btn grey" value="cancel">${t('cancel')}</button><button type="submit" class="btn primary" id="mdeIaOk">${t('insert')}</button></div>
 		</form></dialog>
+		<dialog id="mdeLinkDlg" aria-labelledby="mdeLinkTitle"><form method="dialog">
+			<h2><span id="mdeLinkTitle"><i class="fa fa-link" aria-hidden="true"></i> ${t('link-title')}</span>${close}</h2>
+			<div class="field"><label for="mdeLinkTarget">${t('link-target')}</label><input type="text" id="mdeLinkTarget" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mdeLinkList" aria-describedby="mdeLinkHelp"><div class="help" id="mdeLinkHelp">${t('link-target-help')}</div>
+				<ul class="linklist" id="mdeLinkList" role="listbox" aria-label="${t('link-pages')}" hidden></ul></div>
+			<div class="field"><label for="mdeLinkText">${t('link-text')}</label><input type="text" id="mdeLinkText"></div>
+			<div class="dlg-actions"><button type="button" class="btn outline danger" id="mdeLinkDel" hidden>${t('link-remove')}</button><button type="button" class="btn grey" value="cancel">${t('cancel')}</button><button type="submit" class="btn primary" id="mdeLinkOk">${t('insert')}</button></div>
+		</form></dialog>
 		<dialog id="mdeMathDlg" aria-labelledby="mdeMathTitle"><form method="dialog">
 			<h2><span id="mdeMathTitle">${t('math-title')}</span>${close}</h2>
 			<div class="field"><label for="mdeMathSrc">${t('math-tex')}</label><textarea id="mdeMathSrc" rows="3" spellcheck="false"></textarea><div class="help">${t('math-help')}</div></div>
@@ -273,6 +280,7 @@ export class Dialogs {
 	editNode(view, pos, node) {
 		if (node.type === schema.nodes.figure) { this.openImage({ view, pos, node }); return true; }
 		if (node.type === schema.nodes.diagram) { this.openDiagram({ view, pos, node }); return true; }
+		if (node.type === schema.nodes.wikilink) { this.openLink({ view, from: pos, to: pos + node.nodeSize, target: node.attrs.page, text: node.attrs.label, page: true }); return true; }
 		if (node.type === schema.nodes.interactive && this.ed.markdownOptions(false).level >= 2) { this.openInteractive({ view, pos, node }); return true; }
 		if (node.type === schema.nodes.math_block || node.type === schema.nodes.math_inline) { this.editMath(view, pos); return true; }
 		return false;
@@ -348,6 +356,112 @@ export class Dialogs {
 			this.replaceTarget(target, md);
 		};
 		setTimeout(() => src.focus(), 0);
+	}
+
+	//
+	// Link (design step 5): one field for a web address or a page of this site, with the pages of the site as you type
+	// (private ones with *, and 'nieuwe pagina …'), the text of the link, and removing a link. The same in both views;
+	// in Opmaak it also opens when the author types [[.
+	//
+	currentLink() {
+		if (this.ed.editMode === 'markdown') {
+			const cm = this.ed.cm, { from, to, head } = cm.state.selection.main, line = cm.state.doc.lineAt(head);
+			for (const m of line.text.matchAll(/\[\[([^\]|]+?)(?:\|([^\]]*))?\]\]|\[([^\]]*)\]\(([^)\s]+)\)/g)) {
+				const a = line.from + m.index, z = a + m[0].length;
+				if (a <= head && head <= z) return { from: a, to: z, target: m[1] ? m[1].trim() : m[4], text: m[1] ? (m[2] || '') : m[3], page: !!m[1] };
+			}
+			return { from, to, target: '', text: cm.state.sliceDoc(from, to) };
+		}
+		const v = this.ed.activePm(), sel = v.state.selection;
+		if (sel.node?.type === schema.nodes.wikilink) return { view: v, from: sel.from, to: sel.to, target: sel.node.attrs.page, text: sel.node.attrs.label, page: true };
+		const $pos = v.state.doc.resolve(sel.from), link = schema.marks.link.isInSet($pos.marks());
+		if (link) {
+			let from = sel.from, to = sel.from;
+			const parent = $pos.parent, start = $pos.start();
+			parent.forEach((child, offset) => {
+				if (!link.isInSet(child.marks)) return;
+				const a = start + offset, z = a + child.nodeSize;
+				if (a <= sel.from && sel.from <= z) { from = Math.min(from, a); to = Math.max(to, z); }
+			});
+			return { view: v, from, to, target: link.attrs.href, text: v.state.doc.textBetween(from, to), mark: true };
+		}
+		return { view: v, from: sel.from, to: sel.to, target: '', text: v.state.doc.textBetween(sel.from, sel.to) };
+	}
+
+	openLink(target = this.currentLink()) {
+		const d = this.open('mdeLinkDlg');
+		const input = $('#mdeLinkTarget', d), text = $('#mdeLinkText', d), list = $('#mdeLinkList', d);
+		const editing = !!(target.page || target.mark || (this.ed.editMode === 'markdown' && target.target));
+		input.value = target.target || '';
+		text.value = target.text || '';
+		$('#mdeLinkDel', d).hidden = !editing;
+		$('#mdeLinkOk', d).textContent = this.t(editing ? 'update' : 'insert');
+		const isAddress = value => /^(https?:\/\/|mailto:|\/|#)/i.test(value.trim()) || /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(value.trim());
+		let items = [], index = -1;
+		const show = () => {
+			const q = input.value.trim();
+			const lower = q.replace(/[A-Z]+/g, c => c.toLowerCase());
+			items = q && isAddress(q) ? [] : (this.ed.cfg.pages || []).filter(([name]) => name.replace(/[A-Z]+/g, c => c.toLowerCase()).includes(lower)).slice(0, 10).map(([name, priv]) => ({ name, label: name + (priv ? ' *' : '') }));
+			if (q && !isAddress(q) && !items.some(x => x.name.replace(/[A-Z]+/g, c => c.toLowerCase()) === lower)) items.push({ name: q, label: this.t('page-new', { name: q }) });
+			index = -1;
+			list.innerHTML = items.map((x, i) => `<li role="option" id="mdeLink${i}" data-i="${i}" aria-selected="false">${esc(x.label)}</li>`).join('');
+			list.hidden = !items.length;
+			input.setAttribute('aria-expanded', String(!!items.length));
+			input.removeAttribute('aria-activedescendant');
+		};
+		const choose = i => { input.value = items[i].name; list.hidden = true; input.setAttribute('aria-expanded', 'false'); text.focus(); };
+		const move = dir => {
+			if (!items.length) return;
+			index = (index + dir + items.length) % items.length;
+			for (const o of list.children) o.setAttribute('aria-selected', String(+o.dataset.i === index));
+			input.setAttribute('aria-activedescendant', 'mdeLink' + index);
+			list.children[index]?.scrollIntoView({ block: 'nearest' });
+		};
+		input.oninput = show;
+		input.onkeydown = e => {
+			if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); move(e.key === 'ArrowDown' ? 1 : -1); }
+			else if (e.key === 'Enter' && index >= 0 && !list.hidden) { e.preventDefault(); choose(index); }
+		};
+		list.onmousedown = e => { e.preventDefault(); const o = e.target.closest('[data-i]'); if (o) choose(+o.dataset.i); };
+		show();
+		$('#mdeLinkDel', d).onclick = () => { d.close(); this.applyLink(target, null, ''); };
+		d.querySelector('form').onsubmit = e => {
+			e.preventDefault();
+			const value = input.value.trim();
+			if (!value) { input.focus(); return; }
+			d.close();
+			this.applyLink(target, isAddress(value) ? { href: /^[\w-]+(\.[\w-]+)+/.test(value) && !/^https?:/i.test(value) ? 'https://' + value : value } : { page: value }, text.value.trim());
+		};
+		setTimeout(() => { input.focus(); input.select(); }, 0);
+	}
+
+	//
+	// Puts the link in the text: a page as [[page|text]] (a wikilink in Opmaak), an address as [text](address) (the link
+	// mark); without a link, only the text stays.
+	//
+	applyLink(target, link, label) {
+		if (this.ed.editMode === 'markdown') {
+			const cm = this.ed.cm;
+			const shown = label || (link?.page ? '' : link?.href) || target.text || '';
+			const insert = !link ? (label || target.text || '') : link.page ? `[[${link.page}${label && label !== link.page ? '|' + label : ''}]]` : `[${shown}](${link.href})`;
+			cm.dispatch({ changes: { from: target.from, to: target.to, insert }, selection: { anchor: target.from + insert.length } });
+			return cm.focus();
+		}
+		const v = target.view, tr = v.state.tr, s = schema;
+		if (target.page || !link || link.page) {
+			const content = label || target.text;
+			const node = link?.page ? s.nodes.wikilink.create({ page: link.page, anchor: '', label: label && label !== link.page ? label : '' }) : content ? s.text(content) : null;
+			if (node) tr.replaceWith(target.from, target.to, node);
+			else tr.delete(target.from, target.to);
+			if (!link && target.mark) { tr.removeMark(target.from, target.from + (content || '').length, s.marks.link); }
+		}
+		else {
+			const mark = s.marks.link.create({ href: link.href });
+			const content = label || target.text || link.href;
+			tr.replaceWith(target.from, target.to, s.text(content, [mark]));
+		}
+		v.dispatch(tr.scrollIntoView());
+		v.focus();
 	}
 
 	//

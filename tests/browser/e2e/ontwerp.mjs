@@ -83,6 +83,51 @@ export default async function (t) {
 		await command(page, 'nl/Start', 'mdPreferences', JSON.stringify({ mode: 'visual' }));
 	});
 
+	t.test('Opmaak: ⌘K links selected text to a page of the site, chosen from the list', async () => {
+		await setText('Lees het verslag.\n');
+		await editor(() => { const v = window.hyphaMdeditor.editor.pm; const sel = v.state.selection.constructor; v.dispatch(v.state.tr.setSelection(sel.create(v.state.doc, 10, 17))); v.focus(); });
+		await page.keyboard.press('Meta+k');
+		await page.waitForSelector('#mdeLinkDlg[open]');
+		assert(await page.inputValue('#mdeLinkText') === 'verslag', 'text not prefilled');
+		await page.fill('#mdeLinkTarget', 'Sta');
+		await page.waitForSelector('#mdeLinkList li');
+		await page.keyboard.press('ArrowDown');
+		await page.keyboard.press('Enter');
+		assert(await page.inputValue('#mdeLinkTarget') === 'Start', 'page not chosen');
+		await page.click('#mdeLinkOk');
+		await page.waitForTimeout(150);
+		const text = await editor(() => window.hyphaMdeditor.editor.fields.text);
+		assert(text.startsWith('Lees het [[Start|verslag]].'), 'text: ' + text);
+	});
+
+	t.test('Opmaak: a web address becomes a link, and the link can be removed', async () => {
+		await setText('Lees het verslag.\n');
+		await editor(() => { const v = window.hyphaMdeditor.editor.pm; const sel = v.state.selection.constructor; v.dispatch(v.state.tr.setSelection(sel.create(v.state.doc, 10, 17))); v.focus(); });
+		await page.keyboard.press('Meta+k');
+		await page.fill('#mdeLinkTarget', 'example.org/verslag');
+		await page.click('#mdeLinkOk');
+		await page.waitForTimeout(150);
+		assert((await editor(() => window.hyphaMdeditor.editor.fields.text)).startsWith('Lees het [verslag](https://example.org/verslag).'), 'address');
+		await editor(() => { const v = window.hyphaMdeditor.editor.pm; v.dispatch(v.state.tr.setSelection(v.state.selection.constructor.near(v.state.doc.resolve(12)))); v.focus(); });
+		await page.keyboard.press('Meta+k');
+		await page.waitForSelector('#mdeLinkDel:not([hidden])');
+		await page.click('#mdeLinkDel');
+		await page.waitForTimeout(150);
+		assert((await editor(() => window.hyphaMdeditor.editor.fields.text)).startsWith('Lees het verslag.'), 'not removed: ' + await editor(() => window.hyphaMdeditor.editor.fields.text));
+	});
+
+	t.test('Opmaak: typing [[ opens the list of pages', async () => {
+		await setText('Zie ook \n');
+		await editor(() => { const v = window.hyphaMdeditor.editor.pm; v.dispatch(v.state.tr.setSelection(v.state.selection.constructor.near(v.state.doc.resolve(9)))); v.focus(); });
+		await page.keyboard.type('[[');
+		await page.waitForSelector('#mdeLinkDlg[open]');
+		await page.fill('#mdeLinkTarget', 'Nieuwe proefpagina');
+		await page.click('#mdeLinkOk');
+		await page.waitForTimeout(150);
+		const text = await editor(() => window.hyphaMdeditor.editor.fields.text);
+		assert(text.includes('[[Nieuwe proefpagina]]') && !text.includes('\\['), 'text: ' + text);
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

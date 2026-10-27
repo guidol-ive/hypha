@@ -487,3 +487,9 @@ mde-page-gone	Deze pagina bestaat niet meer. Je tekst staat nog in de editor: ko
 mde-error-page-gone	Deze pagina is intussen hernoemd of verwijderd.	This page was renamed or deleted meanwhile.
 mde-paste-seen	gezien	seen
 mde-status-retracted	teruggetrokken	withdrawn
+mde-link-title	Link	Link
+mde-link-target	Webadres of pagina	Address or page
+mde-link-target-help	Typ een webadres (https://…) of zoek een pagina van deze site.	Type a web address (https://…) or search a page of this site.
+mde-link-text	Tekst van de link (leeg: de naam van de pagina of het adres)	Text of the link (empty: the name of the page or the address)
+mde-link-remove	Link weghalen	Remove link
+mde-link-pages	Pagina's van deze site	Pages of this site

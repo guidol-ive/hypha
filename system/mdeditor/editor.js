@@ -460,6 +460,15 @@ export class Editor {
 				handlePaste: (pv, event) => this.pasteIntoVisual(pv, event),
 				handleDrop: (pv, event) => this.dropFile(event),
 				handleDoubleClickOn: (pv, pos, node) => this.dialogs.editNode(pv, pos, node),
+				//
+				// [[ opens the link window with the pages of the site, as in the Markdown view (design step 5).
+				//
+				handleTextInput: (pv, from, to, text) => {
+					if (text !== '[' || from < 1 || pv.state.doc.textBetween(from - 1, from) !== '[') return false;
+					pv.dispatch(pv.state.tr.delete(from - 1, to));
+					setTimeout(() => this.dialogs.openLink(this.dialogs.currentLink()), 0);
+					return true;
+				},
 			});
 			v.parsed = parsed;
 			v.field = field;
@@ -1194,14 +1203,7 @@ export class Editor {
 				v.dispatch(v.state.tr.replaceSelectionWith(node));
 				return this.dialogs.editMath(v, v.state.selection.from - 1);
 			}
-			case 'link': {
-				const url = prompt(this.t('link-prompt'), 'https://');
-				if (!url || url === 'https://') return;
-				const { from, to, empty } = v.state.selection;
-				const mark = mk.link.create({ href: url.trim() });
-				v.dispatch(empty ? v.state.tr.insert(from, schema.text(url.trim(), [mark])) : v.state.tr.addMark(from, to, mark));
-				return v.focus();
-			}
+			case 'link': return this.dialogs.openLink();
 		}
 	}
 
@@ -1244,11 +1246,7 @@ export class Editor {
 			case 'heading': prefix('### '); break;
 			case 'list': prefix('- '); break;
 			case 'math': wrap('$', '$', '\\tfrac{a}{b}'); break;
-			case 'link': {
-				const url = prompt(this.t('link-prompt'), 'https://');
-				if (url && url !== 'https://') wrap('[', `](${url.trim()})`, this.t('sample-link'));
-				break;
-			}
+			case 'link': return this.dialogs.openLink();
 			case 'quote': case 'callout': {
 				const head = act === 'quote' ? '> [!quote]' : '> [!info] ' + this.t('callout-title-sample');
 				const selected = cm.state.sliceDoc(sel.from, sel.to);

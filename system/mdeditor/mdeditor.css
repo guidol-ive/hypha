@@ -674,3 +674,7 @@
 .mdeditor .ia-view { max-height: 600px; }
 .mdeditor .dropzone > span { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; }
 .mdeditor .cm-missing, .mdeditor .cm-math-err { text-decoration: underline wavy var(--red); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.mdeditor .linklist { list-style: none; margin: 4px 0 0; padding: 4px; border: 1px solid #9AA1A6; border-radius: 4px; max-height: 220px; overflow-y: auto; background: #fff; }
+.mdeditor .linklist li { padding: 8px 10px; border-radius: 3px; cursor: pointer; }
+.mdeditor .linklist li[aria-selected=true], .mdeditor .linklist li:hover { background: var(--bluegreen-light); box-shadow: inset 3px 0 0 var(--bluegreen); }
+@media (pointer: coarse) { .mdeditor .linklist li { min-height: 44px; display: flex; align-items: center; } }

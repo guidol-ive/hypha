@@ -1013,6 +1013,12 @@
 		"mde-error-page-gone" => "Deze pagina is intussen hernoemd of verwijderd.",
 		"mde-paste-seen" => "gezien",
 		"mde-status-retracted" => "teruggetrokken",
+		"mde-link-title" => "Link",
+		"mde-link-target" => "Webadres of pagina",
+		"mde-link-target-help" => "Typ een webadres (https://…) of zoek een pagina van deze site.",
+		"mde-link-text" => "Tekst van de link (leeg: de naam van de pagina of het adres)",
+		"mde-link-remove" => "Link weghalen",
+		"mde-link-pages" => "Pagina's van deze site",
 		// End of the Markdown editor
 	);
 
