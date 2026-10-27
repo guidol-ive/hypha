@@ -1,7 +1,34 @@
 # Testing a change
 
-There is no automated suite in CI yet (NS-GLE-2026W44-hypha-009). Three checks can be run by hand;
-all three need only a container engine and Python 3.
+There is no automated suite in CI yet (NS-GLE-2026W44-hypha-009). The checks below run by hand; the
+first three need only a container engine and Python 3, the browser tests also Node.js on the
+development machine (never on the server).
+
+## 0. One command per PHP version
+
+```bash
+sh tests/run.sh 8.2               # unit tests: tests/HyphaRequestTest.php and tests/markdown/
+sh tests/run.sh 8.2 integratie    # plus the integration tests over HTTP (tests/integratie/)
+sh tests/run.sh 8.2 browser       # plus the browser tests in headless Chrome (tests/browser/)
+```
+
+Replace `8.2` by `8.3`, `8.4` or `8.5`. `ENGINE=podman` uses Podman instead of Docker.
+
+1. **Unit tests** (`tests/markdown/run.php`) run in the official `php:<version>-cli` image. The
+   runner is self-made, in the style of `HyphaRequestTest.php`; every PHP warning, notice or
+   deprecation fails the test that caused it. It ends with a line such as
+   `PHP 8.2.35: 120 tests, 120 passed, 0 failed`.
+2. **Integration tests** (`tests/integratie/run.sh`) build the image of
+   [`docs/container/Containerfile`](../../docs/container/Containerfile) once per version
+   (`hypha-md:php8.2`), start it with this source tree mounted read-only and a fresh fictional
+   site made by `tests/site/maak-site.php` (five test users, seven tags, all made up), and run
+   `tests/integratie/test_*.py` over HTTP. Afterwards every PHP message in the container log
+   fails the run, except the messages that already occur without the editor, listed in
+   `tests/integratie/bekende-meldingen.txt`.
+3. **Browser tests** (`tests/browser/run.sh`) start the same container and run
+   `tests/browser/run.mjs` with Playwright on the installed Google Chrome, headless: the unit
+   pages in `tests/browser/unit/` and the end-to-end tests in `tests/browser/e2e/`. Run
+   `npm install` in `tests/browser/` once.
 
 ## 1. Unit test of request parsing
 

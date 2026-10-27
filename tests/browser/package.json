@@ -1,0 +1,10 @@
+{
+	"name": "hypha-mdeditor-browser-tests",
+	"private": true,
+	"description": "Browser tests of the Markdown editor; development machine only, never on the server",
+	"type": "module",
+	"devDependencies": {
+		"axe-core": "4.10.2",
+		"playwright-core": "1.56.1"
+	}
+}

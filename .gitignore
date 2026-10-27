@@ -9,3 +9,7 @@
 DEBUG
 /data/themes/*/
 !/data/themes/default/
+tests/.werk/
+tests/browser/node_modules/
+tools/bundel/node_modules/
+__pycache__/

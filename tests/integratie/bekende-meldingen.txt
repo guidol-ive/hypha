@@ -1,0 +1,10 @@
+Using ${var} in strings is deprecated, use {$var} instead in /var/www/html/system/core/pages.php
+textpage::makeActionButton(): Implicitly marking parameter
+peer_reviewed_article::makeDiscussionActionButton(): Implicitly marking parameter
+peer_reviewed_article::makeActionButton(): Implicitly marking parameter
+peer_reviewed_article::discussionRender(): Implicitly marking parameter
+peer_reviewed_article::createCommentForm(): Implicitly marking parameter
+peer_reviewed_article::constructDiscussionFieldSuffix(): Implicitly marking parameter
+makeAction(): Implicitly marking parameter
+mailinglist::makeActionButton(): Implicitly marking parameter
+festivalpage::makeActionButton(): Implicitly marking parameter
