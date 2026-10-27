@@ -37,6 +37,27 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
    1. de bestaande code geeft op PHP 8.4 en 8.5 negen keer „Implicitly marking parameter … as nullable is deprecated” en op alle versies „Using ${var} in strings” in `pages.php`; die staan in `bekende-meldingen.txt` en zijn niet van de editor;
    2. Docker Desktop toonde soms de oude inhoud van een map die was weggehaald en opnieuw gemaakt; de proefsite krijgt daarom per run een nieuwe map in `/tmp/hypha-md-test/`.
 
+### T02 Server: Markdown naar XHTML en het filter (2026-10-27)
+
+1. Gebouwd:
+   1. `system/vendor/` met league/commonmark 2.10.4 (en zeven afhankelijkheden), masterminds/html5 2.12.0 en scrivo/highlight.php 9.18.1.10 met negen taaldefinities (tien talen: HTML en XML delen `xml`), een classmap-autoloader en `LICENSES/`; gemaakt met `sh tools/vendor/bijwerken.sh` (Composer in een container); 433 PHP-bestanden, 2,7 MB;
+   2. `system/core/markdown.php`: laden op aanvraag (`hypha_markdownLoad()`), paginanaam uit de titel, instellingen van de editor met standaardwaarden, vrijheidsniveau per rol;
+   3. `system/core/markdown/`: `HyphaMarkdown` (omgeving en volgorde van §13.5), `HyphaMarkdownSyntax` (kader en citaat, `:::`-kaders, paginalink, `==`, `++`, `^`, `~`, notities, figuur met bijschrift en plaatsing, formule, `[TOC]`, kop-id's), `HyphaMarkdownRenderers` en `HyphaFilter`;
+   4. `system/mdeditor/diagrammen.js`: de 36 sjablonen uit het prototype als module; `tests/fixtures/maak-tekeningen.mjs` tekent ze met Pele 1.10.1 en een set formules met Temml 0.14.0 tot `tekeningen.json`.
+2. Tests en uitkomsten (`php tests/markdown/run.php` in `php:8.2-cli` en `php:8.4-cli`):
+   1. filter: 25 van 25 aanvallen afgeweerd, 36 van 36 diagrammen heel (zelfde aantal elementen, `viewBox` aanwezig), alle formules heel, uitvoer laadt als XML;
+   2. Markdown: 31 tests, één per uitbreiding met een geval dat slaagt en een dat niet tot het element mag leiden; de zeven titels van §13.14 plus één randgeval; 18.000 woorden ruim binnen 1 seconde;
+   3. totaal na T02: 65 van 65 op PHP 8.2.35 en op PHP 8.4.27.
+
+### T03 Server: niveau 2 en HedgeDoc-notatie (2026-10-27)
+
+1. Gebouwd: ingesloten inhoud voor YouTube (via `youtube-nocookie.com`), Vimeo, OpenStreetMap, Datawrapper, Flourish, Infogram, Google Maps, Spotify, SoundCloud, Mixcloud, Internet Archive, Bandcamp, Scribd, DocumentCloud en PeerTube-instanties van de lijst; het interactieve blok als `<iframe sandbox="allow-scripts" srcdoc>` met een Content-Security-Policy in de `srcdoc`; HedgeDoc `:::`, `[TOC]`, `++`, `^`, `~`, `=200x150`, `{%youtube %}`, definitielijsten.
+2. Tests en uitkomsten: `tests/markdown/Level2Test.php`, 24 tests (elke dienst, onbekende host, niveau 1, interactief blok met en zonder beschrijving, eigen `<iframe>` van de auteur, niveau per rol); totaal 89 van 89 op PHP 8.2.35 en 8.4.27.
+
 ## Afwijkingen
 
-Nog geen.
+1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.
+2. **Plaatsing `{.klasse}` met een eigen kleine parser**, niet met de Attributes-extensie van league/commonmark (§13.4.2, punt 5). Die extensie kent ook blokattributen op een eigen regel, die markdown-it niet zo kent; met een eigen parser alleen direct achter een afbeelding of op de regel van een codeblok zijn server en browser gelijk.
+3. **Kop-id's beginnen met `kop-`** (`kop-de-eerste-zetels`), omdat Hypha elementen als `main` en `menu` op id zoekt en een tussenkop „Menu” anders botst.
+4. **`system/vendor/` is 2,7 MB** in plaats van de geschatte 1,3 MB (§13.12): vooral league/commonmark zelf (1,4 MB met alle extensies).
+5. **Temml 0.14.0** zoals in het prototype; highlight.php kent HTML als `xml`, dus tien talen met negen definities.

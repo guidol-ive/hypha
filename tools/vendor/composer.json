@@ -1,0 +1,17 @@
+{
+	"name": "hypha/vendor",
+	"description": "PHP libraries of the Markdown editor, installed on the development machine only and shipped in system/vendor/",
+	"license": "proprietary",
+	"require": {
+		"league/commonmark": "^2.7",
+		"masterminds/html5": "^2.9",
+		"scrivo/highlight.php": "^9.18"
+	},
+	"config": {
+		"vendor-dir": "../../system/vendor",
+		"platform": { "php": "8.2.0" },
+		"optimize-autoloader": true,
+		"classmap-authoritative": true,
+		"sort-packages": true
+	}
+}
