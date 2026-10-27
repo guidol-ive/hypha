@@ -124,6 +124,30 @@ export default async function (t) {
 		assert(after.text === before.text && after.title === before.title && after.method === before.method, 'import equals export');
 	});
 
+	t.test('second opening with the files in the cache: usable within 3 seconds (requirement 4)', async () => {
+		const times = [];
+		for (let i = 0; i < 3; i++) {
+			const t0 = Date.now();
+			await page.reload();
+			await page.waitForFunction(() => window.hyphaMdeditor?.editor?.ready, null, { timeout: 10000 });
+			times.push(Date.now() - t0);
+		}
+		globalThis.mdeOpenTimes = times;
+		assert(Math.max(...times) < 3000, 'opening took ' + times.join(', ') + ' ms');
+	});
+
+	t.test('broken Frontmatter: no switch and no save, nothing lost (review finding)', async () => {
+		await setMode('markdown');
+		await page.evaluate(() => { const e = window.hyphaMdeditor.editor; const d = e.cm.state.doc.toString(); const i = d.indexOf('auteur:'); e.cm.dispatch({ changes: [{ from: i, to: i + 7, insert: 'auteur' }, { from: d.length, insert: '\n\nNieuwe alinea na de fout.' }] }); });
+		await page.waitForTimeout(100);
+		await page.click('[data-edit="visual"]');
+		const doc = await page.evaluate(() => window.hyphaMdeditor.editor.cm.state.doc.toString());
+		assert(doc.includes('Nieuwe alinea na de fout.') && await page.evaluate(() => window.hyphaMdeditor.editor.editMode) === 'markdown', 'switched or lost');
+		await page.evaluate(() => { const e = window.hyphaMdeditor.editor; const d = e.cm.state.doc.toString(); const i = d.indexOf('\nauteur') + 1; e.cm.dispatch({ changes: { from: i, to: i + 6, insert: 'auteur:' } }); });
+		await page.waitForTimeout(100);
+		assert((await ed()).text.includes('Nieuwe alinea na de fout.'), 'paragraph kept after repair');
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

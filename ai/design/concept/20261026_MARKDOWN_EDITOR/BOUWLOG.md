@@ -148,6 +148,16 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 2. Tests en uitkomsten: alle 26 Mermaid-blokken tekenen met Pele 1.10.1 (controle van de subagent, met een opzettelijk kapot blok als tegenproef); eigen controle: 17 pagina's, alle met Frontmatter, geen ongenummerde lijsten buiten codeblokken, alle relatieve links bestaan.
 3. Bevindingen van de subagent voor later: het standaardthema heeft geen opmaak voor kaders, plaatsing van figuren, codekleuren en de diagramkleuren in de leesweergave; een paar knoppen van Hypha hebben geen Nederlandse tekst („reincarnate”, „theme”).
 
+### Review van de editor (T08, 2026-10-27)
+
+1. Een subagent beoordeelde de JavaScript met eigen proeven in de browser. Verwerkt:
+   1. **kritiek**: de editor startte niet bij een tweede bezoek: `HTMLDocument` sorteert `<head>`, waardoor de import map na de module kwam; zodra de modules in de cache staan, faalt het laden. Import map en start staan nu in de body. Ook de time-outs bij de toegankelijkheidstest kwamen hiervandaan;
+   2. **dataverlies**: tekst die tijdens het opslaan werd getypt, gold als opgeslagen (het concept werd gewist); nu geldt alleen wat is verstuurd als opgeslagen;
+   3. **dataverlies**: met kapotte Frontmatter bouwde wisselen de Markdown opnieuw op uit de oude waarden; nu weigert de editor wisselen en opslaan tot de vaste velden kloppen, met een melding;
+   4. een weggehaalde vaste eigenschap wordt nu leeg; een ingevoegd blok krijgt altijd een witregel ervoor en erna (anders werd `---` onder een alinea een kop); een nieuwe tabel in Markdown zet de cursor in de eerste kopcel; Tab in de laatste cel van een tabel in Opmaak voegt een rij toe; id's van de editor in de HTML van een auteur worden in het voorbeeld weggehaald; de link *Naar de tekst* wijst naar de actieve weergave; *bovenaan* alleen bij artikelen; *ongedaan maken* werkt ook in Markdown; *Naast elkaar* vanaf 1024 pt.
+2. Niet verwerkt (open punten): de samenvatting van een dichtgevouwen blok blijft leeg; de werkbalkknop heet niet *Beeld bewerken* of *Diagram bewerken* als de cursor in een foto of diagram staat; een webadres plakken over geselecteerde tekst maakt nog geen link; de titel van een kader wordt in Opmaak met een invoervenster gevraagd in plaats van geselecteerd; geen werkbalk boven het schermtoetsenbord via `visualViewport`; het diagram in het voorbeeld heeft geen `role="img"`; de `srcdoc` van een interactief blok in het voorbeeld heeft geen CSP; het voorbeeld laat op niveau 1 ook HTML zien die de server weghaalt.
+3. Tests na de herstelling, op PHP 8.4 in de container: editor 14 van 14 (nieuw: drie keer opnieuw openen met de cache warm, en kapotte Frontmatter), toegankelijkheid 11 van 11 (axe-core 4.10.2: 0 overtredingen in 9 toestanden; aanraakvlakken ≥ 44 pt op 393 pt breed, geen horizontaal scrollen), plakken 9 van 9, nieuwe pagina 4 van 4.
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.

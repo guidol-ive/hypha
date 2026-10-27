@@ -982,6 +982,8 @@
 		"mde-new-remember" => "onthoud mijn keuze",
 		"mde-new-pagename" => "paginanaam",
 		"mde-suggestions" => "suggesties",
+		"mde-save-front-error" => "Herstel eerst de vaste velden bovenaan (zie de checklist); daarna kun je opslaan.",
+		"mde-switch-front-error" => "Herstel eerst de vaste velden bovenaan (zie de checklist); daarna kun je wisselen.",
 		// End of the Markdown editor
 	);
 

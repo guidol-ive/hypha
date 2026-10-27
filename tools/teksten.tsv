@@ -455,3 +455,5 @@ mde-new-markdown-help	met tekens als ### en **	with characters such as ### and *
 mde-new-remember	onthoud mijn keuze	remember my choice
 mde-new-pagename	paginanaam	page name
 mde-suggestions	suggesties	suggestions
+mde-save-front-error	Herstel eerst de vaste velden bovenaan (zie de checklist); daarna kun je opslaan.	First repair the fixed fields at the top (see the checklist); then you can save.
+mde-switch-front-error	Herstel eerst de vaste velden bovenaan (zie de checklist); daarna kun je wisselen.	First repair the fixed fields at the top (see the checklist); then you can switch.

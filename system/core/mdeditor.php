@@ -63,7 +63,7 @@
 		//
 		// Only once: the import map must come before the module that uses it.
 		//
-		if ($head->findXPath('script[@type="importmap"]')->length) return;
+		if ($html->findXPath('//script[@type="importmap"]')->length) return;
 		$version = hypha_mdeditorVersion();
 		$meta = $head->createChild('meta');
 		$meta->setAttribute('name', 'robots');
@@ -73,19 +73,25 @@
 		$html->linkStyle('system/mdeditor/mdeditor.css?v=' . $version);
 		global $hyphaUrl;
 		//
+		// The import map and the start module go into the body, in that order: HTMLDocument sorts the children of
+		// <head> (scripts with src first), which would put the map after the module; with the modules in the cache the
+		// editor then does not start (found in review, 2026-10-27).
+		//
+		$body = $html->getElementById('mdeditor') ?? $html->findOneXPath('body');
+		//
 		// The addresses of an import map must be absolute or start with /, ./ or ../; a bare path is refused.
 		//
 		$imports = [];
 		foreach (hypha_mdeditorVendorFiles() as $name => $file) $imports[$name] = $hyphaUrl . 'system/mdeditor/vendor/' . $file;
-		$map = $head->createChild('script');
+		$map = $body->createChild('script');
 		$map->setAttribute('type', 'importmap');
 		$map->appendText(json_encode(['imports' => $imports], JSON_UNESCAPED_SLASHES));
 		foreach (['codemirror', 'prosemirror', 'markdown-it'] as $name) if (isset($imports[$name])) {
-			$link = $head->createChild('link');
+			$link = $body->createChild('link');
 			$link->setAttribute('rel', 'modulepreload');
 			$link->setAttribute('href', $imports[$name]);
 		}
-		$start = $head->createChild('script');
+		$start = $body->createChild('script');
 		$start->setAttribute('type', 'module');
 		$start->setAttribute('src', 'system/mdeditor/start.js?v=' . $version);
 	}
@@ -352,4 +358,28 @@
 </script>
 <?php
 		$html->writeScript(ob_get_clean());
+	}
+
+	/*
+		Function: hypha_mdeditorReader
+		The reading view of an article or page with a Markdown source (design sections 12.10 and 13.15): the language of
+		the page on <html>, a meta description from the excerpt, and the style sheet for the elements of Hypha-Markdown.
+		The layout of the theme stays as it is (decision 20).
+
+		Parameters:
+		$language - language of the page
+		$description - the excerpt as plain text, or ''
+	*/
+	function hypha_mdeditorReader(string $language, string $description) {
+		global $hyphaHtml;
+		$root = $hyphaHtml->documentElement;
+		if ($root && !$root->getAttribute('lang')) $root->setAttribute('lang', $language);
+		$head = $hyphaHtml->findOneXPath('head');
+		$description = trim(preg_replace('/\s+/u', ' ', $description));
+		if ($description !== '' && !$head->findXPath('meta[@name="description"]')->length) {
+			$meta = $head->createChild('meta');
+			$meta->setAttribute('name', 'description');
+			$meta->setAttribute('content', mb_substr($description, 0, 300));
+		}
+		$hyphaHtml->linkStyle('system/mdeditor/lezer.css?v=' . hypha_mdeditorVersion());
 	}

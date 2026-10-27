@@ -987,6 +987,8 @@
 		"mde-new-remember" => "remember my choice",
 		"mde-new-pagename" => "page name",
 		"mde-suggestions" => "suggestions",
+		"mde-save-front-error" => "First repair the fixed fields at the top (see the checklist); then you can save.",
+		"mde-switch-front-error" => "First repair the fixed fields at the top (see the checklist); then you can switch.",
 		// End of the Markdown editor
 	);
 

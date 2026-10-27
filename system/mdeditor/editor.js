@@ -80,7 +80,7 @@ export class Editor {
 		this.createMarkdownView();
 		this.createVisualViews();
 		this.setEditMode(this.editMode, false);
-		this.setViewMode(window.innerWidth >= 1024 ? 'write' : 'write');
+		this.setViewMode('write');
 		this.applySplit(this.split);
 		this.restoreDraft();
 		this.refresh();
@@ -262,8 +262,8 @@ export class Editor {
 			this.frontError = null;
 			const f = front.fields;
 			if (this.article) {
-				for (const k of ['title', 'author', 'excerpt', 'section', 'image', 'imageAlt', 'imageCaption', 'imageCredit', 'method', 'sources']) if (k in f) this.fields[k] = String(f[k] ?? '');
-				if (f.tags) this.fields.tags = f.tags.map(String);
+				for (const k of ['title', 'author', 'excerpt', 'section', 'image', 'imageAlt', 'imageCaption', 'imageCredit', 'method', 'sources']) this.fields[k] = String(f[k] ?? '');
+				this.fields.tags = (f.tags || []).map(String);
 				this.fields.frontmatter = front.extra;
 				this.unknownFront = front.unknown;
 			}
@@ -294,7 +294,7 @@ export class Editor {
 				'Mod-b': commands.toggleMark(marks.strong), 'Mod-i': commands.toggleMark(marks.em),
 				'Mod-k': () => (this.action('link'), true), 'Mod-s': () => (this.save(), true),
 				'Enter': schemaList.splitListItem(schema.nodes.list_item), 'Mod-[': schemaList.liftListItem(schema.nodes.list_item), 'Mod-]': schemaList.sinkListItem(schema.nodes.list_item),
-				'Tab': tables.goToNextCell(1), 'Shift-Tab': tables.goToNextCell(-1), 'Shift-Enter': (st, dispatch) => { if (dispatch) dispatch(st.tr.replaceSelectionWith(schema.nodes.hard_break.create()).scrollIntoView()); return true; },
+				'Tab': (st, dispatch, v) => tables.goToNextCell(1)(st, dispatch) || (tables.isInTable(st) && tables.addRowAfter(st, dispatch) && tables.goToNextCell(1)(v.state, v.dispatch)), 'Shift-Tab': tables.goToNextCell(-1), 'Shift-Enter': (st, dispatch) => { if (dispatch) dispatch(st.tr.replaceSelectionWith(schema.nodes.hard_break.create()).scrollIntoView()); return true; },
 			}),
 			keymap.keymap(commands.baseKeymap),
 			dropcursor.dropCursor(), gapcursor.gapCursor(), tables.tableEditing(),
@@ -425,11 +425,16 @@ export class Editor {
 	// Switching between Opmaak and Markdown (BR-75): the source does not change, the cursor keeps its place.
 	//
 	setEditMode(mode, keepCaret = true) {
+		//
+		// With broken Frontmatter the Markdown stays as typed: switching would rebuild it from the last good values.
+		//
+		if (mode === 'visual' && this.frontError && this.ready) { this.toast(this.t('switch-front-error')); return; }
 		const caret = keepCaret && this.ready ? this.captureCaret() : null;
 		if (mode === 'visual') this.loadVisual();
 		else this.loadMarkdown();
 		this.editMode = mode;
 		this.root.classList.toggle('mode-visual', mode === 'visual');
+		$('.skip', this.root).setAttribute('href', mode === 'visual' ? '#mdeVisual' : '#mdeText');
 		this.root.classList.toggle('mode-markdown', mode === 'markdown');
 		for (const b of this.root.querySelectorAll('[data-edit]')) b.setAttribute('aria-pressed', String(b.dataset.edit === mode));
 		$('.toolbar', this.root).classList.toggle('visual', mode === 'visual');
@@ -637,7 +642,7 @@ export class Editor {
 	// Preview in the style of the article page (design step 7 and 9).
 	//
 	setViewMode(mode) {
-		if (mode === 'side' && window.innerWidth < 700) mode = 'preview';
+		if (mode === 'side' && window.innerWidth < 1024) mode = 'preview';
 		this.viewMode = mode;
 		const panes = $('#mdePanes', this.root);
 		panes.className = 'panes ' + { write: 'write-only', preview: 'preview-only', side: 'side' }[mode];
@@ -680,6 +685,10 @@ export class Editor {
 			if (!hosts.includes(host)) f.remove();
 			else f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-presentation');
 		}
+		//
+		// An author must not take over the ids of the editor (mde...): those elements would be found first.
+		//
+		for (const el of t.content.querySelectorAll('[id^="mde"], [id^="MDE"]')) el.removeAttribute('id');
 		for (const a of t.content.querySelectorAll('a[href^="http"]')) { a.classList.add('ext'); a.title = this.t('external-link', { url: a.getAttribute('href') }); a.rel = 'noopener nofollow'; a.target = '_blank'; }
 		return t.innerHTML;
 	}
@@ -928,6 +937,10 @@ export class Editor {
 		cm.focus();
 	}
 
+	undoMarkdown() {
+		CM.commands.undo(this.cm);
+	}
+
 	markdownToNodes(markdown) {
 		return pmParse(markdown, this.markdown).doc.content;
 	}
@@ -939,9 +952,18 @@ export class Editor {
 		if (this.editMode === 'markdown') {
 			const cm = this.cm;
 			const line = cm.state.doc.lineAt(cm.state.selection.main.head);
+			const doc = cm.state.doc;
 			const atEmpty = line.text.trim() === '';
-			const insert = (atEmpty ? '' : '\n\n') + markdown + '\n';
-			cm.dispatch({ changes: { from: atEmpty ? line.from : line.to, to: atEmpty ? line.to : line.to, insert }, selection: { anchor: (atEmpty ? line.from : line.to) + insert.length } });
+			const previous = line.number > 1 ? doc.line(line.number - 1).text.trim() : '';
+			//
+			// A block always gets a blank line before and after, or it would merge with the paragraph next to it.
+			//
+			const before = atEmpty ? (previous ? '\n' : '') : '\n\n';
+			const next = line.number < doc.lines ? doc.line(line.number + 1).text.trim() : '';
+			const insert = before + markdown + (next ? '\n\n' : '\n');
+			const from = atEmpty ? line.from : line.to;
+			const cursor = /^\| /.test(markdown) ? from + before.length + 2 : from + insert.length;
+			cm.dispatch({ changes: { from, to: line.to, insert }, selection: { anchor: cursor } });
 			cm.focus();
 			return;
 		}
@@ -1064,11 +1086,16 @@ export class Editor {
 		try {
 			if (this.editMode === 'markdown') this.onMarkdownChange();
 			const view = this.cfg.commands.view || 'edit';
-			const fields = this.article ? this.fields : { title: this.fields.title, text: this.fields.text, private: !!this.fields.private, language: this.fields.language };
+			if (this.frontError) { this.toast(this.t('save-front-error')); return; }
+			//
+			// What is sent is what counts as saved: text typed while the request runs stays unsaved (found in review).
+			//
+			const snapshot = JSON.stringify(this.fields);
+			const fields = this.article ? JSON.parse(snapshot) : { title: this.fields.title, text: this.fields.text, private: !!this.fields.private, language: this.fields.language };
 			const result = await this.post(`${this.cfg.page.language}/${this.cfg.page.name}/${view}`, { command: this.cfg.commands.save, md_fields: JSON.stringify(fields), md_renders: JSON.stringify(await this.renders()), ajax: '1' }, true);
 			window.mdeLastSave = { ms: performance.now() - started, server: result.ms };
 			if (!result.ok) { this.toast((result.errors || []).join(' ') || this.t('save-failed')); return; }
-			this.saved = JSON.stringify(this.fields);
+			this.saved = snapshot;
 			this.storeDraft();
 			this.updateChip();
 			if (result.checks) { this.cfg.checks = result.checks; this.cfg.checkStatus = result.checkStatus; }

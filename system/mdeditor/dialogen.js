@@ -23,7 +23,7 @@ export class Dialogs {
 
 	template() {
 		const t = k => esc(this.t(k));
-		const place = (name, top) => `<div class="place" role="radiogroup" aria-label="${t('placement')}">` + [...PLACEMENTS, ...(top ? ['bovenaan'] : [])].map((p, i) =>
+		const place = (name, top) => `<div class="place" role="radiogroup" aria-label="${t('placement')}">` + [...PLACEMENTS, ...(top && this.ed.article ? ['bovenaan'] : [])].map((p, i) =>
 			`<label title="${t('placement-' + p + '-help')}"><input type="radio" name="${name}" value="${p}"${i === 0 ? ' checked' : ''}><span class="pic pic-${p}" aria-hidden="true"></span>${t('placement-' + p)}</label>`).join('') + '</div>';
 		const close = `<button type="button" class="dlg-close" value="cancel" aria-label="${t('close')}" title="${t('close')}">✕</button>`;
 		return `
@@ -202,7 +202,7 @@ export class Dialogs {
 	removeTarget(target) {
 		if (target.node && target.view) target.view.dispatch(target.view.state.tr.delete(target.pos, target.pos + target.node.nodeSize));
 		else if (target.from !== undefined) this.ed.cm.dispatch({ changes: { from: target.from, to: target.to, insert: '' } });
-		this.ed.toast(this.t('deleted'), this.t('undo'), () => this.ed.editMode === 'visual' ? PM.history.undo(target.view.state, target.view.dispatch) : null);
+		this.ed.toast(this.t('deleted'), this.t('undo'), () => this.ed.editMode === 'visual' ? PM.history.undo(target.view.state, target.view.dispatch) : this.ed.undoMarkdown());
 	}
 
 	parseBlocks(markdown) {

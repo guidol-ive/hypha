@@ -168,6 +168,7 @@
 		protected function mdDefaultView(HyphaRequest $request) {
 			if ($this->mdIsEmpty() && isUser()) return ['redirect', $this->constructFullPath($this->pagename . '/' . self::PATH_EDIT)];
 			$this->html->writeToElement('langList', hypha_indexLanguages($this->pageListNode, $this->language));
+			hypha_mdeditorReader($this->language, '');
 			$version = isUser() ? $this->mdVersion($request) : '';
 			$main = $this->html->getElementById('main');
 			$scratch = new Xml();

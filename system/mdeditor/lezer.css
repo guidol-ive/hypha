@@ -1,0 +1,31 @@
+/*
+//
+// The reading view of an article or page with a Markdown source: the elements of Hypha-Markdown that a theme may not
+// style yet (callouts, quotes, figures with placement, diagrams, formulas, code, footnotes). A theme overrides these
+// with its own rules; the colours are CSS variables with the accessible defaults of the design (section 2.5).
+//
+*/
+:root { --mde-action: #0B7285; --mde-accent: #fe9900; --mde-box: #E3F3F5; --mde-line: #0c8599; --mde-muted: #505458; --mde-code-bg: #F5F7F8; }
+.callout { margin: 1.5em 0; padding: .8em 1.1em; background: var(--mde-box); border-left: 4px solid var(--mde-line); border-radius: 3px; }
+.callout-title { font-weight: 700; margin: 0 0 .4em; }
+blockquote.callout.quote { background: none; border: 0; border-top: 3px solid var(--mde-accent); padding: .6em 0 0; font-style: italic; font-size: 1.25em; }
+figure { margin: 1.5em 0; }
+figure img, figure svg { max-width: 100%; height: auto; }
+figure.breed { width: 100%; }
+figure.in-de-tekst { max-width: 75%; }
+figure.klein-rechts { float: right; width: 40%; margin: .3em 0 1em 1.5em; }
+figcaption { font-size: .9em; color: var(--mde-muted); margin-top: .4em; }
+figure.diagram details summary { cursor: pointer; font-size: .85em; color: var(--mde-action); }
+figure.interactief iframe, figure.embed iframe { width: 100%; border: 0; }
+.math-block { overflow-x: auto; margin: 1em 0; }
+pre.code { background: var(--mde-code-bg); padding: .8em 1em; overflow-x: auto; border-radius: 3px; }
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in { color: #8A3B00; }
+.hljs-string, .hljs-attr { color: #1F6B2E; }
+.hljs-comment { color: #5F656A; font-style: italic; }
+.hljs-number, .hljs-literal, .hljs-variable { color: #3A5FA8; }
+.hljs-title, .hljs-name, .hljs-tag { color: #0B7285; }
+section.footnotes { font-size: .9em; border-top: 1px solid #ddd; margin-top: 2em; }
+mark { background: #FFF1A8; }
+p.retracted { border-left: 4px solid #be0709; padding: .6em 1em; background: #FCEEEE; }
+nav.toc { background: var(--mde-code-bg); padding: .5em 1em; }
+@media (max-width: 600px) { figure.klein-rechts, figure.in-de-tekst { float: none; width: 100%; max-width: 100%; margin: 1em 0; } }

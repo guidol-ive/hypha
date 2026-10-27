@@ -285,6 +285,7 @@
 		protected function mdDefaultView(HyphaRequest $request) {
 			$article = $this->xml->findOneXPath('article');
 			if ($this->getStatus() === self::MD_STATUS_RETRACTED) {
+				hypha_mdeditorReader($this->language, '');
 				//
 				// The address keeps working, but search engines drop the page (BR-86).
 				//
@@ -301,6 +302,7 @@
 				return null;
 			}
 			$result = $this->defaultView($request);
+			hypha_mdeditorReader($this->language, $this->getExcerpt() ? $this->getExcerpt()->textContent : '');
 			if (!isUser()) return $result;
 			$status = $this->getStatus();
 			$role = $this->mdRole();
