@@ -185,6 +185,8 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 1. Gebouwd volgens §10.1, regel 2: een interactief blok zonder `{hoogte=…}` meldt zijn hoogte met `postMessage` (`HyphaMarkdown::REPORT_HEIGHT` in de `srcdoc`, het iframe krijgt `data-height="auto"`); `system/mdeditor/lezer.js` in de leesweergave en `followHeights()` in het voorbeeld en de dialoog luisteren alleen naar dat ene iframe en houden de hoogte tussen 50 en 4000 px. Met een vaste hoogte gebeurt er niets.
 2. Tests: `Level2Test` (met en zonder hoogte), `aanvullingen.mjs` (voorbeeld en leesweergave passen zich aan een blok van 900 px aan). De gouden dataset heeft geen interactieve blokken; dat is een gat in de dekking.
 3. Handleiding: uitleg over het interactieve blok in `04-artikel-schrijven.md`.
+4. Beeldvenster: de gekozen foto staat nu in het uploadvak (meteen bij het kiezen, nog voor de upload klaar is), met „andere foto” eronder; de opmaak daarvoor stond al in het prototype, de code vulde het vak niet.
+5. Schermafdrukken van de handleiding opnieuw gemaakt (plaatjes bij de plaatsing, *Meer* op de telefoon).
 
 ### Telefoon en http (2026-10-27, nacht)
 

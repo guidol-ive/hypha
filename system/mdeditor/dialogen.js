@@ -147,6 +147,7 @@ export class Dialogs {
 		$('#mdeImageOk', d).textContent = this.t(editing ? 'update' : 'insert');
 		$('#mdeImageDel', d).hidden = !editing;
 		f('mdeImageInfo').textContent = this.image.src ? this.image.src.split('/').pop() : '';
+		this.showImage(d, this.image.src ? this.ed.markdownOptions(false).imageSrc(this.image.src) : '');
 		const update = () => {
 			const alt = f('mdeImageAlt').value.trim();
 			const ok = !!this.image.src && !!alt;
@@ -189,8 +190,18 @@ export class Dialogs {
 		return `![${alt}](${this.image.src || '…'})${placement !== 'breed' ? `{.${placement}}` : ''}` + (caption ? `\n*${caption}*` : '');
 	}
 
+	//
+	// The chosen photo in the drop zone, so the author sees what goes in; without one the zone invites to choose.
+	//
+	showImage(d, url) {
+		const drop = $('#mdeDrop', d);
+		if (!drop.dataset.empty) drop.dataset.empty = drop.innerHTML;
+		drop.innerHTML = url ? `<span><img src="${esc(url)}" alt=""><small><i class="fa fa-upload" aria-hidden="true"></i> ${esc(this.t('field-image-other'))}</small></span>` : drop.dataset.empty;
+	}
+
 	async upload(file, d, update) {
 		const info = $('#mdeImageInfo', d);
+		this.showImage(d, URL.createObjectURL(file));
 		info.textContent = this.t('image-uploading', { file: file.name });
 		const body = new FormData();
 		body.append('uploadedfile', file);
@@ -202,7 +213,10 @@ export class Dialogs {
 			info.textContent = file.name;
 			if (!$('#mdeImageAlt', d).value) $('#mdeImageAlt', d).focus();
 		}
-		catch (e) { info.textContent = this.t('image-upload-failed') + (e.message !== 'upload' ? ' ' + e.message : ''); }
+		catch (e) {
+			info.textContent = this.t('image-upload-failed') + (e.message !== 'upload' ? ' ' + e.message : '');
+			this.showImage(d, this.image.src ? this.ed.markdownOptions(false).imageSrc(this.image.src) : '');
+		}
 		update();
 	}
 

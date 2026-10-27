@@ -672,3 +672,4 @@
 	.mdeditor .toolbar { overflow-x: visible; }
 }
 .mdeditor .ia-view { max-height: 600px; }
+.mdeditor .dropzone > span { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; }
