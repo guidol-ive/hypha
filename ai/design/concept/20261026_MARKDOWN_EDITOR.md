@@ -1,17 +1,17 @@
 ---
 title: "MARKDOWN EDITOR: een tekst-editor op basis van Markdown naast WYMeditor, functioneel en grafisch ontwerp"
-revision: 12
+revision: 14
 date_created: 2026-10-26
 date_last_review:
 status: concept
 issue: https://github.com/PlanBCode/hypha/issues/520   # Replace WYMeditor and improve the authoring experience
-estimate: "93 mandagen (81 werk + 12 reserve), AI-ondersteund, inclusief codemarkering, wiskunde, handleiding, gouden dataset en tests; maximum 160"
+estimate: "99 mandagen (86 werk + 13 reserve), AI-ondersteund, inclusief codemarkering, wiskunde, handleiding, gouden dataset, tests, plakken uit tekstverwerkers en prestatie-eisen; maximum 160"
 language: nl            # Nederlandstalig op verzoek: de doelgroep en het voorbeeld zijn Nederlands
 fase: 1 van 3 (ontwerp → technisch ontwerp → technisch prototype en test)
 php_minimum: "8.2"
 ai_model_advies: claude-opus-5-5   # Claude Opus 5.5 voor ontwerp, bouw en review; Claude Sonnet 5.5 kan routinewerk (teksten, tests) overnemen
-ai_tokens_bouw: "ca. 102 miljoen"  # schatting: ± 1,1 miljoen tokens per mandag, grotendeels hergebruikte context (cache); ± 8 miljoen output
-mandagen: 93                      # 81 werk + 12 reserve (zie §17), inclusief handleiding, gouden dataset en tests; maximum 160
+ai_tokens_bouw: "ca. 109 miljoen"  # schatting: ± 1,1 miljoen tokens per mandag, grotendeels hergebruikte context (cache); ± 8 miljoen output
+mandagen: 99                      # 86 werk + 13 reserve (zie §17), inclusief handleiding, gouden dataset, tests, plakken en prestaties; maximum 160
 markdown_versie: "Hypha-Markdown 1.0 = CommonMark 0.31.2 + GFM 0.29-gfm + uitbreidingen (zie §10)"
 prototype: 20261026_MARKDOWN_EDITOR/prototype/index.html
 ---
@@ -59,7 +59,7 @@ prototype: 20261026_MARKDOWN_EDITOR/prototype/index.html
 4. opmaak die verspringt na plakken uit Word;
 5. op iPhone en iPad lastig selecteren en scrollen.
 
-Foto's met bijschrift, kaders, tabellen en diagrammen kosten veel handwerk of kunnen niet. De techniek is verouderd en wordt niet meer bijgewerkt ([§3](#3-het-probleem-wat-auteurs-ervaren)).
+Foto's met bijschrift, kaders, tabellen en diagrammen kosten veel handwerk of kunnen niet. De techniek is verouderd en wordt niet meer bijgewerkt. Het oorspronkelijke team, met een journalistieke achtergrond, was redactiesystemen met een minder vriendelijke interface gewend; de auteurs van nu zijn dat niet ([§3](#3-het-probleem-wat-auteurs-ervaren)).
 
 **Positie.** Hypha is een klein open-sourceproject.
 
@@ -91,8 +91,11 @@ Zie [§3.4](#34-randvoorwaarden-waar-een-oplossing-aan-moet-voldoen).
 7. Getest wordt met een **gouden dataset van 10.000 verzonnen artikelen**, met **unit tests** en **integratietests** ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)).
 8. **Docker** blijft een ondersteunde manier om Hypha te draaien, ook met de nieuwe editor, en staat beschreven in de handleiding ([§12.14](#1214-docker-blijft-mogelijk)).
 9. **Versies** van een artikel vallen buiten de scope (besluit, issue #241).
+10. Tekst uit **Word, Google Docs en LibreOffice** komt via het klembord vrijwel ongewijzigd in de Markdown: vet, schuin, koppen, tabellen, formules en lijsten, met behoud van de betekenis ([§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice)).
+11. **Snel**: typen binnen 100 ms op het scherm, bewaren binnen 1 seconde, de leesweergave binnen 250 ms op een iPhone 16 en de editor de tweede keer binnen 3 seconden open ([§12.16](#1216-prestatie-eisen)).
+12. **Migratie**: de oude editor blijft voor oude artikelen. Omzetten naar Markdown kan ooit, als de nieuwe editor zich heeft bewezen, maar valt buiten de scope ([§5.2](#52-migratie-de-oude-editor-blijft-voor-oude-artikelen)).
 
-De begroting is **93 dagen** (81 werk en 12 reserve), AI-ondersteund, binnen een maximum van 160 ([§17](#17-scope-en-begroting)). De besluiten staan in [§19](#19-besluiten).
+De begroting is **99 dagen** (86 werk en 13 reserve), AI-ondersteund, binnen een maximum van 160 ([§17](#17-scope-en-begroting)). De besluiten staan in [§19](#19-besluiten).
 
 ## 2. Huidige situatie
 
@@ -265,6 +268,8 @@ Zie de schermafbeelding in [§2.1](#21-zo-ziet-artikel-bewerken-er-nu-uit). De p
 2. **Nieuwe auteurs**: de drempel is hoog voor wie gewend is aan Word, Google Docs of een notitie-app.
 3. **Beheer**: verouderde JavaScript-bibliotheken met bekende kwetsbaarheden, die niet los te vervangen zijn zonder de editor te raken.
 
+**Waarom het nu meer knelt dan vroeger.** Het oorspronkelijke team rond De Stadsbron had een meer **journalistieke achtergrond**. Die makers waren gewend aan de redactiesystemen (*authoring systems*) van kranten en omroepen, met een gebruikersinterface die mogelijk minder vriendelijk was, en namen de eigenaardigheden van de editor daarom voor lief. De auteurs van nu zijn vaker vrijwilligers uit de alfa- en gammahoek ([§2.2](#22-wie-er-schrijft-de-auteurs)), die Word, Google Docs en apps op hun telefoon gewend zijn. Voor hen is dezelfde editor een drempel. Het probleem is dus niet alleen de editor zelf, maar ook dat de groep die ermee schrijft is veranderd.
+
 ### 3.4 Randvoorwaarden: waar een oplossing aan moet voldoen
 
 | Randvoorwaarde | Wat het betekent voor het ontwerp |
@@ -279,12 +284,14 @@ Zie de schermafbeelding in [§2.1](#21-zo-ziet-artikel-bewerken-er-nu-uit). De p
 | Flexibiliteit voor gevorderd gebruik (doel) | De Markdown mag geen dichte doos zijn. Wat de editor niet kent, blijft ongewijzigd in de bron staan. Eigen HTML, ingesloten inhoud (video, kaart, grafiek), Hypha-macro's en, voor een vertrouwde rol, eigen JavaScript zijn mogelijk, in oplopende niveaus van vrijheid en met een veilige standaard. Notities uit **HedgeDoc** zijn grotendeels over te nemen. Als modules erbij: codemarkering voor meerdere talen en wiskundige formules in LaTeX-notatie. Zie [§10.1](#101-flexibiliteit-eigen-html-javascript-en-uitbreidingen) en [§10.2](#102-hedgedoc-compatibiliteit). |
 | Docker-deployment blijft mogelijk | Hypha draait ook met de nieuwe editor in een container met **Docker** of Podman, op PHP 8.2 tot en met 8.5, met de bestanden in `docs/container/`. De nieuwe bestanden komen vanzelf mee in het image. De werkwijze staat in de handleiding ([§12.14](#1214-docker-blijft-mogelijk)). |
 | Toetsbaar | Elke wijziging is te toetsen met **unit tests** en **integratietests** op een **gouden dataset** van 10.000 verzonnen artikelen, zonder persoonsgegevens ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)). |
+| Plakken uit tekstverwerkers | Tekst uit Word, Google Docs en LibreOffice komt via het klembord vrijwel ongewijzigd in de Markdown, met behoud van de betekenis: vet, schuin, kop 1 tot en met 3, tabel, formule, lijst met opsommingstekens en genummerde lijst. Plaatjes overnemen valt buiten de scope. Zie [§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice). |
+| Snel | Typen staat binnen 100 ms op het scherm; bewaren duurt minder dan 1 seconde; een gepubliceerd artikel staat binnen 250 ms op een iPhone 16 in een anoniem venster; de editor is de tweede en volgende keer binnen 3 seconden bruikbaar. Zie [§12.16](#1216-prestatie-eisen). |
 | Bestaande artikelen ongemoeid | Oude artikelen blijven HTML en blijven met de opmaakeditor bewerkbaar. Geen conversie, geen migratie van de XML. |
 | Geen wijziging in architectuur of complexiteit | Het `<editor>`-element, `loadEditor()`, de formulieren, de XML-opslag met versies, `wikify_html()` en de reviewstroom blijven zoals ze zijn. De Markdown-editor is een tweede *weergave* van hetzelfde formulierveld. Geen database, geen Node.js op de server en geen build-stap bij installatie. |
 | iPhone, iPad en Chromium | Ontwerp eerst voor touch (knoppen ≥ 44 pt) en daarna voor toetsenbord. De editor gebruikt het native tekstinvoermodel, zodat iOS-autocorrectie, dicteren en spellingcontrole blijven werken. Test op Safari iOS/iPadOS en Chrome/Edge. |
 | Alleen open source met een permissieve licentie (vergelijkbaar met Apache 2.0 of de PHP-licentie) | Toegestaan: MIT, BSD-2/3, Apache-2.0 en ISC. **Uitgesloten**: GPL/LGPL/AGPL en commerciële licenties, en daarmee o.a. TinyMCE 7 (GPLv2+ of commercieel) en CKEditor 5 (GPL of commercieel). |
 | Bij voorkeur geschikt voor Nederlandstaligen | Alle labels, hulpteksten en foutmeldingen in het Nederlands (taalniveau B1), via de bestaande taalbestanden `system/languages/nl.php` en `en.php`. Nederlandse spellingcontrole via de browser (`lang="nl"`, `spellcheck="true"`). Nederlandse aanhalingstekens („…”) mogelijk. |
-| Doorlooptijd (AI-ondersteund) | Oorspronkelijk maximaal 50 dagen; op verzoek verruimd tot 80 en daarna tot **maximaal 160**. Begroting in [§17](#17-scope-en-begroting): 81 dagen werk plus 12 dagen reserve = 93 dagen, inclusief codemarkering, wiskunde, handleiding, gouden dataset en tests. |
+| Doorlooptijd (AI-ondersteund) | Oorspronkelijk maximaal 50 dagen; op verzoek verruimd tot 80 en daarna tot **maximaal 160**. Begroting in [§17](#17-scope-en-begroting): 86 dagen werk plus 13 dagen reserve = 99 dagen, inclusief codemarkering, wiskunde, handleiding, gouden dataset, tests, plakken uit tekstverwerkers en prestatie-eisen. |
 
 ## 4. Bekeken mogelijkheden
 
@@ -337,6 +344,13 @@ Uit te werken in het technisch ontwerp:
 5. Integratie in Hypha met **PHP 8.2 als minimum**, toegankelijk volgens **WCAG 2.1 AA** en getoetst aan de **Apple Human Interface Guidelines** voor iPhone en iPad.
 
 Geschatte doorlooptijd: **81 mensdagen plus 12 dagen reserve = 93 dagen**, AI-ondersteund, inclusief de modules **codemarkering** en **wiskunde**, de **handleiding van Hypha** in het Nederlands, de **gouden dataset** en de **tests** (zie [§17](#17-scope-en-begroting)). Het maximum is 160 dagen. **Versies** van een artikel vallen buiten de scope (issue #241).
+
+### 5.2 Migratie: de oude editor blijft voor oude artikelen
+
+1. **De oude editor blijft.** WYMeditor blijft behouden om bestaande artikelen te bewerken. Wie een oud artikel opent, krijgt de vertrouwde opmaakeditor met de vier velden; er verandert niets aan de opslag van dat artikel.
+2. **Nieuwe artikelen** krijgen de nieuwe editor met een Markdown-bron.
+3. **Geen omzetting nu.** Oude artikelen worden niet naar Markdown omgezet. Dat kan **ooit** gebeuren, als de nieuwe editor zich heeft bewezen en iedereen er tevreden over is. Die omzetting valt **buiten de scope** van dit ontwerp (besluit 16 in [§19](#19-besluiten)).
+4. **Wat de omzetting later makkelijker maakt**: het signaal in de opslag ([§12.5](#125-opslag-oude-artikelen-blijven-html-signaal-voor-markdown)) laat per artikel zien of het al een Markdown-bron heeft, de plakomzetting ([§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice)) zet HTML al om naar Markdown, en de 3.000 oude HTML-artikelen in de gouden dataset ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)) zijn een kant-en-klare testset.
 
 ## 6. Ontwerpprincipes
 
@@ -941,7 +955,7 @@ De editor heeft **twee weergaven op dezelfde Markdown-bron**: *Markdown* (tekst 
 
 Het **prototype** gebruikt bewust eenvoudiger techniek: een `<textarea>` met een opgemaakte laag eronder voor Markdown, en `contenteditable` met een eigen omzetting naar Markdown voor Opmaak. Dat volstaat om het gebruik te toetsen (heen en terug wisselen gaf in de test geen verschil in de Markdown), maar is niet bedoeld voor productie.
 
-Eis aan elke kandidaat, te toetsen in het technisch prototype: **op iOS werken autocorrectie, woordsuggesties, dicteren en tekst selecteren met de vergrootloep**, in beide weergaven.
+Eis aan elke kandidaat, te toetsen in het technisch prototype: **op iOS werken autocorrectie, woordsuggesties, dicteren en tekst selecteren met de vergrootloep**, in beide weergaven. Verder moet de component een **plakhaak** hebben voor de omzetting van [§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice) en de **prestatie-eisen** van [§12.16](#1216-prestatie-eisen) halen.
 
 ### 12.3 Diagrammen: Mermaid-notatie, getekend met Pele
 
@@ -978,7 +992,8 @@ Eis aan elke kandidaat, te toetsen in het technisch prototype: **op iOS werken a
 
 1. **Markdown naar HTML**: zie [§12.1](#121-server-markdown-naar-xhtml-in-php).
 2. **Import en export** van `.md`-bestanden geldt alleen voor artikelen met een Markdown-bron.
-3. **Geen conversie van oude artikelen**: HTML-artikelen worden niet omgezet naar Markdown. Een HTML-naar-Markdown-omzetter (zoals league/html-to-markdown of Turndown) is daarom niet nodig.
+3. **Geen conversie van oude artikelen**: HTML-artikelen worden niet omgezet naar Markdown; de oude editor blijft voor hen ([§5.2](#52-migratie-de-oude-editor-blijft-voor-oude-artikelen)). Op de server is daarom geen HTML-naar-Markdown-omzetter (zoals league/html-to-markdown) nodig.
+4. **Plakken** uit Word, Google Docs en LibreOffice is wel een omzetting van HTML naar Markdown, maar dan in de browser, met **Turndown** (MIT); zie [§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice).
 
 ### 12.5 Opslag: oude artikelen blijven HTML, signaal voor Markdown
 
@@ -1158,6 +1173,7 @@ Getoetst aan de Apple Human Interface Guidelines (HIG) voor iPhone en iPad, op h
 1. **PHP**, in de stijl van de bestaande `tests/HyphaRequestTest.php` (een eigen runner, zonder Composer en PHPUnit): Markdown naar XHTML met de Hypha-uitbreidingen, het HTML-filter per vrijheidsniveau, het lezen en schrijven van de front matter, het signaal `format="markdown"` en de bedrijfsregels uit [§14](#14-bedrijfsregels-als-constraints), elk met een geval dat slaagt en een dat faalt.
 2. **JavaScript**, als testpagina in gewoon JavaScript die in een browser draait (headless Chromium op de ontwikkelmachine; geen Node.js op de server): heen en terug tussen Opmaak en Markdown zonder verschil, de cursorpositie bij wisselen, de checklist, tabellen, en formules en diagrammen die wel en niet kloppen.
 3. Elke gouden casus is ook een unit test: Markdown erin, de vastgelegde XHTML eruit.
+4. De vastgelegde klembord-HTML van Word, Google Docs en LibreOffice gaat door de plakomzetting en moet letter voor letter de verwachte Markdown geven ([§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice)).
 
 **Integratietests** toetsen Hypha als geheel, in een container op PHP 8.2 tot en met 8.5:
 
@@ -1165,7 +1181,8 @@ Getoetst aan de Apple Human Interface Guidelines (HIG) voor iPhone en iPad, op h
 2. de schrijf- en reviewstroom van begin tot eind via HTTP: artikel maken, opslaan, beoordeling starten, opmerking met breekpunt, drie goedkeuringen, publiceren, terugtrekken; met de regels dat de auteur niet goedkeurt (BR-94) en alleen een beheerder een tag maakt (BR-98);
 3. de editor in een browser (headless Chromium): artikel schrijven in beide weergaven, beeld uploaden, opslaan en het resultaat vergelijken met de gouden uitkomst;
 4. regressie: oude HTML-artikelen openen, bewerken en opslaan zonder wijziging in hun XML-structuur;
-5. tijd en geheugen: de 10.000 artikelen opslaan en tonen binnen een vast te stellen grens, ook met de begrenzing van twee Apache-werkers in 256 MB.
+5. plakken in de editor in beide weergaven, met dezelfde klembord-HTML als de unit tests;
+6. tijd en geheugen: de prestatie-eisen van [§12.16](#1216-prestatie-eisen) (typen binnen 100 ms, bewaren binnen 1 seconde, de editor de tweede keer binnen 3 seconden open), ook met de begrenzing van twee Apache-werkers in 256 MB.
 
 De tests draaien met één opdracht per PHP-versie, lokaal en in een CI-omgeving, en staan beschreven in `docs/technical/TESTING.md`.
 
@@ -1175,6 +1192,98 @@ De tests draaien met één opdracht per PHP-versie, lokaal en in een CI-omgeving
 2. Het image wordt bij elke oplevering getest op PHP 8.2 tot en met 8.5, met de integratietests van [§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests).
 3. `compose.yaml` blijft werken met `docker compose` en `podman compose`.
 4. De handleiding beschrijft het in het Nederlands, op de pagina [*Installatie, ook met Docker*](../../../docs/handleiding/techniek/02-installatie.md): bouwen, een nieuwe site, een bestaande site, logboek, NGINX ervoor en bijwerken.
+
+### 12.15 Acceptatiecriteria: plakken uit Word, Google Docs en LibreOffice
+
+Dit zijn vaste eisen (besluit 14 in [§19](#19-besluiten)), geen verkenning. Auteurs schrijven vaak eerst in een tekstverwerker. Wat ze via het klembord overnemen, moet **vrijwel ongewijzigd** in de Markdown komen, **met behoud van de betekenis**: een kop blijft een kop, een genummerde lijst blijft een genummerde lijst. Het uiterlijk (lettertype, kleur, regelafstand) valt weg; dat bepaalt het thema.
+
+**Programma's.** De criteria gelden voor elk van deze drie bronnen, elk met kopiëren (⌘C of Ctrl+C) en plakken (⌘V of Ctrl+V) in de editor:
+
+1. **Microsoft Word** (Microsoft 365, actuele versie) op Windows en macOS;
+2. **Google Docs** in Chrome en in Safari;
+3. **LibreOffice Writer** (actuele versie en de versie daarvoor) op Windows, macOS en Linux.
+
+Word in de browser en de apps op iPad worden meegetest en gerapporteerd, maar zijn geen voorwaarde voor acceptatie.
+
+**Wat moet overkomen.** Per element, in beide weergaven (*Opmaak* en *Markdown*):
+
+| # | Element in de tekstverwerker | Resultaat in de Markdown | Criterium |
+|---|---|---|---|
+| 1 | **Vet** | `**tekst**` | ook binnen een lijst of tabelcel; geen lege `****` of losse sterretjes |
+| 2 | *Schuin* | `*tekst*` | idem; vet en schuin samen geeft `***tekst***` |
+| 3 | Kop 1 (*Heading 1*) | `### Kop` (tussenkop, H3) | de kopstructuur van een artikel begint bij H3, omdat H1 de titel is en H2 bij Hypha hoort ([§11](#11-krantenartikel-elementen-zoals-op-nrcnl)); de **volgorde van de niveaus** blijft gelijk |
+| 4 | Kop 2 | `#### Kop` | idem |
+| 5 | Kop 3 | `##### Kop` | idem |
+| 6 | Tabel | GFM-tabel `\| … \|` met de eerste rij als kop | alle rijen, kolommen en celteksten; vet en schuin in cellen blijven; uitlijning per kolom als die in de bron vastligt |
+| 7 | Formule (Word-vergelijking, Google Docs-vergelijking, LibreOffice Math) | `$…$` in de tekst, `$$…$$` als eigen regel | de formule is daarna **bewerkbaar als LaTeX** en Temml tekent hem zonder fout ([§10.1](#101-flexibiliteit-eigen-html-javascript-en-uitbreidingen)); de testformules zijn breuken, machten en indices, wortels, som en integraal met grenzen, Griekse letters en vergelijkingstekens |
+| 8 | Lijst met opsommingstekens | `- item` | ook genest tot drie niveaus; een sublijst springt in tot onder de tekst van het item erboven (twee spaties onder `-`, drie onder `1.`) |
+| 9 | Genummerde lijst | `1. item` | genest tot drie niveaus; een lijst die bij 3 begint, begint ook in de Markdown bij 3; een gemengde lijst (genummerd met opsommingstekens eronder) blijft gemengd |
+
+**Wat „vrijwel ongewijzigd” betekent.** Een plaktest slaagt als:
+
+1. de tekst **letter voor letter** gelijk is, inclusief Nederlandse aanhalingstekens („…”), apostroffen, gedachtestreepjes, accenten en emoji;
+2. **alinea's** gelijk blijven: één lege regel ertussen, geen lege alinea's extra, geen alinea's samengevoegd; een zachte regelovergang (Shift+Enter) wordt een harde regelovergang in de Markdown;
+3. er **geen resten** van de tekstverwerker in de Markdown staan: geen `mso-`-stijlen, `class="Mso…"`, `<span style>`, `<o:p>`, `docs-internal-guid`, voorwaardelijk commentaar (`<!--[if …]>`) of vaste spaties waar een gewone spatie hoort;
+4. de Markdown na opslaan **dezelfde structuur** geeft als het origineel: dezelfde koppen, lijsten, tabellen en formules, in dezelfde volgorde;
+5. **links** behouden blijven, met hun tekst en adres;
+6. wat niet wordt ondersteund (onderstrepen, kleur, lettertype, tekstvakken, kop- en voetteksten, opmerkingen en wijzigingen bijhouden) **wegvalt zonder de tekst** te verliezen; de tekst van een tekstvak wordt een gewone alinea;
+7. plakken van een document van tien pagina's met alle elementen hierboven **binnen 1 seconde** klaar is;
+8. ⌘Z (Ctrl+Z) het plakken in één stap ongedaan maakt;
+9. **plakken als platte tekst** (⌘⇧V, Ctrl+Shift+V) de tekst zonder opmaak neerzet, voor wie dat wil.
+
+**Bekende valkuilen, die de omzetting moet afvangen.**
+
+1. **Word** zet lijsten niet als `<ul>` of `<ol>` op het klembord, maar als alinea's met `mso-list:l0 level1 lfo1` en een nep-opsommingsteken in `<![if !supportLists]>`. Het niveau en het soort lijst moeten uit die stijl worden afgeleid.
+2. **Word** zet een vergelijking als OMML (`<m:oMath>`) in voorwaardelijk commentaar, met een plaatje als terugval. De omzetting leest de OMML en maakt er LaTeX van, met een eigen omzetter in gewoon JavaScript voor de constructies hierboven. Het XSLT-bestand van Microsoft (OMML2MML) valt af door de licentie.
+3. **Google Docs** pakt alles in een `<b style="font-weight:normal" id="docs-internal-guid-…">`. Dat is geen vet. Vet en schuin staan daar in `<span style="font-weight:700">` en `font-style:italic`, en het lijstniveau in `aria-level`.
+4. **LibreOffice** geeft koppen met `class="western"`, een sublijst als `<ul><ul><li>` zonder het item erboven, en soms een verkeerd beginnummer (een tweede `<ol start="3">` na een sublijst, waar 5 bedoeld is). Een formule uit LibreOffice Math komt als **plaatje** mee, met de naam `Object1`, `Object2`, …; dat is gezien in de HTML-export van LibreOffice 25.2, die hetzelfde filter gebruikt als het klembord. *Te verifiëren met een echte opname*: welke vorm Google Docs een formule op het klembord meegeeft, en of het klembord van LibreOffice hetzelfde doet als de export. Is dat alleen een plaatje, dan zet de editor op die plek `$\text{formule niet overgenomen}$`, meldt de checklist het, en wordt aan de opdrachtgever gerapporteerd dat het criterium voor dat programma via het klembord niet haalbaar is ([§18](#18-risicos-en-open-vragen)).
+
+**Plaatjes** overnemen valt **buiten de scope**. Lukt het toch, dan is dat mooi meegenomen. Bijvoorbeeld: Google Docs geeft een adres van de afbeelding mee en Word op macOS soms de afbeelding zelf; de editor uploadt hem dan via de bestaande route `upload/image` en zet hem als beeld met een lege beschrijving neer. Lukt het niet, dan blijft de tekst staan en meldt de checklist „afbeelding niet overgenomen: voeg hem toe met **Beeld…**”. Een plaatje mag de plak nooit laten mislukken.
+
+**In het prototype.** De omzetting is gebouwd in [`prototype/plakken.js`](20261026_MARKDOWN_EDITOR/prototype/plakken.js), gewoon JavaScript zonder afhankelijkheden, en werkt in beide weergaven van het prototype. De testpagina [`prototype/plaktest.html`](20261026_MARKDOWN_EDITOR/prototype/plaktest.html) toont de uitslag:
+
+1. **drie testdocumenten**: Word voor Windows en Google Docs (nagebouwd naar de bekende opbouw van hun klembord) en LibreOffice 25.2 (de echte HTML-export van [`plaktest.odt`](20261026_MARKDOWN_EDITOR/prototype/plaktest/plaktest.odt)). Alle drie geven letter voor letter de verwachte Markdown, en elke formule tekent zonder fout in Temml;
+2. **24 losse gevallen**, zoals: het omhulsel van Google Docs is geen vet, tekens als `*` en `$` worden geen opmaak, geen lege alinea's extra, samengevoegde cellen, Word-opmerkingen vallen weg, afbeeldingen van de eigen schijf geven een melding, en zes OMML-formules (wortel met graad, integraal, haakjes en functie, Griekse letters, matrix);
+3. **snelheid**: ruim 6.000 woorden (zo'n dertien pagina's) worden in circa 15 ms omgezet, ruim binnen de eis van 1 seconde;
+4. een **opnameveld**: plak er iets in uit het echte programma en je ziet de HTML van het klembord, de Markdown en het resultaat; met *kopieer als testgeval* komt het in [`plaktest/gegevens.js`](20261026_MARKDOWN_EDITOR/prototype/plaktest/gegevens.js). Zo worden de nagebouwde documenten van Word en Google Docs vervangen door echte opnamen.
+
+In de editor zelf is getest: plakken aan het begin, midden en eind van de tekst en over een selectie, in Opmaak en in Markdown, geeft dezelfde Markdown als de testpagina; een paar woorden midden in een zin blijven in de zin, met hun spaties; ⌘Z maakt het plakken in één stap ongedaan.
+
+**Hoe getoetst.**
+
+1. Een **plaktestdocument** met verzonnen tekst (zonder persoonsgegevens) bevat alle elementen uit de tabel, in Word ([`plaktest.docx`](20261026_MARKDOWN_EDITOR/prototype/plaktest/plaktest.docx)), Google Docs (dezelfde `.docx`, geopend in Google Docs) en LibreOffice ([`plaktest.odt`](20261026_MARKDOWN_EDITOR/prototype/plaktest/plaktest.odt)), met de bron in [`plaktest.md`](20261026_MARKDOWN_EDITOR/prototype/plaktest/plaktest.md).
+2. De HTML die elk programma op het klembord zet, wordt per versie één keer vastgelegd als testbestand, met de verwachte Markdown ernaast. Een **unit test** in JavaScript zet de vastgelegde HTML om en vergelijkt het resultaat letter voor letter ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)).
+3. Een **integratietest** plakt in de editor in een browser (headless Chromium) via een nagebootste plak met dezelfde HTML, in beide weergaven, en slaat op.
+4. Bij elke oplevering een **handmatige test** met de echte programma's, met de uitkomst per programma en per element in het testverslag.
+
+**Techniek.** In beide weergaven gaat geplakte HTML door één omzetstap: eerst opschonen (de valkuilen hierboven), dan naar Markdown. Het prototype laat zien dat een eigen omzetter van circa 450 regels volstaat, inclusief OMML naar LaTeX. Het technisch ontwerp kiest tussen die eigen omzetter en **Turndown** (MIT) met de **GFM-plug-in** (MIT), aangevuld met dezelfde eigen regels voor lijsten van Word, formules en Hypha-elementen. In *Opmaak* zit die stap in de plakhaak van ProseMirror (`transformPastedHTML`), in *Markdown* in de plakhaak van CodeMirror. Daarna gaat het resultaat door hetzelfde HTML-filter als alle andere tekst ([§10.1](#101-flexibiliteit-eigen-html-javascript-en-uitbreidingen)).
+
+### 12.16 Prestatie-eisen
+
+Ook dit zijn vaste eisen (besluit 15 in [§19](#19-besluiten)). De wachttijden voor diagrammen ([§12.3](#123-diagrammen-mermaid-notatie-getekend-met-pele)) blijven gelden.
+
+| # | Wat | Eis | Hoe gemeten |
+|---|---|---|---|
+| 1 | **Typen** | wat getikt wordt, staat **binnen 100 ms** op het scherm, bij elke toetsaanslag | van de invoer tot de volgende weergave (*Event Timing API*; in Safari met `requestAnimationFrame` na de invoer), in beide weergaven, ook met *Naast elkaar* aan |
+| 2 | **Artikel bewaren** | **minder dan 1 seconde** | van de klik op **opslaan** tot de bevestiging en een editor die weer reageert; inclusief Markdown naar XHTML, het filter, de SVG van de diagrammen en het schrijven van de XML; zonder het uploaden van nieuwe foto's |
+| 3 | **Leesweergave** | de HTML van een gepubliceerd artikel staat **binnen 250 ms** op het scherm van een **iPhone 16**, in een **anoniem venster** | van het begin van het laden tot de grootste zichtbare inhoud (*Largest Contentful Paint*: kop, intro of hoofdfoto), in Safari in een privévenster (niet ingelogd, lege cache), via wifi in de testopstelling; daarna verspringt de opmaak niet meer (*Cumulative Layout Shift* ≤ 0,1) |
+| 4 | **Editor openen** | de **tweede en volgende keer** binnen **3 seconden** bruikbaar | van de klik op **bewerken** tot de cursor in de tekst staat en typen werkt, met de bestanden van de editor in de cache van de browser; de eerste keer heeft geen eis, maar wordt wel gemeten en gerapporteerd |
+| 5 | **Plakken** | een document van tien pagina's binnen 1 seconde | zie [§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice) |
+
+**Onder welke omstandigheden.**
+
+1. **Apparaten**: een iPhone 16 (Safari), een iPad Air (Safari) en een gewone laptop van vier jaar oud met Chrome of Edge. Elke eis geldt op elk van die apparaten.
+2. **Artikelen**: een gewoon artikel uit de gouden dataset (circa 1.500 woorden, drie foto's, een diagram) én het langste randgeval (20.000 woorden, 25 diagrammen, formules en tabellen) ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)).
+3. **Server**: de container van [§12.14](#1214-docker-blijft-mogelijk) op PHP 8.2, met de begrenzing van twee Apache-werkers in 256 MB, gevuld met de gouden dataset van 10.000 artikelen.
+4. **Herhaling**: elke meting minstens tien keer; de eis geldt voor elke meting, niet voor het gemiddelde. Bij typen telt elke toetsaanslag in een reeks van 500 aanslagen.
+
+**Wat dat betekent voor de bouw.**
+
+1. **Typen**: alles wat zwaar is, gebeurt buiten de toetsaanslag. Het voorbeeld, de checklist, de diagrammen en de formules worden bijgewerkt na een korte pauze (*debounce*), het automatisch bewaren in de browser gebeurt als de browser niets te doen heeft (`requestIdleCallback`), en CodeMirror en ProseMirror werken alleen het veranderde stuk bij.
+2. **Bewaren**: de server zet alleen de Markdown om; diagrammen komen al als SVG uit de browser mee (optie B in [§12.3](#123-diagrammen-mermaid-notatie-getekend-met-pele)). Is de status gewijzigd, dan valt het versturen van e-mail met `mail()` er wel onder; bij veel leden is dat het eerste aandachtspunt ([§18](#18-risicos-en-open-vragen)).
+3. **Leesweergave**: de lezer krijgt kant-en-klare HTML, zonder JavaScript voor de inhoud. Diagrammen zijn SVG en formules MathML, dus Pele, Temml en highlight.js gaan niet naar de lezer. Foto's krijgen `width`, `height` en `loading="lazy"` (behalve de hoofdfoto), lettertypes `font-display: swap`. Wat de lezer van het thema nodig heeft, wordt in de cache gezet. *Te verifiëren*: welke scripts Hypha nu aan anonieme lezers meestuurt (zoals jQuery 1.7.1) en of die met `defer` kunnen.
+4. **Editor openen**: de bestanden van de editor hebben een versie in hun naam en worden lang in de cache bewaard (`Cache-Control: max-age=31536000, immutable`); de import map laadt ze met `modulepreload`; Pele, Temml en highlight.js worden pas geladen als het artikel een diagram, formule of codeblok bevat, of als je er een invoegt.
+5. **Bewaken**: de integratietests meten bewaren en plakken (eis 2 en 5) en, in headless Chromium, typen en openen (eis 1 en 4) automatisch, en falen als een eis niet wordt gehaald ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)). Op de iPhone 16, de iPad en de laptop worden alle vijf de eisen bij elke oplevering gemeten, met de webinspecteur van Safari en de prestatiemeting van Chrome; de uitkomsten komen in het testverslag.
 
 ## 13. Projectie op de XML-opslag
 
@@ -1409,7 +1518,7 @@ De gegevens, in database-termen: **artikel** (XML-bestand per artikel), **pagina
 
 ## 15. Klikbaar prototype
 
-[`20261026_MARKDOWN_EDITOR/prototype/index.html`](20261026_MARKDOWN_EDITOR/prototype/index.html) is één HTML-bestand in gewoon JavaScript, zonder build-stap. Het start met een verzonnen voorbeeldartikel en laat het hele schrijfproces doorlopen:
+[`20261026_MARKDOWN_EDITOR/prototype/index.html`](20261026_MARKDOWN_EDITOR/prototype/index.html) is één HTML-bestand in gewoon JavaScript, zonder build-stap, met de plakomzetting in een los bestand ([`plakken.js`](20261026_MARKDOWN_EDITOR/prototype/plakken.js)) dat ook de testpagina [`plaktest.html`](20261026_MARKDOWN_EDITOR/prototype/plaktest.html) gebruikt. Het start met een verzonnen voorbeeldartikel en laat het hele schrijfproces doorlopen:
 
 1. **start in Opmaak, Schrijven**; **geen tabbladen**: bijsluiter en bronnen staan in de front matter en als vaste blokken onderaan; artikelkop, bijsluiter en bronnen zijn **open- en dichtvouwbaar** en hun vakken zien er bewerkbaar uit; de werkbalk met de weergave rechts blijft bovenaan in beeld;
 2. titel, auteur, uittreksel, tags en de afbeelding bij het uittreksel als **vaste front matter** in Markdown en als **vaste artikelkop** in Opmaak, in beide richtingen gesynchroniseerd; bij wisselen blijft de **cursor op dezelfde plek**;
@@ -1423,7 +1532,8 @@ De gegevens, in database-termen: **artikel** (XML-bestand per artikel), **pagina
 10. foto's en diagrammen **bewerken en verwijderen**: in Opmaak met ✎ en ✕ of een dubbelklik, in Markdown met *Beeld bewerken* en *Diagram bewerken*; na verwijderen *ongedaan maken*; *Citaat* en *Kader* zetten geselecteerde tekst in het blok;
 11. de statussen schets → in beoordeling → goedgekeurd → gepubliceerd (gesimuleerd), met een **deels gevuld rondje** bij 1 of 2 goedkeuringen; **geef goedkeuring…** opent een venster met het **redactiestatuut** en een opmerking; **trek terug** zet het artikel terug naar schets; met **rol: auteur | collega | beheerder** in de bovenste balk zie je dat de auteur kan terugtrekken en publiceren maar niet goedkeuren, een collega alleen goedkeuren, en dat alleen een beheerder nieuwe tags maakt; een **gepubliceerd** artikel trekt de auteur of een beheerder terug met een **reden**, die lezers als melding zien;
 12. de **taal** van het artikel als keuze in de checklist; de werkbalk op één regel met **Meer ▾** voor wat niet past; *Beeld…* en *Diagram…* met drie puntjes;
-13. **formules** in LaTeX-notatie (`$\tfrac{4}{37}$` in de tekst, `$$…$$` als blok) als MathML met Temml; in Opmaak de knop *Formule* en bewerken met een dubbelklik; een formule die niet klopt, staat rood en geeft een tip; **code** met kleuren per taal (highlight.js), via het `/`-menu.
+13. **formules** in LaTeX-notatie (`$\tfrac{4}{37}$` in de tekst, `$$…$$` als blok) als MathML met Temml; in Opmaak de knop *Formule* en bewerken met een dubbelklik; een formule die niet klopt, staat rood en geeft een tip; **code** met kleuren per taal (highlight.js), via het `/`-menu;
+14. **plakken uit Word, Google Docs en LibreOffice** in beide weergaven: vet, schuin, koppen, tabellen, formules (uit Word) en lijsten worden Markdown; een melding als een afbeelding of formule niet mee kon ([§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice)).
 
 Alles wordt **alleen in de localStorage** van de browser bewaard; er gaat niets naar een server. *terug naar het startpunt* zet alles terug. Markdown, opschonen, diagrammen, formules en codekleuren gebruiken marked, DOMPurify, Pele, Temml en highlight.js via jsDelivr en cdnjs (vaste versies), dus het voorbeeld heeft een internetverbinding nodig. Het commentaar in de code staat in het Engels in de Invantive-opmaak:
 
@@ -1506,7 +1616,7 @@ date_last_review:
 | 16 | `techniek/06-beheer.md` | back-up, logboeken, e-mail, updates | `timeline`: een update stap voor stap |
 | 17 | `techniek/07-beveiliging.md` | rollen, vrijheidsniveaus van de editor, HTML-filter, aanbevelingen | `flowchart`: wat er met ingevoerde HTML gebeurt |
 
-**Klaar** (revisie 1, 2026-10-27): [`index.md`](../../../docs/handleiding/index.md), [`gebruik/04-artikel-schrijven.md`](../../../docs/handleiding/gebruik/04-artikel-schrijven.md), [`gebruik/05-beoordelen-en-publiceren.md`](../../../docs/handleiding/gebruik/05-beoordelen-en-publiceren.md), [`techniek/01-architectuur.md`](../../../docs/handleiding/techniek/01-architectuur.md) en [`techniek/02-installatie.md`](../../../docs/handleiding/techniek/02-installatie.md), samen met elf Mermaid-diagrammen. De andere pagina's volgen.
+**Klaar** (2026-10-27; revisie 1, *Een artikel schrijven* revisie 2 met plakken uit Word, Google Docs en LibreOffice): [`index.md`](../../../docs/handleiding/index.md), [`gebruik/04-artikel-schrijven.md`](../../../docs/handleiding/gebruik/04-artikel-schrijven.md), [`gebruik/05-beoordelen-en-publiceren.md`](../../../docs/handleiding/gebruik/05-beoordelen-en-publiceren.md), [`techniek/01-architectuur.md`](../../../docs/handleiding/techniek/01-architectuur.md) en [`techniek/02-installatie.md`](../../../docs/handleiding/techniek/02-installatie.md), samen met elf Mermaid-diagrammen. De andere pagina's volgen.
 
 ### 16.5 Voorbeeld van een pagina
 
@@ -1551,14 +1661,17 @@ stateDiagram-v2
 4. De **handleiding van Hypha** in het Nederlands, als Markdown voor Obsidian ([§16](#16-handleiding-van-hypha)).
 5. Een **gouden dataset** van 10.000 verzonnen artikelen, met **unit tests** en **integratietests** ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)).
 6. **Docker-deployment** blijft mogelijk en staat in de handleiding ([§12.14](#1214-docker-blijft-mogelijk)).
-7. Toegankelijkheid (WCAG 2.1 AA), Apple-stijlgids, Nederlandse teksten en packaging.
+7. **Plakken** uit Word, Google Docs en LibreOffice volgens de acceptatiecriteria ([§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice)).
+8. De **prestatie-eisen** voor typen, bewaren, de leesweergave en het openen van de editor ([§12.16](#1216-prestatie-eisen)).
+9. Toegankelijkheid (WCAG 2.1 AA), Apple-stijlgids, Nederlandse teksten en packaging.
 
 **Buiten de scope**
 
 1. **Versies van een artikel** met verschillen en terugzetten (issue #241). Hypha bewaart bij een artikel nu alleen de laatste stand (`Xml::versionsOff`) en het nieuwe datatype doet dat ook (besluit 8 in [§19](#19-besluiten), BR-74).
-2. Omzetten van bestaande HTML-artikelen naar Markdown.
+2. Omzetten van bestaande HTML-artikelen naar Markdown. De oude editor blijft voor oude artikelen; omzetten kan later, als de nieuwe editor zich heeft bewezen en iedereen er tevreden over is ([§5.2](#52-migratie-de-oude-editor-blijft-voor-oude-artikelen), besluit 16).
 3. Samen tegelijk in één artikel schrijven, zoals in HedgeDoc.
 4. Het opruimen van WYMeditor en jQuery 1.7.1 voor de oude artikelen.
+5. **Plaatjes** overnemen bij plakken uit een tekstverwerker; lukt het toch, dan is dat mooi meegenomen ([§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice)).
 
 ### 17.2 Begroting
 
@@ -1593,11 +1706,13 @@ In mensdagen, uitgaande van een ontwikkelaar met AI-ondersteuning.
 | 17 | Gouden dataset: generator met vaste seed, profielen voor 10.000 verzonnen artikelen (Markdown en oud HTML, alle statussen, randgevallen), manifest met de verwachte uitkomst, eenmalig nakijken ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)) | 2 |
 | 18 | Testcases: unit tests in PHP en JavaScript, integratietests in de container op PHP 8.2 tot en met 8.5 (pagina's, reviewstroom, editor in de browser, regressie, tijd en geheugen), één opdracht per versie | 4 |
 | 19 | Docker: image en Compose met de nieuwe editor, test op vier PHP-versies; handleidingpagina *Installatie, ook met Docker* ([§12.14](#1214-docker-blijft-mogelijk)) | 1 |
-| | **Subtotaal** | **81** |
-| | Reserve (circa 15 %) | 12 |
-| | **Totaal** | **93** |
+| 20 | Plakken uit Word, Google Docs en LibreOffice: opschonen, lijsten en koppen, tabellen, OMML naar LaTeX, plaktestdocument, vastgelegde klembord-HTML per programma, unit- en integratietests ([§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice)) | 3 |
+| 21 | Prestaties: meetopstelling op iPhone 16, iPad en laptop, cache en laden van de editor, leesweergave zonder overbodige scripts, metingen in de integratietests ([§12.16](#1216-prestatie-eisen)) | 2 |
+| | **Subtotaal** | **86** |
+| | Reserve (circa 15 %) | 13 |
+| | **Totaal** | **99** |
 
-Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begroting komt uit op **93 dagen**. Daarin zitten nu ook codemarkering (+2) en wiskunde (+3), eerst *could haves*, de handleiding van Hypha (+4), de gouden dataset (+2), de testcases (+4) en Docker (+1). Versies van een artikel vallen buiten de scope (besluit, #241). Eerder kwamen erbij: bijsluiter en bronnen als vaste velden en het terugtrekken van een gepubliceerd artikel (+2), beoordelen met redactiestatuut, terugtrekken en taal (+3), flexibiliteit, HedgeDoc-notatie en het interactieve blok (+5), de vaste front matter en artikelkop (+3), de afbeeldingsknop (+1), de cursorpositie en tooltips (+1), tabellen (+2) en meer diagramsoorten (+1). De reserve is circa 15 %. Tot 160 dagen blijft ruim 65 dagen over, bijvoorbeeld voor een tweede gebruikerstest, de Markdown-editor ook voor tekstpagina's of later versies van een artikel.
+Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begroting komt uit op **99 dagen**. Daarin zitten nu ook codemarkering (+2) en wiskunde (+3), eerst *could haves*, de handleiding van Hypha (+4), de gouden dataset (+2), de testcases (+4), Docker (+1), plakken uit tekstverwerkers (+3) en de prestatie-eisen (+2). Versies van een artikel vallen buiten de scope (besluit, #241). Eerder kwamen erbij: bijsluiter en bronnen als vaste velden en het terugtrekken van een gepubliceerd artikel (+2), beoordelen met redactiestatuut, terugtrekken en taal (+3), flexibiliteit, HedgeDoc-notatie en het interactieve blok (+5), de vaste front matter en artikelkop (+3), de afbeeldingsknop (+1), de cursorpositie en tooltips (+1), tabellen (+2) en meer diagramsoorten (+1). De reserve is circa 15 %. Tot 160 dagen blijft ruim 60 dagen over, bijvoorbeeld voor een tweede gebruikerstest, de Markdown-editor ook voor tekstpagina's of later versies van een artikel.
 
 ## 18. Risico's en open vragen
 
@@ -1615,7 +1730,7 @@ Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begrotin
 | Pele is een jong project met snelle releases | middel | laag | vaste versie meeleveren; mermaid.js als terugvaloptie |
 | Een lange front matter (met bijsluiter en bronnen) maakt de Markdown-weergave onrustig | middel | laag | de front matter is grijs; in Opmaak zijn het dichtvouwbare blokken; overweeg in CodeMirror het inklappen van de front matter |
 | Front matter wordt met de hand kapotgemaakt (bijv. `---` weggehaald) | middel | laag | de checklist meldt de regel en de laatste goede waarden blijven staan; wisselen naar Opmaak zet de vier regels weer goed |
-| Overschrijding van de begroting | laag | middel | reserve van 11 dagen; daarboven ruimte tot 160 dagen |
+| Overschrijding van de begroting | laag | middel | reserve van 13 dagen; daarboven ruimte tot 160 dagen |
 | Formules of codekleuren zien er in de editor anders uit dan in het gepubliceerde artikel | middel | laag | MathML gaat bij opslaan mee (geen tweede omzetting op de server); highlight.php en highlight.js gebruiken dezelfde taaldefinities; testset met beide |
 | De gouden dataset lijkt niet op echte artikelen | middel | middel | profielen afleiden uit de **opbouw** van echte artikelen (lengte, aantal koppen, foto's, kaders, tabellen), nooit uit hun inhoud; randgevallen apart toevoegen |
 | Gouden uitkomsten worden klakkeloos bijgewerkt als een test faalt | middel | hoog | een gewijzigde uitkomst vraagt een verklaring in de commit en een tweede paar ogen |
@@ -1628,6 +1743,11 @@ Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begrotin
 | Cursor springt bij wisselen naar een verkeerde plek (bijv. bij een tabel of lijst) | middel | laag | blokken in beide weergaven op dezelfde manier tellen; terugvallen op het begin van het blok |
 | `-beta`-soorten van Mermaid veranderen van notatie | middel | laag | vaste Pele-versie; sjablonen meetesten bij een update |
 | Nieuw paginatype mist in lijsten die op type filteren | middel | laag | macro's en menu's in de data aanpassen; of toch hetzelfde type met doorschakelen (zie §12.11) |
+| Google Docs of LibreOffice geeft een formule alleen als plaatje mee op het klembord | **gezien** bij LibreOffice (export); Google Docs middel | middel | Google Docs als eerste toetsen met een echte opname; zo ja: plaatshouder met een melding in de checklist, en rapporteren aan de opdrachtgever dat het criterium voor dat programma niet haalbaar is |
+| De klembord-HTML van Word of Google Docs verandert met een nieuwe versie | middel | middel | vastgelegde klembord-HTML per versie in de tests; handmatige plaktest bij elke oplevering |
+| Typen wordt traag bij een lang artikel met veel diagrammen | middel | hoog | zwaar werk buiten de toetsaanslag ([§12.16](#1216-prestatie-eisen)); meten met het langste randgeval van de gouden dataset |
+| Bewaren duurt langer dan 1 seconde door e-mail met `mail()` bij een statuswijziging | middel | middel | meten met veel leden; zo nodig e-mail na het antwoord versturen (`fastcgi_finish_request` of een eenvoudige wachtrij) |
+| De leesweergave haalt 250 ms niet door scripts of lettertypes van het thema | middel | middel | meten in een privévenster op iPhone 16; scripts met `defer`, lettertypes met `font-display: swap`, hoofdfoto met vaste maten |
 | Auteurs vinden Markdown toch te technisch | middel | middel | opmaakeditor blijft; gebruikerstest met twee à drie auteurs in de prototypefase |
 
 **Open vragen voor de opdrachtgever**
@@ -1658,6 +1778,9 @@ Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begrotin
 | 11 | 2026-10-27 | Er komt een **gouden dataset van 10.000 verzonnen artikelen** voor de testcases | [§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests) |
 | 12 | 2026-10-27 | Er komen testcases met **unit tests** én **integratietests** | [§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests) |
 | 13 | 2026-10-27 | **Docker-deployment blijft mogelijk** en staat beschreven in de handleiding | [§12.14](#1214-docker-blijft-mogelijk) |
+| 14 | 2026-10-27 | **Acceptatiecriteria voor plakken** uit Word, Google Docs en LibreOffice: vet, schuin, kop 1 tot en met 3, tabel, formule en beide soorten lijsten vrijwel ongewijzigd en met behoud van betekenis; plaatjes buiten de scope | [§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice) |
+| 15 | 2026-10-27 | **Prestatie-eisen**: typen binnen 100 ms, bewaren binnen 1 seconde, leesweergave binnen 250 ms op iPhone 16 in een anoniem venster, editor de tweede en volgende keer binnen 3 seconden open | [§12.16](#1216-prestatie-eisen) |
+| 16 | 2026-10-27 | **De oude editor blijft** voor het bewerken van bestaande artikelen. Omzetten van oude artikelen naar Markdown kan ooit, als de nieuwe editor zich heeft bewezen en iedereen er tevreden over is, maar valt buiten de scope | [§5.2](#52-migratie-de-oude-editor-blijft-voor-oude-artikelen), [§17.1](#171-binnen-en-buiten-de-scope) |
 
 ## 20. Volgende stappen
 
@@ -1668,7 +1791,9 @@ Het maximum is verruimd van 50 naar 80 en daarna naar **160 dagen**. De begrotin
    1. iPhone (Safari, iOS actueel en vorige versie), iPad (Safari, met en zonder toetsenbord), Chrome en Edge (Windows/macOS) en een Chromebook;
    2. een gebruikerstest met twee à drie auteurs uit de doelgroep (taken: artikel starten, foto met bijschrift, kader, tijdlijn, beoordeling starten);
    3. import en export van `.md`-bestanden met een ander Markdown-programma;
-   4. regressie: oude HTML-artikelen openen, bewerken en opslaan met de opmaakeditor, zonder wijziging in hun XML-structuur.
+   4. regressie: oude HTML-artikelen openen, bewerken en opslaan met de opmaakeditor, zonder wijziging in hun XML-structuur;
+   5. de plaktest met Word, Google Docs en LibreOffice ([§12.15](#1215-acceptatiecriteria-plakken-uit-word-google-docs-en-libreoffice)), met als eerste de vraag in welke vorm een formule op het klembord komt;
+   6. de prestatie-eisen op iPhone 16, iPad en laptop ([§12.16](#1216-prestatie-eisen)).
 5. **Handleiding** aanvullen in `docs/handleiding/`: de eerste vijf pagina's staan er ([§16.4](#164-inhoud)); de andere volgen, zodat de gebruikerstest ze kan meenemen.
 6. **Gouden dataset** opbouwen: generator, profielen en manifest, en de uitkomsten eenmalig nakijken ([§12.13](#1213-testen-gouden-dataset-unit-tests-en-integratietests)).
 7. **Testcases** schrijven: unit tests in PHP en JavaScript en integratietests in de container op PHP 8.2 tot en met 8.5, ook voor Docker ([§12.14](#1214-docker-blijft-mogelijk)).

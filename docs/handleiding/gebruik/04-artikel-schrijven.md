@@ -1,6 +1,6 @@
 ---
 title: "Een artikel schrijven"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -97,8 +97,8 @@ fotograaf: Foto (naam fotograaf)
 4. Een link naar een andere pagina van de site maak je met `[[` gevolgd door de naam; de editor stelt pagina's voor.
 5. Een **voetnoot** maak je met `[^1]` in de tekst en `[^1]: Bron of uitleg` onderaan.
 
-> [!tip] Plakken uit Word
-> Plak gerust tekst uit Word of Google Docs. De editor neemt koppen, vet, schuin, lijsten en links over en laat de rest weg, zodat de opmaak niet verspringt.
+> [!tip] Plakken uit Word, Google Docs of LibreOffice
+> Plak gerust tekst uit Word, Google Docs of LibreOffice. De editor neemt vet, schuin, koppen, tabellen, formules, lijsten en links over en laat de rest weg, zodat de opmaak niet verspringt. Kop 1 wordt een tussenkop. Foto's gaan niet altijd mee: voeg ze dan toe met **Beeld…**; de checklist herinnert je eraan. Wil je alleen de tekst, zonder opmaak? Plak dan met ⌘⇧V (Ctrl+Shift+V).
 
 ### 5. Beeld, citaat, kader, tabel en diagram toevoegen
 

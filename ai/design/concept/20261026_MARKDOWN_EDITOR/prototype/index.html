@@ -18,6 +18,7 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/temml@0.14.0/dist/temml.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js"></script>
+<script src="plakken.js"></script>
 <style>
 @font-face { font-family: 'Lato'; font-weight: 400; src: url('../img/fonts/lato-regular.woff2') format('woff2'); }
 @font-face { font-family: 'Lato'; font-weight: 700; src: url('../img/fonts/lato-bold.woff2') format('woff2'); }
@@ -1944,20 +1945,66 @@ wys.addEventListener('keydown', e => {
 	if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); VACTIONS.link(); }
 });
 //
+// Paste from Word, Google Docs and LibreOffice: the HTML on the clipboard becomes Markdown (plakken.js), in both views.
+// Plain text, and paste as plain text (⌘⇧V, Ctrl+Shift+V), go in unchanged. Both are one undo step.
+//
+function pastedMarkdown(e) {
+	const html = e.clipboardData && e.clipboardData.getData('text/html');
+	if (!html || !window.HyphaPlakken) return null;
+	const r = HyphaPlakken.toMarkdown(html, { imageNo: Object.keys(state.images).filter(k => k.startsWith('beeld/geplakt-')).length });
+	for (const im of r.images) state.images[im.key] = im.src;
+	if (r.notes.length) toast(r.notes.join(' '));
+	//
+	// Pasting a few words within a sentence keeps the space before and after them.
+	//
+	const plain = e.clipboardData.getData('text/plain') || '';
+	if (r.md && !/\n/.test(r.md)) return (/^\s/.test(plain) ? ' ' : '') + r.md + (/\s$/.test(plain) ? ' ' : '');
+	return r.md;
+}
+src.addEventListener('paste', e => {
+	const md = pastedMarkdown(e);
+	if (md === null) return;
+	e.preventDefault();
+	document.execCommand('insertText', false, md);
+});
+for (const el of [wys, $('wysMethod'), $('wysSources')])
+	el.addEventListener('paste', e => {
+		const md = pastedMarkdown(e);
+		if (md === null) return;
+		e.preventDefault();
+		//
+		// One paragraph goes in as text within the sentence. Several blocks get an empty paragraph after them, because
+		// Chrome merges the last inserted block with what follows; a selection is deleted first for the same reason.
+		//
+		let html = renderMarkdown(md.trim(), state.images).trim();
+		if (/^\s/.test(md)) html = html.replace(/^<p>/, '<p> ');
+		if (/\s$/.test(md)) html = html.replace(/<\/p>$/, ' </p>');
+		const single = /^<p>[\s\S]*<\/p>$/.test(html) && html.indexOf('<p>', 1) < 0;
+		html = single ? html.slice(3, -4).replace(/^ | $/g, '&nbsp;') : html + '<p><br></p>';
+		if (!getSelection().isCollapsed) document.execCommand('delete');
+		document.execCommand('insertHTML', false, html);
+		if (el === wys) { decorateFigures(); decorateMath(wys); renderDiagrams(wys); onVisualInput(); }
+	});
+//
 // HTML back to Markdown, for the elements the editor creates itself.
 //
 function htmlToMd(root) {
 	const notes = [];
 	const inl = n => [...n.childNodes].map(inlineMd).join('');
+	//
+	// Line breaks (Shift+Enter) are hard breaks: a backslash at the end of the line. One at the start or end of a block is dropped.
+	//
+	const trimBr = s => s.replace(/^(\s|\\\n)+|(\s|\\\n)+$/g, '');
+	const inlT = n => trimBr(inl(n));
 	function inlineMd(n) {
-		if (n.nodeType === 3) return n.nodeValue.replace(/\u00a0/g, ' ');
+		if (n.nodeType === 3) return n.nodeValue.replace(/\u00a0/g, ' ').replace(/([\\`*_\[\]$])/g, '\\$1');
 		if (n.nodeType !== 1) return '';
 		const t = n.tagName.toLowerCase();
 		if (t === 'strong' || t === 'b') return `**${inl(n)}**`;
 		if (t === 'em' || t === 'i') return `*${inl(n)}*`;
 		if (t === 'mark') return `==${inl(n)}==`;
 		if (t === 'span' && n.classList.contains('math')) return `$${decodeURIComponent(n.dataset.tex || '')}$`;
-		if (t === 'br') return '\n';
+		if (t === 'br') return '\\\n';
 		if (t === 'sup' && n.querySelector('a[href^="#fn-"]')) return `[^${n.textContent.trim()}]`;
 		if (t === 'a' && n.classList.contains('wikilink')) { const pg = n.dataset.page || n.textContent; return n.textContent === pg ? `[[${pg}]]` : `[[${pg}|${n.textContent}]]`; }
 		if (t === 'a') return `[${inl(n)}](${n.getAttribute('href')})`;
@@ -1965,23 +2012,36 @@ function htmlToMd(root) {
 		return inl(n);
 	}
 	function imageKey(srcv) { for (const [k, v] of Object.entries(state.images)) if (v === srcv) return k; return srcv; }
+	//
+	// Nested lists: a sub-list is indented to the text of its item (two spaces under '-', three under '1.').
+	//
+	function listMd(n, ind) {
+		const ordered = n.tagName === 'OL';
+		let k = +(n.getAttribute('start') || 1);
+		return [...n.children].filter(li => li.tagName === 'LI').map(li => {
+			const mk = ordered ? `${k++}.` : '-', pad = ind + mk.length + 1;
+			const own = [...li.childNodes].filter(c => !(c.nodeType === 1 && /^(UL|OL)$/.test(c.tagName)));
+			const text = trimBr(own.map(c => c.nodeType === 1 && c.tagName === 'P' ? inl(c) + '\\\n' : inlineMd(c)).join('')).replace(/\\\n/g, '\\\n' + ' '.repeat(pad));
+			const sub = [...li.children].filter(c => /^(UL|OL)$/.test(c.tagName)).map(c => listMd(c, pad));
+			return [' '.repeat(ind) + mk + ' ' + text, ...sub].join('\n');
+		}).join('\n');
+	}
 	function block(n) {
 		if (n.nodeType === 3) return n.nodeValue.trim() ? n.nodeValue.trim() : '';
 		if (n.nodeType !== 1) return '';
 		const t = n.tagName.toLowerCase();
-		if (/^h[1-6]$/.test(t)) return '#'.repeat(Math.max(3, +t[1])) + ' ' + inl(n).trim();
+		if (/^h[1-6]$/.test(t)) return '#'.repeat(Math.max(3, +t[1])) + ' ' + inlT(n).replace(/\\\n/g, ' ');
 		if (t === 'span' && n.classList.contains('math')) return inlineMd(n);
 		if (t === 'div' && n.classList.contains('math-block')) return '$$\n' + decodeURIComponent(n.dataset.tex || '') + '\n$$';
-		if (t === 'p' || t === 'div') return inl(n).trim();
-		if (t === 'ul') return [...n.children].map(li => '- ' + inl(li).trim()).join('\n');
-		if (t === 'ol') return [...n.children].map((li, i) => `${i + 1}. ` + inl(li).trim()).join('\n');
+		if (t === 'p' || t === 'div') return inlT(n);
+		if (t === 'ul' || t === 'ol') return listMd(n, 0);
 		if (t === 'hr') return '---';
-		if (t === 'blockquote' && n.classList.contains('quote')) return '> [!quote] Citaat\n' + [...n.children].map(c => '> ' + inl(c).trim()).join('\n>\n');
-		if (t === 'blockquote') return [...n.children].map(c => '> ' + inl(c).trim()).join('\n');
+		if (t === 'blockquote' && n.classList.contains('quote')) return '> [!quote] Citaat\n' + [...n.children].map(c => '> ' + inlT(c)).join('\n>\n');
+		if (t === 'blockquote') return [...n.children].map(c => '> ' + inlT(c)).join('\n');
 		if (t === 'aside' && n.classList.contains('callout')) {
 			const type = [...n.classList].find(c => c !== 'callout') || 'info';
 			const title = (n.querySelector('.ct') || {}).textContent || '';
-			return `> [!${type}] ${title}`.trim() + '\n' + [...n.children].filter(c => !c.classList.contains('ct')).map(c => '> ' + inl(c).trim()).join('\n>\n');
+			return `> [!${type}] ${title}`.trim() + '\n' + [...n.children].filter(c => !c.classList.contains('ct')).map(c => '> ' + inlT(c)).join('\n>\n');
 		}
 		if (t === 'figure' && n.classList.contains('diagram')) {
 			const alt = n.dataset.alt;
@@ -1993,17 +2053,17 @@ function htmlToMd(root) {
 			const cls = [...n.classList].find(c => c !== 'breed');
 			return `![${img ? img.alt : ''}](${img ? imageKey(img.getAttribute('src')) : ''})${cls ? `{.${cls}}` : ''}` + (cap && cap.textContent.trim() ? `\n*${cap.textContent.trim()}*` : '');
 		}
-		if (t === 'section' && n.classList.contains('footnotes')) { n.querySelectorAll('li').forEach(li => notes.push(`[^${li.id.replace('fn-', '')}]: ${inl(li).trim()}`)); return ''; }
+		if (t === 'section' && n.classList.contains('footnotes')) { n.querySelectorAll('li').forEach(li => notes.push(`[^${li.id.replace('fn-', '')}]: ${inlT(li)}`)); return ''; }
 		if (t === 'pre') return '```' + (n.dataset.lang || '') + '\n' + n.textContent.replace(/\n$/, '') + '\n```';
 		if (t === 'table') {
 			const trs = [...n.querySelectorAll('tr')];
 			if (!trs.length) return '';
-			const cell = c => inl(c).replace(/\n/g, ' ').replace(/\|/g, '\\|').trim();
+			const cell = c => inlT(c).replace(/\\\n/g, ' ').replace(/\n/g, ' ').replace(/(^|[^\\])\|/g, '$1\\|');
 			const rows = trs.map(tr => '| ' + [...tr.cells].map(cell).join(' | ') + ' |');
 			rows.splice(1, 0, '| ' + [...trs[0].cells].map(c => ALIGN[c.getAttribute('align') || c.style.textAlign] || '---').join(' | ') + ' |');
 			return rows.join('\n');
 		}
-		return inl(n).trim();
+		return inlT(n);
 	}
 	const out = [...root.childNodes].map(block).filter(b => b !== '');
 	if (notes.length) out.push(notes.join('\n'));

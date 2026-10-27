@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plaktest – Markdown-editor voor Hypha</title>
+<!--
+// Test page for the paste conversion (plakken.js): runs the captured clipboard HTML of Word, Google Docs and
+// LibreOffice and the small cases, measures the time, and captures new clipboard HTML as a test case.
+// Libraries: marked (MIT) for the preview, Temml (MIT) to check the formulas.
+-->
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/temml@0.14.0/dist/temml.min.js"></script>
+<script src="plakken.js"></script>
+<script src="plaktest/gegevens.js"></script>
+<style>
+/*
+// House style of the prototype: Lato, the calm teal for accents, green and red only with a word next to them.
+*/
+@font-face { font-family: 'Lato'; font-weight: 400; src: url('../img/fonts/lato-regular.woff2') format('woff2'); }
+@font-face { font-family: 'Lato'; font-weight: 700; src: url('../img/fonts/lato-bold.woff2') format('woff2'); }
+:root { --fg: #1d2021; --muted: #505458; --line: #d5dadd; --accent: #0B7285; --ok: #2b6b25; --bad: #a3171a; --bg: #ffffff; --alt: #f4f6f7; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 Lato, Helvetica, Arial, sans-serif; color: var(--fg); background: var(--bg); }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 28px; margin: 0 0 4px; }
+h2 { font-size: 21px; margin: 32px 0 8px; border-bottom: 2px solid #fe9900; padding-bottom: 4px; }
+p.lead { color: var(--muted); margin: 0 0 16px; }
+#summary { font-size: 18px; font-weight: 700; padding: 12px 16px; border-radius: 6px; background: var(--alt); }
+.ok { color: var(--ok); } .bad { color: var(--bad); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 6px 8px; }
+th { background: var(--alt); }
+pre, textarea { font: 13px/1.45 Menlo, Consolas, monospace; }
+pre { background: var(--alt); padding: 8px 10px; white-space: pre-wrap; word-break: break-word; margin: 6px 0; border-radius: 4px; }
+details { margin: 4px 0; }
+summary { cursor: pointer; color: var(--accent); min-height: 32px; display: flex; align-items: center; }
+.diff { border-left: 4px solid var(--bad); }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 760px) { .cols { grid-template-columns: 1fr; } th:nth-child(3), td:nth-child(3) { display: none; } }
+#capture { min-height: 120px; border: 2px dashed var(--accent); border-radius: 6px; padding: 12px; background: #fff; }
+#capture:focus { outline: 3px solid #fe9900; outline-offset: 2px; }
+textarea { width: 100%; min-height: 160px; border: 1px solid var(--line); border-radius: 4px; padding: 8px; }
+label { font-weight: 700; display: block; margin: 8px 0 4px; }
+select, button { font: inherit; min-height: 44px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--line); background: #fff; color: var(--fg); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.preview { border: 1px solid var(--line); border-radius: 4px; padding: 0 12px; }
+.small { font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>Plaktest</h1>
+<p class="lead">Zet de HTML die Word, Google Docs en LibreOffice op het klembord zetten om naar Markdown, en vergelijk het resultaat letter voor letter met de verwachte Markdown. Zie §12.15 van het ontwerp.</p>
+<div id="summary" role="status" aria-live="polite">Bezig…</div>
+
+<h2>Testdocumenten</h2>
+<p class="small">Het testdocument staat als <code>plaktest/plaktest.docx</code>, <code>.odt</code> en <code>.md</code> naast deze pagina. <em>Opname</em>: van het echte klembord; <em>export</em>: HTML-export van het programma, met hetzelfde filter als het klembord; <em>nagebouwd</em>: met de hand nagemaakt naar de bekende opbouw, te vervangen door een opname.</p>
+<table>
+	<thead><tr><th scope="col">Programma</th><th scope="col">Uitslag</th><th scope="col">Herkomst</th><th scope="col">Tijd</th></tr></thead>
+	<tbody id="docs"></tbody>
+</table>
+
+<h2>Losse gevallen</h2>
+<table>
+	<thead><tr><th scope="col">Geval</th><th scope="col">Uitslag</th></tr></thead>
+	<tbody id="cases"></tbody>
+</table>
+
+<h2>Snelheid</h2>
+<p class="small">Eis: plakken van een document van tien pagina's binnen 1 seconde (§12.16). Gemeten wordt alleen de omzetting, de mediaan van vijf keer, met het Word-document veertig keer achter elkaar (ruim 6.000 woorden, zo'n dertien pagina's).</p>
+<p id="speed">Bezig…</p>
+
+<h2>Opname: klembord vastleggen</h2>
+<p class="small">Kopieer het testdocument (of een ander verzonnen stuk, zonder persoonsgegevens) in Word, Google Docs of LibreOffice en plak het in het vak. Je ziet de HTML van het klembord, de Markdown en het resultaat. Met <strong>kopieer als testgeval</strong> krijg je een blok voor <code>plaktest/gegevens.js</code>.</p>
+<label for="program">Programma</label>
+<select id="program">
+	<option>Word (Microsoft 365) op Windows</option>
+	<option>Word (Microsoft 365) op macOS</option>
+	<option>Word in de browser</option>
+	<option>Google Docs in Chrome</option>
+	<option>Google Docs in Safari</option>
+	<option>LibreOffice Writer</option>
+</select>
+<label for="capture">Plak hier</label>
+<div id="capture" contenteditable="true" role="textbox" aria-multiline="true" aria-describedby="captureHelp"></div>
+<p id="captureHelp" class="small">Er wordt niets opgeslagen of verstuurd; alles blijft in deze pagina.</p>
+<div class="cols">
+	<div><label for="capHtml">HTML van het klembord</label><textarea id="capHtml" readonly></textarea></div>
+	<div><label for="capMd">Markdown</label><textarea id="capMd" readonly></textarea></div>
+</div>
+<p id="capNotes" class="small" role="status"></p>
+<p><button class="primary" id="copyCase" type="button" disabled>kopieer als testgeval</button></p>
+<label id="capPreviewLabel">Resultaat</label>
+<div class="preview" id="capPreview" aria-labelledby="capPreviewLabel"></div>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const HERKOMST = { opname: 'opname', export: 'export', nagebouwd: 'nagebouwd' };
+
+//
+// Every formula in the Markdown must draw without error in Temml.
+//
+function formulaErrors(md) {
+	const errs = [];
+	const tex = [...md.matchAll(/^\$\$\n([\s\S]+?)\n\$\$$/gm)].map(m => m[1]).concat([...md.replace(/^\$\$\n[\s\S]+?\n\$\$$/gm, '').matchAll(/(^|[^\\$])\$(?=\S)([^$\n]*?\S)\$(?![\w$\d])/g)].map(m => m[2]));
+	for (const t of tex) {
+		try { temml.renderToString(t, { throwOnError: true }); } catch (e) { errs.push(`${t}: ${e.message}`); }
+	}
+	return errs;
+}
+//
+// The first line that differs, with the expected and the actual text.
+//
+function firstDiff(want, got) {
+	const a = want.split('\n'), b = got.split('\n');
+	for (let i = 0; i < Math.max(a.length, b.length); i++)
+		if (a[i] !== b[i]) return `regel ${i + 1}\nverwacht: ${JSON.stringify(a[i] ?? '(geen regel)')}\nkregen:   ${JSON.stringify(b[i] ?? '(geen regel)')}`;
+	return '';
+}
+const sameNotes = (want = [], got = []) => JSON.stringify([...want].sort()) === JSON.stringify([...got].sort());
+let passed = 0, total = 0;
+const result = { documenten: [], gevallen: [] };
+
+for (const d of PLAKTEST.documenten) {
+	const t0 = performance.now();
+	const r = HyphaPlakken.toMarkdown(d.html);
+	const ms = performance.now() - t0;
+	const fe = formulaErrors(r.md), diff = firstDiff(d.verwacht, r.md), notesOk = sameNotes(d.meldingen, r.notes);
+	const ok = !diff && !fe.length && notesOk;
+	total++; if (ok) passed++;
+	result.documenten.push({ id: d.id, ok, diff, formules: fe, meldingen: r.notes });
+	$('docs').insertAdjacentHTML('beforeend', `<tr><td>${esc(d.programma)}</td><td>
+		<strong class="${ok ? 'ok' : 'bad'}">${ok ? '✓ geslaagd' : '✗ verschil'}</strong>
+		${diff ? `<pre class="diff">${esc(diff)}</pre>` : ''}
+		${fe.length ? `<pre class="diff">Formule klopt niet:\n${esc(fe.join('\n'))}</pre>` : ''}
+		${notesOk ? '' : `<pre class="diff">Meldingen verwacht: ${esc(JSON.stringify(d.meldingen))}\nkregen: ${esc(JSON.stringify(r.notes))}</pre>`}
+		${d.opmerking ? `<p class="small">${esc(d.opmerking)}</p>` : ''}
+		${r.notes.length ? `<p class="small">Meldingen voor de auteur: ${esc(r.notes.join(' '))}</p>` : ''}
+		<details><summary>Markdown</summary><pre>${esc(r.md)}</pre></details>
+		<details><summary>HTML van het klembord (${d.html.length.toLocaleString('nl')} tekens)</summary><pre>${esc(d.html)}</pre></details>
+		</td><td>${esc(HERKOMST[d.herkomst] || d.herkomst)}</td><td>${ms.toFixed(1).replace('.', ',')} ms</td></tr>`);
+}
+
+for (const c of PLAKTEST.gevallen) {
+	let got, notes = [];
+	if (c.omml) {
+		const doc = new DOMParser().parseFromString(`<x-omml>${c.omml}</x-omml>`, 'text/html');
+		got = HyphaPlakken.ommlToTex(doc.body.firstElementChild);
+	} else { const r = HyphaPlakken.toMarkdown(c.html); got = r.md; notes = r.notes; }
+	const fe = c.omml ? formulaErrors(`$${got}$`) : [];
+	const ok = got === c.verwacht && sameNotes(c.meldingen, notes) && !fe.length;
+	total++; if (ok) passed++;
+	result.gevallen.push({ naam: c.naam, ok, kregen: got });
+	$('cases').insertAdjacentHTML('beforeend', `<tr><td>${esc(c.naam)}</td><td><strong class="${ok ? 'ok' : 'bad'}">${ok ? '✓ geslaagd' : '✗ verschil'}</strong>
+		${ok ? '' : `<pre class="diff">verwacht: ${esc(JSON.stringify(c.verwacht))}\nkregen:   ${esc(JSON.stringify(got))}${notes.length ? '\nmeldingen: ' + esc(JSON.stringify(notes)) : ''}${fe.length ? '\n' + esc(fe.join('\n')) : ''}</pre>`}</td></tr>`);
+}
+
+//
+// Speed: the Word document forty times, as one paste.
+//
+{
+	const word = PLAKTEST.documenten.find(d => d.id === 'word-windows').html;
+	const body = word.replace(/^[\s\S]*<!--StartFragment-->/, '').replace(/<!--EndFragment-->[\s\S]*$/, '');
+	const big = word.replace(body, Array(40).fill(body).join('\n'));
+	const times = [];
+	let words = 0;
+	for (let k = 0; k < 5; k++) { const t0 = performance.now(); const r = HyphaPlakken.toMarkdown(big); times.push(performance.now() - t0); words = r.md.split(/\s+/).length; }
+	times.sort((a, b) => a - b);
+	const med = times[2], ok = med < 1000;
+	total++; if (ok) passed++;
+	result.snelheid = { ms: med, woorden: words, ok };
+	$('speed').innerHTML = `<strong class="${ok ? 'ok' : 'bad'}">${ok ? '✓ geslaagd' : '✗ te traag'}</strong>: ${med.toFixed(0)} ms voor ${words.toLocaleString('nl')} woorden (${(big.length / 1024).toFixed(0)} kB HTML).`;
+}
+
+$('summary').innerHTML = `<span class="${passed === total ? 'ok' : 'bad'}">${passed} van ${total} geslaagd</span>`;
+result.geslaagd = passed; result.totaal = total;
+window.PLAKTEST.resultaat = result;
+
+//
+// Capture: the HTML of a real paste, converted, with a test case to copy into gegevens.js.
+//
+let captured = '';
+$('capture').addEventListener('paste', e => {
+	e.preventDefault();
+	captured = e.clipboardData.getData('text/html');
+	const plain = e.clipboardData.getData('text/plain');
+	$('capHtml').value = captured || '(geen HTML op het klembord, alleen tekst)';
+	const r = captured ? HyphaPlakken.toMarkdown(captured) : { md: plain, notes: [] };
+	$('capMd').value = r.md;
+	const fe = formulaErrors(r.md);
+	$('capNotes').textContent = [r.notes.join(' '), fe.length ? 'Formule klopt niet: ' + fe.join('; ') : ''].filter(Boolean).join(' ') || 'Omgezet zonder meldingen.';
+	$('capPreview').innerHTML = marked.parse(r.md);
+	$('capture').textContent = `Geplakt: ${captured.length.toLocaleString('nl')} tekens HTML.`;
+	$('copyCase').disabled = !captured;
+});
+$('copyCase').addEventListener('click', async () => {
+	const id = $('program').value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+	const block = `\t{\n\t\tid: ${JSON.stringify(id)}, programma: ${JSON.stringify($('program').value)}, herkomst: 'opname',\n\t\thtml: ${JSON.stringify(captured)},\n\t\tverwacht: ${JSON.stringify($('capMd').value)},\n\t\tmeldingen: []\n\t},\n`;
+	try { await navigator.clipboard.writeText(block); $('capNotes').textContent = 'Testgeval gekopieerd. Controleer de verwachte Markdown voordat je het toevoegt.'; }
+	catch (e) { $('capMd').value = block; $('capNotes').textContent = 'Kopiëren mag hier niet; het testgeval staat in het vak Markdown.'; }
+});
+</script>
+</body>
+</html>
