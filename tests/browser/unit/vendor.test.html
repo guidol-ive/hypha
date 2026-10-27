@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Bibliotheken</title>
+<script type="importmap">
+{ "imports": {
+	"codemirror": "../../../system/mdeditor/vendor/codemirror-6.36.8.js",
+	"prosemirror": "../../../system/mdeditor/vendor/prosemirror-1.40.0.js",
+	"markdown-it": "../../../system/mdeditor/vendor/markdown-it-14.1.0.js",
+	"dompurify": "../../../system/mdeditor/vendor/dompurify-3.2.6.js",
+	"highlight": "../../../system/mdeditor/vendor/highlight-11.11.1.js",
+	"pele": "../../../system/mdeditor/vendor/pele-1.10.1.js",
+	"temml": "../../../system/mdeditor/vendor/temml-0.14.0.js"
+} }
+</script>
+<script type="module">
+	//
+	// Every bundled library loads through the import map and does its basic job (task T06).
+	//
+	import { test, same, check, done } from './lib.js';
+	test('codemirror: an editor with Markdown', async () => {
+		const cm = await import('codemirror');
+		const view = new cm.view.EditorView({ doc: '### Kop', extensions: [cm.markdown.markdown()], parent: document.body });
+		same('### Kop', view.state.doc.toString());
+		view.destroy();
+	});
+	test('prosemirror: a document and markdown-it from the import map', async () => {
+		const pm = await import('prosemirror');
+		const doc = pm.markdown.defaultMarkdownParser.parse('**vet**');
+		same('**vet**', pm.markdown.defaultMarkdownSerializer.serialize(doc));
+	});
+	test('markdown-it with footnotes and definition lists', async () => {
+		const m = await import('markdown-it');
+		const md = m.default().use(m.footnote).use(m.deflist);
+		check(md.render('a[^1]\n\n[^1]: b').includes('footnote'));
+		check(md.render('Woo\n: Wet').includes('<dl>'));
+	});
+	test('dompurify removes a script', async () => {
+		const p = (await import('dompurify')).default;
+		same('<p>x</p>', p.sanitize('<p>x</p><script>alert(1)<\/script>'));
+	});
+	test('highlight.js knows the ten languages', async () => {
+		const h = (await import('highlight')).default;
+		for (const l of ['php', 'javascript', 'sql', 'python', 'html', 'css', 'json', 'yaml', 'bash', 'xml']) check(h.getLanguage(l), l);
+	});
+	test('pele draws a pie chart', async () => {
+		const p = await import('pele');
+		check(p.render('pie title A\n  "x" : 1').svg.startsWith('<svg'));
+	});
+	test('temml makes MathML', async () => {
+		const t = (await import('temml')).default;
+		check(t.renderToString('a^2').startsWith('<math'));
+	});
+	done();
+</script>

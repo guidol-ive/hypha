@@ -49,7 +49,11 @@ for (const f of fs.readdirSync(path.join(root, 'tests/browser/unit')).filter(f =
 	page.on('response', r => { if (r.status() >= 400 && !r.url().endsWith('/favicon.ico')) errors.push(r.status() + ' ' + r.url()); });
 	await page.goto(stat + 'tests/browser/unit/' + f);
 	try {
-		await page.waitForFunction(() => window.hyphaTestResult, null, { timeout: 120000 });
+		for (let t = 0; !(await page.evaluate(() => !!window.hyphaTestResult)); t += 100) {
+			if (errors.some(e => /SyntaxError|ReferenceError|TypeError/.test(e)) && t > 2000) throw new Error('page error: ' + errors[0]);
+			if (t > 120000) throw new Error('no result after 120 s');
+			await new Promise(r => setTimeout(r, 100));
+		}
 		const r = await page.evaluate(() => window.hyphaTestResult);
 		for (const [name, ok, message, ms] of r.results) report(`${f}: ${name}`, ok, message, ms);
 	}

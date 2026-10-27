@@ -86,6 +86,12 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 2. Tests en uitkomsten: `tests/integratie/test_tekstpagina.py`, 8 tests (nieuwe pagina, drie versies met gelijke tijdstempels, `viewBox` in de leesweergave, oude versie voor leden, terugzetten van XHTML en bron samen, vertalen, hernoemen en privé, oude tekstpagina blijft in WYMeditor en ongewijzigd). PHP 8.2.35 en 8.4.27: 8 van 8 (en 26 en 3 van T01 en T04), geen nieuwe PHP-meldingen.
 3. Gevonden en opgelost: twee talen die in dezelfde seconde worden bewaard, kregen dezelfde `xml:id`; de tijdstempel wordt nu verhoogd tot hij uniek is in het document. (De bestaande `storeWikiContent()` heeft hetzelfde probleem bij vertalen; niet aangepast.)
 
+### T06 Bibliotheken voor de browser (2026-10-27)
+
+1. Gebouwd: `tools/bundel/` (package.json met vaste versies, `bundel.mjs`, ingangen in `src/`) en `system/mdeditor/vendor/bundel.sh`. Per bibliotheek één ES-module met de versie in de naam: `codemirror-6.36.8.js` (203 kB gzip), `prosemirror-1.40.0.js` (83 kB; markdown-it komt via de import map), `markdown-it-14.1.0.js` met voetnoten en definitielijsten (52 kB), `dompurify-3.2.6.js` (8 kB), `highlight-11.11.1.js` met de tien talen (21 kB), `pele-1.10.1.js` (257 kB) en `temml-0.14.0.js` (113 kB) als hun eigen ES-module. Licenties van alle 48 meegebundelde pakketten in `LICENSES/`.
+2. Tests en uitkomsten: `tests/browser/unit/vendor.test.html` in headless Chrome: 7 van 7 (elke bundel laadt via de import map en doet zijn basistaak); de licentiecontrole in `bundel.mjs`: 48 pakketten, alle permissief (DOMPurify onder Apache-2.0).
+3. CodeMirror is groter dan geschat (203 tegen 178 kB gzip): `@codemirror/lang-markdown` trekt de HTML-, CSS- en JavaScript-talen mee voor ingesloten code. Pele en Temml worden pas geladen als ze nodig zijn.
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.
