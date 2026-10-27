@@ -290,6 +290,35 @@ def language_change_before_publication_br77(base):
 
 
 @test
+def review_findings_control_characters_title_csrf_statute_roles(base):
+    sanne = Client(base).login("sanne")
+    ahmed = Client(base).login("ahmed")
+    title = "<img src=x onerror=alert(1)> \x0b titel"
+    location = new_article(sanne, title)
+    path = location.split("?")[0].replace(base.rstrip("/") + "/", "").removesuffix("/edit")
+    status, text, _ = sanne.get(path)
+    assert status == 200, status
+    assert "<img src=\"x\" onerror" not in text and "&lt;img src=x onerror=alert(1)&gt;" in text, re.findall(r'<h1[^>]*>.*?</h1>', text, re.S)
+    assert save(sanne, path, fields(title="Titel", frontmatter="a: b\x0bc", tags=[["x"]], author=["y"]))["ok"]
+    root = article_xml(path.split("/")[1])
+    assert root.find("article/source/frontmatter").text == "a: bc", root.find("article/source/frontmatter").text
+    status, text, _ = sanne.post(path + "/edit", "md_save", "", {"md_fields": json.dumps(fields()), "ajax": "1", "csrfToken": "deadbeef"})
+    assert json.loads(text)["ok"] is False, text
+    assert save(sanne, path, fields(title="Titel"))["ok"]
+    command(sanne, path, "status_change_review")
+    for name in ("ahmed", "lotte", "joris"):
+        command(Client(base).login(name), path, "approve", {"md_statute[]": [10, 11, 12, 13, 14]})
+    assert len(article_xml(path.split("/")[1]).find("approves")) == 0, "statute numbers outside the list"
+    ahmed.get(path)
+    ahmed.post(path, "md_language", "en")
+    assert page_node(path.split("/")[1], "en") is None, "colleague changed the language"
+    for name in ("ahmed", "lotte", "joris"):
+        command(Client(base).login(name), path, "approve", {"md_statute[]": STATUTE})
+    command(ahmed, path, "status_change_published")
+    assert article_xml(path.split("/")[1]).find("article").get("status") == "approved", "colleague published or not approved: " + article_xml(path.split("/")[1]).find("article").get("status")
+
+
+@test
 def old_html_article_opens_in_wymeditor(base):
     # An article stored the old way, without format="markdown" and without a source element.
     beheer = Client(base).login("beheer")

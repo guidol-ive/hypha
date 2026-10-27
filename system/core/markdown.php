@@ -25,6 +25,32 @@
 	}
 
 	/*
+		Function: hypha_markdownClean
+		A text from the editor as a clean string: arrays and other types become '', invalid UTF-8 is repaired, and control
+		characters that XML 1.0 does not allow (vertical tab from Word, for one) are removed; otherwise the page file
+		would no longer load.
+	*/
+	function hypha_markdownClean($value): string {
+		if (!is_string($value) && !is_int($value) && !is_float($value)) return '';
+		$value = mb_scrub((string)$value, 'UTF-8');
+		return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]|\x{FFFE}|\x{FFFF}/u', '', $value);
+	}
+
+	/*
+		Function: hypha_markdownCleanFields
+		Every field from the editor through <hypha_markdownClean>; only tags is a list, of which only the strings stay.
+	*/
+	function hypha_markdownCleanFields(array $fields): array {
+		$clean = [];
+		foreach ($fields as $key => $value) {
+			if (is_array($value) && $key === 'tags') $clean[$key] = array_values(array_filter(array_map('hypha_markdownClean', array_filter($value, 'is_string')), fn ($v) => $v !== ''));
+			elseif (is_bool($value)) $clean[$key] = $value;
+			else $clean[$key] = hypha_markdownClean($value);
+		}
+		return $clean;
+	}
+
+	/*
 		Function: hypha_markdownSlug
 		Turns a text into lower case words joined by hyphens, without accents (design section 13.14, BR-27).
 		Symbols become words first: & is 'en', % is 'procent', € is 'euro' (the Dutch words, as in the design).

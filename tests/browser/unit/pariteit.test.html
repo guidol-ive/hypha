@@ -1,0 +1,49 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pariteit</title>
+<script type="importmap">
+{ "imports": {
+	"markdown-it": "../../../system/mdeditor/vendor/markdown-it-14.1.0.js",
+	"highlight": "../../../system/mdeditor/vendor/highlight-11.11.1.js"
+} }
+</script>
+<script type="module">
+	//
+	// Parity test (design section 13.4.2): markdown-it with the Hypha plug-ins gives the same HTML as league/commonmark
+	// with the Hypha extensions, after normalising: attributes sorted, white space collapsed, rel left out, and the
+	// colour spans of the code highlighting left out (highlight.js 11 and highlight.php 9 name a few tokens differently).
+	//
+	import { test, same, done, diffLine } from './lib.js';
+	import { createMarkdown } from '../../../system/mdeditor/hypha-markdown.js';
+	import hljs from 'highlight';
+	const data = await (await fetch('../../fixtures/pariteit.json')).json();
+	const md = createMarkdown({ frameHosts: data.frameHosts, peertubeHosts: data.peertubeHosts, highlight: (code, language) => hljs.highlight(code, { language, ignoreIllegals: true }).value });
+
+	const BLOCK = /^(P|LI|UL|OL|BLOCKQUOTE|H\d|PRE|TABLE|THEAD|TBODY|TR|TD|TH|HR|DIV|FIGURE|FIGCAPTION|ASIDE|SECTION|NAV|DETAILS|SUMMARY|DL|DT|DD)$/;
+	function canon(html) {
+		const t = document.createElement('template');
+		t.innerHTML = html;
+		return walk(t.content, false).trim();
+	}
+	function walk(node, pre) {
+		let s = '';
+		for (const c of node.childNodes) {
+			if (c.nodeType === 3) s += pre ? c.data : c.data.replace(/\s+/g, ' ');
+			else if (c.nodeType === 1) {
+				if (c.tagName === 'SPAN' && /^hljs-/.test(c.className)) { s += walk(c, pre); continue; }
+				const attrs = [...c.attributes].filter(a => a.name !== 'rel').map(a => `${a.name}="${a.value}"`).sort().join(' ');
+				let inner = walk(c, pre || c.tagName === 'PRE');
+				const block = BLOCK.test(c.tagName);
+				if ((block || !inner.trim()) && !pre) inner = inner.trim();
+				s += (block ? '\n' : '') + `<${c.tagName.toLowerCase()}${attrs ? ' ' + attrs : ''}>${inner}</${c.tagName.toLowerCase()}>`;
+			}
+		}
+		return pre ? s : s.replace(/ *\n */g, '\n');
+	}
+	for (const c of data.cases) test(c.name, () => {
+		const a = canon(c.html), b = canon(md.hyphaRender(c.md));
+		const d = diffLine(a, b);
+		if (d) { const l = +d.match(/line (\d+)/)[1] - 1, x = a.split('\n')[l] || '', y = b.split('\n')[l] || ''; let k = 0; while (x[k] === y[k]) k++; throw new Error(`line ${l + 1} at ${k}: …${x.slice(Math.max(0, k - 40), k + 60)} <> …${y.slice(Math.max(0, k - 40), k + 60)}`); }
+	});
+	done();
+</script>

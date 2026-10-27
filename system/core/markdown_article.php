@@ -60,6 +60,21 @@
 		 */
 		protected function mdProcess(HyphaRequest $request) {
 			if (!$this->isMarkdown()) return false;
+			//
+			// A posted command needs a valid CSRF token (SEC-002); executePostedCommand() only marks a bad one as handled.
+			//
+			if ($request->getCommand() !== null && !$this->O_O->validCsrfToken()) {
+				if ($request->getPostValue('ajax') === '1') hypha_mdeditorJson(['ok' => false, 'errors' => [__('csrf-error')]]);
+				notify('error', __('csrf-error'));
+				return $this->mdRedirect();
+			}
+			//
+			// Only the author or an administrator publishes (BR-72, BR-92); the existing action only hides the button.
+			//
+			if ($request->getCommand() === self::CMD_STATUS_CHANGE_PUBLISHED && !in_array($this->mdRole(), ['author', 'admin'], true)) {
+				notify('error', __('mde-error-only-author-or-admin'));
+				return $this->mdRedirect();
+			}
 			switch ([$request->getView(), $request->getCommand()]) {
 				case [null,            null]:                  return $this->mdDefaultView($request);
 				case [self::PATH_EDIT, null]:                  return $this->mdEditView($request);
@@ -118,6 +133,7 @@
 		 * @return array{errors: list<string>, messages: list<array>} errors stop the save; messages are for the checklist
 		 */
 		public function mdSave(array $fields, array $renders): array {
+			$fields = hypha_markdownCleanFields($fields);
 			$settings = hypha_mdeditorSettings();
 			$user = $this->O_O->getUser();
 			$errors = [];
@@ -269,6 +285,12 @@
 		protected function mdDefaultView(HyphaRequest $request) {
 			$article = $this->xml->findOneXPath('article');
 			if ($this->getStatus() === self::MD_STATUS_RETRACTED) {
+				//
+				// The address keeps working, but search engines drop the page (BR-86).
+				//
+				$robots = $this->html->findOneXPath('head')->createChild('meta');
+				$robots->setAttribute('name', 'robots');
+				$robots->setAttribute('content', 'noindex');
 				$main = $this->html->getElementById('main');
 				$main->appendChild($this->mdRetractionNotice($main));
 				if (isUser()) {
@@ -371,7 +393,8 @@
 				notify('error', __('login-to-perform-action'));
 				return $this->mdRedirect();
 			}
-			$error = $this->mdApprove((array)$request->getPostValue('md_statute', []), (string)$request->getPostValue('md_comment', ''));
+			$statute = $request->getPostValue('md_statute', []);
+			$error = $this->mdApprove(is_array($statute) ? $statute : [], hypha_markdownClean($request->getPostValue('md_comment', '')));
 			notify($error ? 'error' : 'success', $error ? __($error) : ucfirst(__('art-successfully-updated')));
 			return $this->mdRedirect();
 		}
@@ -384,9 +407,17 @@
 			if ($this->getStatus() !== self::STATUS_REVIEW) return 'art-unsupported-status-change';
 			if ($this->hasUserCreated($userId)) return 'mde-error-author-approves';
 			$statute = hypha_mdeditorSettings()['statute'];
-			if (count(array_unique(array_map('intval', $confirmed))) !== count($statute)) return 'mde-error-statute';
-			if ($this->hasUserApproved($userId)) return null;
+			$points = array_values(array_unique(array_map('intval', array_filter($confirmed, 'is_numeric'))));
+			sort($points);
+			if (!$statute || $points !== range(0, count($statute) - 1)) return 'mde-error-statute';
 			$this->xml->lockAndReload();
+			//
+			// Again under the lock: a second post must not add a second approval (BR-51).
+			//
+			if ($this->hasUserApproved($userId) || $this->getStatus() !== self::STATUS_REVIEW) {
+				$this->xml->unlock();
+				return null;
+			}
 			$approve = $this->xml->createElement(self::FIELD_NAME_APPROVE);
 			$this->xml->findOneXPath(self::FIELD_NAME_APPROVE_CONTAINER)->appendChild($approve);
 			$approve->setAttribute(self::FIELD_NAME_USER, $userId);
@@ -442,7 +473,7 @@
 		 * BR-86, BR-97). The text stays stored; the page leaves the overviews.
 		 */
 		protected function mdWithdrawAction(HyphaRequest $request) {
-			$error = isUser() ? $this->mdWithdraw((string)$request->getPostValue('md_reason', '')) : 'login-to-perform-action';
+			$error = isUser() ? $this->mdWithdraw(hypha_markdownClean($request->getPostValue('md_reason', ''))) : 'login-to-perform-action';
 			notify($error ? 'error' : 'success', $error ? __($error) : __('mde-withdrawn'));
 			return $this->mdRedirect();
 		}
@@ -517,7 +548,7 @@
 		 * BR-50, BR-77).
 		 */
 		protected function mdLanguageAction(HyphaRequest $request) {
-			$language = (string)$request->getPostValue('argument', '');
+			$language = hypha_markdownClean($request->getPostValue('argument', ''));
 			$error = isUser() ? $this->mdChangeLanguage($language) : 'login-to-perform-action';
 			if ($error) {
 				notify('error', __($error));
@@ -527,6 +558,7 @@
 		}
 
 		public function mdChangeLanguage(string $language): ?string {
+			if ($this->mdRole() !== 'author') return 'mde-error-only-author';
 			if (!in_array($this->getStatus(), [self::STATUS_DRAFT, self::STATUS_REVIEW, self::STATUS_APPROVED], true)) return 'mde-error-language-published';
 			if (!in_array($language, hypha_mdeditorLanguages(), true)) return 'mde-error-language';
 			if ($language === $this->language) return null;
@@ -557,6 +589,7 @@
 		}
 
 		public function mdRename(): ?string {
+			if (!in_array($this->mdRole(), ['author', 'admin'], true)) return null;
 			if ($this->getStatus() === self::STATUS_PUBLISHED || $this->getStatus() === self::MD_STATUS_RETRACTED) return null;
 			global $hyphaXml;
 			$hyphaXml->lockAndReload();

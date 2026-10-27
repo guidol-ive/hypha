@@ -92,6 +92,25 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 2. Tests en uitkomsten: `tests/browser/unit/vendor.test.html` in headless Chrome: 7 van 7 (elke bundel laadt via de import map en doet zijn basistaak); de licentiecontrole in `bundel.mjs`: 48 pakketten, alle permissief (DOMPurify onder Apache-2.0).
 3. CodeMirror is groter dan geschat (203 tegen 178 kB gzip): `@codemirror/lang-markdown` trekt de HTML-, CSS- en JavaScript-talen mee voor ingesloten code. Pele en Temml worden pas geladen als ze nodig zijn.
 
+### Review van T04 en T05 (2026-10-27)
+
+1. Een subagent beoordeelde opslag en reviewstroom met eigen aanvallen over HTTP. Verwerkt:
+   1. **kritiek**: een verticale tab (gangbaar na plakken uit Word) in een veld maakte het hele artikelbestand onleesbaar; alle velden gaan nu door `hypha_markdownClean()` (geen ongeldige XML-tekens, geldige UTF-8, alleen tekst; alleen `tags` is een lijst);
+   2. **hoog**: de titel kwam als HTML in de kop van de leespagina (bestaande `writeToElement('pagename', …)`); nu als tekst. Dat lost ook de fatale fout bij een nieuw artikel zonder titel op (T04, bevinding 2);
+   3. **hoog**: het redactiestatuut liet zich omzeilen met andere nummers; nu moeten precies de punten 0 tot en met n−1 bevestigd zijn, opnieuw gecontroleerd onder het slot (BR-51);
+   4. **hoog**: een collega kon de taal en het webadres wijzigen; nu alleen de auteur (taal) of auteur en beheerder (webadres);
+   5. een ongeldig CSRF-token hield `md_*`-opdrachten niet tegen (de bestaande `executePostedCommand()` markeert ze alleen); de traits controleren het nu zelf (SEC-002);
+   6. een collega kon een goedgekeurd artikel publiceren (bestaand: alleen de knop was verborgen); voor Markdown-artikelen nu geweigerd (BR-72, BR-92);
+   7. een niet-bestaande versie gaf een fatale fout; alleen bestaande versies worden gebruikt;
+   8. een teruggetrokken artikel krijgt `noindex`.
+2. Niet verwerkt, genoteerd als open punt: de site-index (`datatypes/index.php`) toont teruggetrokken artikelen nog bij naam; de reactieroutes blijven open op een teruggetrokken artikel; bij hernoemen of tags wordt `hypha.xml` vóór het artikelbestand geschreven (geen transactie over twee bestanden, zoals overal in Hypha).
+3. Tests: één integratietest die al deze gevallen nabootst; 27, 3 en 8 van 27, 3 en 8 op PHP 8.2.35 en 8.4.27, geen nieuwe meldingen; unit 98 van 98.
+
+### T07 (deel 1) Gedeelde markdown-it-plug-ins en de pariteitstest (2026-10-27)
+
+1. Gebouwd: `system/mdeditor/hypha-markdown.js` met dezelfde uitbreidingen als de server (kaders en citaten, `:::`, paginalinks, `==`, `++`, `^`, `~`, notities, figuren met plaatsing en grootte, diagrammen, formules, codemarkering, voetnoten in de HTML van de server, kop-id's, `[TOC]`, ingesloten inhoud, takenlijsten, uitlijning als `align`); `tests/fixtures/pariteit.php` en `maak-pariteit.php` (19 gevallen, waaronder de drie proefteksten).
+2. Tests: `tests/browser/unit/pariteit.test.html`: 19 van 19 gelijk na normaliseren (attributen gesorteerd, witruimte samengevoegd, `rel` en de kleurspans van de codemarkering weggelaten).
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.

@@ -41,6 +41,11 @@
 
 		protected function mdProcess(HyphaRequest $request) {
 			if (!$this->isMarkdown()) return false;
+			if ($request->getCommand() !== null && !$this->O_O->validCsrfToken()) {
+				if ($request->getPostValue('ajax') === '1') hypha_mdeditorJson(['ok' => false, 'errors' => [__('csrf-error')]]);
+				notify('error', __('csrf-error'));
+				return ['redirect', $this->constructFullPath($this->pagename)];
+			}
 			switch ([$request->getView(), $request->getCommand()]) {
 				case [null,                 null]:                return $this->mdDefaultView($request);
 				case [null,                 self::CMD_REVERT]:    return $this->mdRevertAction($request);
@@ -128,6 +133,7 @@
 		 * @return array{errors: list<string>, messages: list<array>, pagename?: string, language?: string}
 		 */
 		public function mdSavePage(array $fields, array $renders, bool $translate): array {
+			$fields = hypha_markdownCleanFields($fields);
 			$language = $translate ? (string)($fields['language'] ?? '') : $this->language;
 			$pagename = validatePagename(trim((string)($fields['title'] ?? '')));
 			if ($pagename === '') return ['errors' => ['no-page-name'], 'messages' => []];
@@ -162,7 +168,7 @@
 		protected function mdDefaultView(HyphaRequest $request) {
 			if ($this->mdIsEmpty() && isUser()) return ['redirect', $this->constructFullPath($this->pagename . '/' . self::PATH_EDIT)];
 			$this->html->writeToElement('langList', hypha_indexLanguages($this->pageListNode, $this->language));
-			$version = isUser() ? (string)$request->getPostValue(self::FIELD_NAME_VERSION) : '';
+			$version = isUser() ? $this->mdVersion($request) : '';
 			$main = $this->html->getElementById('main');
 			$scratch = new Xml();
 			foreach (hypha_markdownWikify($scratch, $this->mdContent($this->language, $version), false) as $node) $main->appendChild($this->html->importNode($node, true));
@@ -190,10 +196,21 @@
 				notify('error', __('login-to-perform-action'));
 				return ['redirect', $this->constructFullPath($this->pagename)];
 			}
-			$version = (string)$request->getPostValue(self::FIELD_NAME_VERSION);
-			$this->mdRevert($version);
+			$version = $this->mdVersion($request);
+			if ($version !== '') $this->mdRevert($version);
 			notify('success', ucfirst(__('page-successfully-updated')));
 			return ['redirect', $this->constructFullPath($this->pagename)];
+		}
+
+		/**
+		 * The posted version, only if it is one of the versions of this language; otherwise '' (the newest).
+		 */
+		protected function mdVersion(HyphaRequest $request): string {
+			$version = hypha_markdownClean($request->getPostValue(self::FIELD_NAME_VERSION));
+			if ($version === '') return '';
+			$language = getLangNode($this->xml->documentElement, $this->language);
+			foreach ($language->findXPath('version') as $node) if ($node->getAttribute('xml:id') === $version) return $version;
+			return '';
 		}
 
 		public function mdRevert(string $version): void {

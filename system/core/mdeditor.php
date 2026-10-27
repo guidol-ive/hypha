@@ -222,7 +222,7 @@
 	function hypha_mdeditorNewArticle($title) {
 		global $O_O, $hyphaXml;
 		if (!isUser()) return 'reload';
-		$title = trim(preg_replace('/\s+/u', ' ', (string)$title));
+		$title = trim(preg_replace('/\s+/u', ' ', hypha_markdownClean($title)));
 		$language = $O_O->getRequest()->getPostValue('newPageLanguage', $O_O->getContentLanguage());
 		if ($title === '' || !in_array($language, hypha_mdeditorLanguages(), true)) {
 			notify('error', __('mde-error-title'));
