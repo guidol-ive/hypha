@@ -1,6 +1,6 @@
 ---
 title: "GITHUB ISSUES FILED 2026W44: the issues filed from this review, with type, labels and impact"
-revision: 1
+revision: 2
 date_created: 2026-10-26
 date_last_review:
 ---
@@ -133,3 +133,35 @@ Added later on 2026-10-26:
 |---|---|---|---|---|---|
 | #518 | - | #411 | `site-data-cache-411` | core: Cache anonymous page views and site data in APCu (fix 2); tested on 8.2 and 8.5 with and without APCu, four problems fixed in a second commit | OPEN (draft) |
 | #519 | - | #406 | `logged-in-article-crashes` | Stop logged-in article views and the moderation view from crashing (logged-in crawl 82 → 0 failures) | OPEN |
+
+## Filed during the build of the Markdown editor (#520), 2026-10-27
+
+Bugs in existing code found while building, testing and documenting the editor on branch `issue520-bouw`; each reproduced on `main` (d97ab7b) with a fictional site, labels set per the rules above, pull requests labelled `Status: Needs review`.
+
+| Issue | PR | Area | Title |
+|---|---|---|---|
+| #525 | #531 | article | Article title is parsed as HTML in the page heading, and a new article without title crashes |
+| #526 | #532 | hypha.php | The built installer misses subfolders, assets, macros and the default theme, and fails without data/ |
+| #527 | #533 | templates | Invalid HTML in four templates gives a PHP warning on almost every page |
+| #528 | #534 | versions | Translation saved in the same second gets the same xml:id as a version of another language |
+| #529 | #535 | article | Any member can publish an approved article by posting the command |
+| #530 | #536 | text page | Unknown version number gives a fatal error on a text page |
+| #537 | #538 | festival | A new festival page opens on 'Page not found' |
+| #539 | #540 | input | A control character or invalid UTF-8 in a comment or full name makes the article or the whole site unreadable |
+| #541 | #542 | routing | Request path not percent-decoded: pages with a non-ASCII name give 404 |
+| #543 | - | page names | `validatePagename()` drops non-ASCII letters |
+| #544 | #545 | mail | Over-long encoded mail subject |
+| #546 | #547 | festival | Festival settings show the raw key festival-field-festival-description |
+| #548 | #562 | festival | Festival sign-up fails with a fatal error: undefined constant FIELD_NAME_ATTENDING |
+| #549 | #563 | festival | Security: festival timetable shows a contribution's title, day and location as HTML |
+| #550 | - | festival | A failed Mollie call logs warnings and sends the participant on as if paid |
+| #551 | #564 | mailing list | An invalid confirm or unsubscribe link and other GET errors end in an endless redirect |
+| #552 | #565 | mailing list | 'unsubscribe' by an administrator does nothing for an address that subscribed again |
+| #553 | - | mailing list | Security: address actions are GET links without CSRF token; mailing progress needs no login |
+| #554 | #566 | users | Security: user names are not unique, so a member can take another member's name |
+| #555 | - | users | Invitations: an existing account gets a registration link; unchecked input creates broken invitees |
+| #556 | - | settings | Fatal errors on an unknown user or a non-numeric digest interval; members get a menu editor that does not save |
+| #557 | #568 | languages | Raw translation keys on the festival, mailing list, index, tag index and settings pages |
+| #558 | #567 | festival | PHP 8.5 deprecation: curl_close() in the Mollie API client |
+| #559 | - | warnings | PHP warnings on incomplete tag index and mailing list addresses |
+

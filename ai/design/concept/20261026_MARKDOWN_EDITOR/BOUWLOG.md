@@ -238,6 +238,7 @@ Fouten in bestaande code die bij de bouw zijn gevonden, staan als issue met een 
 10. #541 / PR #542: het pad van een verzoek wordt niet ontcijferd (pagina's buiten ASCII geven 404);
 11. #543: `validatePagename()` laat letters buiten ASCII weg (geen pull request: hangt af van #541 en #516);
 12. #544 / PR #545: een lang onderwerp van een e-mail wordt één te lang gecodeerd woord.
+13. #548–#559 met PR #562–#568: twaalf fouten in de oudere paginatypes (festival, mailinglijst, index, tagindex, instellingen), gevonden door een subagent die elk scherm als bezoeker, lid en beheerder doorliep op PHP 8.2, 8.4 en 8.5; onder andere een fatale fout bij aanmelden voor een festival (#548), HTML uit aanmeldingen in het programma (#549), een eindeloze doorverwijzing bij een ongeldige link van de mailinglijst (#551), niet-unieke gebruikersnamen (#554) en ontbrekende vertalingen (#557). Overzicht in `ai/reference/GITHUB_ISSUES_FILED_2026W44.md`.
 
 Alle issues hebben passende labels (type, niveau, impact, paginatype, onderdeel, waarde); de pull requests het label *Status: Needs review*.
 
