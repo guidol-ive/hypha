@@ -235,15 +235,16 @@
 
 	/*
 		Function: hypha_markdownDate
-		A date in words in the language of the article, without the intl extension: 27 oktober 2026, 27 October 2026.
+		A date in words in the language of the article, without the intl extension: 27 oktober 2026, 27 October 2026; with
+		$time also the time of day (27 oktober 2026 21:40).
 	*/
-	function hypha_markdownDate(int $timestamp, string $language): string {
+	function hypha_markdownDate(int $timestamp, string $language, bool $time = false): string {
 		$months = [
 			'nl' => ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'],
 			'en' => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 		];
 		$names = $months[$language] ?? $months['en'];
-		return date('j', $timestamp) . ' ' . $names[(int)date('n', $timestamp) - 1] . ' ' . date('Y', $timestamp);
+		return date('j', $timestamp) . ' ' . $names[(int)date('n', $timestamp) - 1] . ' ' . date('Y', $timestamp) . ($time ? ' ' . date('H:i', $timestamp) : '');
 	}
 
 	/*

@@ -180,6 +180,21 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
    8. Lighthouse op de editor (ingelogd, zonder SEO): computer 96 / 95 / 100, telefoon 69 / 95 / 100. Op de telefoon rekent Lighthouse met traag 4G: de ruim 400 kB code van de editor haalt 95 daar niet. De eis „95 voor de editor” is op de telefoon dus niet gehaald.
 3. Gevonden in de testopstelling: een reeks ontbrekende afbeeldingen (404-pagina's van Hypha) houdt de twee Apache-werkers bezet en vertraagt de volgende pagina met seconden; voor de meting is de voorbeeldfoto uit het lange artikel gehaald.
 
+### Gelijktijdig werken (2026-10-27, avond)
+
+Een subagent liet tot 32 verzoeken tegelijk los op een proefsite (Docker-volume, zodat `flock` werkt als op Linux) en opende hetzelfde artikel in twee tabbladen. Bron en XHTML liepen nooit uit elkaar en er was geen deadlock, maar in de editorcode zaten acht fouten. Hersteld:
+
+1. **Verloren wijzigingen** (30 van 30 bij twee schrijvers): de editor stuurt de versie mee die hij opende (`article/@md_revision`, bij een tekstpagina het `at` van de nieuwste bronversie); de server weigert een opslag op een oudere versie en meldt wie en wanneer opsloeg; de auteur kiest *Toch opslaan*.
+2. **Tags van een andere schrijver dan de tekst** (3 van 30): eerst de tekst, dan de tags, en alleen door de opslag waarvan de tekst bewaard is.
+3. **HTTP 500 bij opslaan terwijl een ander hernoemt** (24 van 30): de pagina wordt na het herladen van `hypha.xml` op id gezocht, niet op naam; een editor die 404 krijgt, vraagt het nieuwe adres met de opdracht `mdLocate` en slaat daar op.
+4. **Status vóór het slot gecontroleerd** (terugtrekken tegen publiceren gaf een publieke schets): terugtrekken, intrekken, opnieuw bewerken, hernoemen en taal wijzigen controleren de status opnieuw onder het slot; terugtrekken maakt het artikel weer privé en wist de publicatiedatum.
+5. **Een opslag tijdens een opslag viel weg**: die volgt nu op de lopende; *start beoordeling*, taal en adres gaan niet door als opslaan mislukt.
+6. **Eén concept voor alle tabbladen**: per pagina-id en per tabblad.
+7. **Een concept op een oudere versie verdween zonder melding**: het wordt aangeboden, met een waarschuwing.
+8. **Na hernoemen door een ander gaf elke opslag 404**: zie punt 3; het concept staat onder het pagina-id en blijft dus vindbaar.
+
+Tests: `tests/integratie/test_gelijktijdig.py` (6) en `tests/browser/e2e/gelijktijdig.mjs` (5), groen op 8.2 tot en met 8.5. Op de macOS-bindmount ziet een container bij veel gelijktijdige `rename()` soms heel even geen bestand (`Cannot lock file …, open failed`); dat is een eigenschap van de testopzet (0 fouten op een tmpfs), staat in `bekende-meldingen.txt` en in `docs/technical/TESTING.md`, en een ronde met zo'n fout telt niet mee. Upstream gemeld: #560 / PR #561 (TypeError bij gelijktijdig hernoemen of verwijderen), #569 / PR #570 (statuswijziging vóór het slot gecontroleerd), en een opmerking bij #528 (dubbele `xml:id` bij drie opslagen in dezelfde seconde in WYMeditor). Documentatie: ACID in `03-opslag.md` en `DATA_MODEL.md` bijgewerkt, vraag in `04-artikel-schrijven.md`.
+
 ### Verder gebouwd (2026-10-27, avond)
 
 Na het eindverslag, op verzoek „bouw verder”:
@@ -205,13 +220,13 @@ Alle tests zijn opnieuw gedraaid op PHP 8.2.35, 8.3.36, 8.4.27 en 8.5.12 (`sh te
 | `HyphaRequestTest.php` (bestaand) | 84 | 84 | 84 | 84 |
 | unit (`tests/markdown/`): filter, Markdown, niveau 2, 500 gouden items | 102 van 102 | 102 van 102 | 102 van 102 | 102 van 102 |
 | gouden manifest, alle 10.000 items | 10.000 | 10.000 | 10.000 | 10.000 |
-| integratie over HTTP: proefsite, artikel en reviewstroom, tekstpagina | 38 van 38 | 38 van 38 | 38 van 38 | 38 van 38 |
-| browser: unit-pagina's en end-to-end (zie hieronder) | 155 van 155 | 155 van 155 | 155 van 155 | 155 van 155 |
+| integratie over HTTP: proefsite, artikel en reviewstroom, tekstpagina, gelijktijdig werken | 44 van 44 | 44 van 44 | 44 van 44 | 44 van 44 |
+| browser: unit-pagina's en end-to-end (zie hieronder) | 160 van 160 | 160 van 160 | 160 van 160 | 160 van 160 |
 | packaging: `hypha.php` bouwen en installeren | 11 van 11 | 11 van 11 | 11 van 11 | 11 van 11 |
 | gouden dataset als site, 10.000 pagina's | 0 fouten | 0 fouten | 0 fouten | 0 fouten |
 | nieuwe PHP-meldingen in het logboek | geen | geen | geen | geen (na `mail()`, zie hieronder) |
 
-De browsertests: bibliotheken 7, pariteit met league/commonmark 19, Opmaak heen en terug 42, plaktest 28, editor 14, aanvullingen 12, plakken in de editor 9, nieuwe pagina 4, toegankelijkheid 13 (axe 0 overtredingen in 10 toestanden, aanraakvlakken ≥ 44 pt, werkbalk boven het toetsenbord), prestaties 6; samen 155 (inclusief de runner-proef). Laatste ronde op alle vier versies na de avondwijzigingen (zie „Verder gebouwd”).
+De browsertests: bibliotheken 7, pariteit met league/commonmark 19, Opmaak heen en terug 42, plaktest 28, editor 14, aanvullingen 12, gelijktijdig 5, plakken in de editor 9, nieuwe pagina 4, toegankelijkheid 13 (axe 0 overtredingen in 10 toestanden, aanraakvlakken ≥ 44 pt, werkbalk boven het toetsenbord), prestaties 6; samen 160 (inclusief de runner-proef). Laatste ronde op alle vier versies na de avondwijzigingen (zie „Verder gebouwd”).
 
 Gebouwd volgens het ontwerp, per onderdeel van §18.2: 4 (server en filter), 5 (Markdown-weergave op CodeMirror 6), 6 (Opmaak op ProseMirror met eigen schema en serializer, verliesvrij wisselen), 7, 7a, 7b, 7c (artikelscherm, vaste velden, cursor bij wisselen, tabellen), 8 (beelddialoog met upload, `[[`-suggesties), 9 (diagrammen met 36 sjablonen), 9a–9e (niveau 1 en 2, HedgeDoc, interactief blok in de server, reviewstroom met redactiestatuut, terugtrekken), 10 (import en export van `.md`), 11 (regressie met oude artikelen en tekstpagina's), 12 (WCAG met axe, HIG-aanraakvlakken, teksten in nl en en), 13 en 19 (`hypha.php`, Docker), 14 en 15 (codemarkering en wiskunde), 16 (handleiding, 17 pagina's), 17 en 18 (gouden dataset, unit- en integratietests), 20 (plakken), 21 (prestaties en Lighthouse), 22 (tekstpagina's met versies, vertalen en terugzetten).
 
@@ -219,7 +234,7 @@ Gebouwd volgens het ontwerp, per onderdeel van §18.2: 4 (server en filter), 5 (
 
 1. **Lighthouse ≥ 95 overal**: een gepubliceerd artikel haalt met het standaardthema 96–100 / 94 / 100 / 91; met het advies `#0B7285` voor links (en `#5F656A` voor knoppen) en een `robots.txt` van de site 97–100 / 98 / 100 / 100. Beide zijn keuzes van het thema en de site, niet van de editor (standaardkeuze a). De editor op de telefoon haalt 69 voor prestaties (traag 4G met ruim 400 kB code); op de computer 96.
 2. Punten 2 tot en met 5 van de eerste versie van deze lijst (interactief blok, reviewpunten, gouden site op 8.3 en 8.5, documentatie) zijn af; zie „Verder gebouwd”.
-3. **Twee schrijvers tegelijk**: de laatste die opslaat, wint, zonder waarschuwing (geen versiecontrole); zie de ACID-tabel in `docs/technical/DATA_MODEL.md`. Een subagent onderzoekt gelijktijdig werken en de oude paginatypes; de uitkomst volgt.
+3. **Twee schrijvers tegelijk** in de oude editor en de andere schermen: daar wint nog de laatste die opslaat; de nieuwe editor waarschuwt (zie „Gelijktijdig werken”). Publiceren tegelijk met goedkeuren of terugtrekken hangt ook af van upstream #570 (`updateToNewStatus()` controleert vóór het slot).
 4. **Bestaande problemen gevonden, niet opgelost** (buiten deze issue): `hypha.php` installeert niet zonder map `data/` en pakt het standaardthema niet in; een nieuw artikel via de oude popup zonder titel gaf een fatale fout (nu opgelost door de titel als tekst te schrijven); `strftime()` en enkele HTML-fouten in de sjablonen van Hypha (`bekende-meldingen.txt`); op PHP 8.5 meldt `mail()` een fout als de container geen sendmail heeft.
 
 ### Gemelde fouten buiten deze issue
@@ -238,7 +253,8 @@ Fouten in bestaande code die bij de bouw zijn gevonden, staan als issue met een 
 10. #541 / PR #542: het pad van een verzoek wordt niet ontcijferd (pagina's buiten ASCII geven 404);
 11. #543: `validatePagename()` laat letters buiten ASCII weg (geen pull request: hangt af van #541 en #516);
 12. #544 / PR #545: een lang onderwerp van een e-mail wordt één te lang gecodeerd woord.
-13. #548–#559 met PR #562–#568: twaalf fouten in de oudere paginatypes (festival, mailinglijst, index, tagindex, instellingen), gevonden door een subagent die elk scherm als bezoeker, lid en beheerder doorliep op PHP 8.2, 8.4 en 8.5; onder andere een fatale fout bij aanmelden voor een festival (#548), HTML uit aanmeldingen in het programma (#549), een eindeloze doorverwijzing bij een ongeldige link van de mailinglijst (#551), niet-unieke gebruikersnamen (#554) en ontbrekende vertalingen (#557). Overzicht in `ai/reference/GITHUB_ISSUES_FILED_2026W44.md`.
+13. #548–#559 met PR #562–#568: twaalf fouten in de oudere paginatypes (festival, mailinglijst, index, tagindex, instellingen), gevonden door een subagent die elk scherm als bezoeker, lid en beheerder doorliep op PHP 8.2, 8.4 en 8.5; onder andere een fatale fout bij aanmelden voor een festival (#548), HTML uit aanmeldingen in het programma (#549), een eindeloze doorverwijzing bij een ongeldige link van de mailinglijst (#551), niet-unieke gebruikersnamen (#554) en ontbrekende vertalingen (#557). Overzicht in `ai/reference/GITHUB_ISSUES_FILED_2026W44.md`;
+14. #560 / PR #561 en #569 / PR #570: fouten bij gelijktijdig werken (zie „Gelijktijdig werken”).
 
 Alle issues hebben passende labels (type, niveau, impact, paginatype, onderdeel, waarde); de pull requests het label *Status: Needs review*.
 

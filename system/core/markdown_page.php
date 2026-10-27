@@ -132,7 +132,7 @@
 		 * @param array $fields text (Markdown), title (the page name as shown), private, language (translate only)
 		 * @return array{errors: list<string>, messages: list<array>, pagename?: string, language?: string}
 		 */
-		public function mdSavePage(array $fields, array $renders, bool $translate): array {
+		public function mdSavePage(array $fields, array $renders, bool $translate, ?string $base = null, bool $force = false): array {
 			$fields = hypha_markdownCleanFields($fields);
 			$language = $translate ? (string)($fields['language'] ?? '') : $this->language;
 			$pagename = validatePagename(trim((string)($fields['title'] ?? '')));
@@ -151,15 +151,49 @@
 			if ($pagename !== $this->pagename || $language !== $this->language || $private !== $this->privateFlag) {
 				global $hyphaXml;
 				$hyphaXml->lockAndReload();
-				$this->replacePageListNode(hypha_getPage($this->language, $this->pagename));
+				//
+				// By id: another request may have renamed the page meanwhile.
+				//
+				$node = hypha_getPageById($this->pageListNode->getAttribute('id'));
+				if (!$node) {
+					$hyphaXml->unlock();
+					return ['errors' => ['mde-error-page-gone'], 'messages' => $renderer->messages];
+				}
+				$this->replacePageListNode($node);
 				$error = hypha_setPage($this->pageListNode, $language, $pagename, $private ? 'on' : 'off');
 				$hyphaXml->saveAndUnlock();
 				if ($error) return ['errors' => [$error], 'messages' => $renderer->messages, 'raw' => true];
 			}
 			$this->xml->lockAndReload();
+			//
+			// Someone else saved a version since the editor loaded the page: no silent overwrite, unless chosen.
+			//
+			if (!$force && $base !== null && $this->mdNewestAt($language) !== $base) {
+				$this->xml->unlock();
+				return ['errors' => [], 'messages' => $renderer->messages, 'conflict' => $this->mdSavedBy($language), 'revision' => $this->mdNewestAt($language)];
+			}
 			$this->mdStoreVersion($language, $markdown, $xhtml, $this->O_O->getUser()->getAttribute('username'));
 			$this->xml->saveAndUnlock();
-			return ['errors' => [], 'messages' => $renderer->messages, 'pagename' => $pagename, 'language' => $language];
+			return ['errors' => [], 'messages' => $renderer->messages, 'pagename' => $pagename, 'language' => $language, 'revision' => $this->mdNewestAt($language)];
+		}
+
+		/**
+		 * The time stamp of the newest Markdown version of a language, or '' without one: the base of a save.
+		 */
+		protected function mdNewestAt(string $language): string {
+			$newest = '';
+			foreach ($this->xml->findXPath('source/language[@id=' . xpath_encode($language) . ']/version') as $v) if ($v->getAttribute('at') > $newest) $newest = $v->getAttribute('at');
+			return $newest;
+		}
+
+		/**
+		 * Who saved the newest version and when, for the message about a conflict.
+		 */
+		protected function mdSavedBy(string $language): array {
+			$at = $this->mdNewestAt($language);
+			$node = $at === '' ? null : $this->xml->findOneXPath('source/language[@id=' . xpath_encode($language) . ']/version[@at=' . xpath_encode($at) . ']');
+			$user = $node ? hypha_getUserByName($node->getAttribute('author')) : null;
+			return ['name' => $user ? $user->getAttribute('fullname') : ($node ? $node->getAttribute('author') : ''), 'at' => hypha_markdownDate((int)ltrim($at, 't'), $this->language, true)];
 		}
 
 		/**
@@ -233,7 +267,7 @@
 				'kind' => 'page',
 				'translate' => $translate,
 				'fields' => ['title' => showPagename($this->pagename), 'text' => $this->mdSource($this->language), 'private' => $this->privateFlag, 'language' => $translate ? '' : $this->language],
-				'page' => ['language' => $this->language, 'name' => $this->pagename, 'private' => $this->privateFlag, 'role' => isAdmin() ? 'admin' : 'author'],
+				'page' => ['language' => $this->language, 'name' => $this->pagename, 'private' => $this->privateFlag, 'role' => isAdmin() ? 'admin' : 'author', 'id' => $this->pageListNode->getAttribute('id'), 'revision' => $translate ? '' : $this->mdNewestAt($this->language)],
 				'settings' => ['level' => hypha_mdeditorLevel($this->O_O->getUser(), hypha_mdeditorSettings()), 'frameHosts' => hypha_mdeditorSettings()['frameHosts'], 'peertubeHosts' => hypha_mdeditorSettings()['peertubeHosts']],
 				'languages' => array_values(array_diff(hypha_mdeditorLanguages(), $translate ? [$this->language] : [])),
 				'commands' => ['save' => self::MD_CMD_SAVE, 'view' => $translate ? self::PATH_TRANSLATE : self::PATH_EDIT],
@@ -249,11 +283,14 @@
 			$post = $request->getPostData();
 			$fields = json_decode((string)($post['md_fields'] ?? ''), true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
 			$renders = json_decode((string)($post['md_renders'] ?? ''), true);
-			$result = $this->mdSavePage(is_array($fields) ? $fields : [], is_array($renders) ? $renders : [], $translate);
+			$result = $this->mdSavePage(is_array($fields) ? $fields : [], is_array($renders) ? $renders : [], $translate, isset($post['md_base']) ? (string)$post['md_base'] : null, ($post['md_force'] ?? '') === '1');
 			$errors = array_map(fn ($e) => empty($result['raw']) ? __($e) : $e, $result['errors']);
-			$url = $result['errors'] ? null : $this->constructFullPath($result['pagename'], $result['language']);
-			if (($post['ajax'] ?? '') === '1') hypha_mdeditorJson(['ok' => !$errors, 'errors' => $errors, 'messages' => $result['messages'], 'url' => $url]);
+			$conflict = $result['conflict'] ?? null;
+			$url = $result['errors'] || $conflict ? null : $this->constructFullPath($result['pagename'], $result['language']);
+			if (($post['ajax'] ?? '') === '1') hypha_mdeditorJson(['ok' => !$errors && !$conflict, 'errors' => $errors, 'messages' => $result['messages'], 'url' => $url, 'conflict' => $conflict, 'revision' => $result['revision'] ?? null]);
+			if ($conflict) notify('error', __('mde-conflict', ['name' => $conflict['name'], 'at' => $conflict['at']]));
 			foreach ($errors as $error) notify('error', $error);
+			if ($conflict) return ['redirect', $this->constructFullPath($this->pagename)];
 			if ($errors) return ['redirect', $this->constructFullPath($this->pagename)];
 			notify('success', ucfirst(__('page-successfully-updated')));
 			return ['redirect', $url];

@@ -55,6 +55,7 @@ export class Editor {
 		this.article = config.kind === 'article';
 		this.fields = Object.assign({ title: '', author: '', excerpt: '', section: '', tags: [], image: '', imageAlt: '', imageCaption: '', imageCredit: '', method: '', sources: '', text: '', frontmatter: '' }, config.fields);
 		this.saved = JSON.stringify(this.fields);
+		this.revision = config.page?.revision ?? '';
 		const query = new URLSearchParams(location.search).get('mode');
 		const pref = config.user?.preferences || {};
 		this.editMode = query === 'markdown' || query === 'visual' ? query : (pref.mode || 'visual');
@@ -732,24 +733,53 @@ export class Editor {
 		set('mdeSumSources', plain(f.sources).slice(0, 120));
 	}
 
-	draftKey() { return 'mde:' + this.cfg.page.language + '/' + this.cfg.page.name + (this.cfg.translate ? '/translate' : ''); }
+	//
+	// A draft per page and per tab: the id of the page stays the same when it is renamed, and two tabs of the same page
+	// do not overwrite each other's draft (found by testing two tabs at once).
+	//
+	draftPrefix() { return 'mde:' + (this.cfg.page.id || this.cfg.page.name) + ':' + (this.cfg.translate ? 'translate:' : this.cfg.page.language + ':'); }
+
+	draftKey() {
+		if (!this.tab) {
+			try { this.tab = sessionStorage.getItem('mde-tab'); } catch (e) { /* no storage */ }
+			if (!this.tab) {
+				this.tab = Math.random().toString(36).slice(2, 10);
+				try { sessionStorage.setItem('mde-tab', this.tab); } catch (e) { /* no storage */ }
+			}
+		}
+		return this.draftPrefix() + this.tab;
+	}
 
 	storeDraft() {
 		try {
-			if (this.dirty()) localStorage.setItem(this.draftKey(), JSON.stringify({ at: Date.now(), fields: this.fields, base: this.saved }));
+			if (this.dirty()) localStorage.setItem(this.draftKey(), JSON.stringify({ at: Date.now(), fields: this.fields, base: this.saved, revision: this.revision }));
 			else localStorage.removeItem(this.draftKey());
 		} catch (e) { /* no storage: work in memory only */ }
 	}
 
+	//
+	// The newest draft of this page from any tab. A draft made on an older version is offered too, with a warning,
+	// instead of being dropped without a word; drafts equal to the saved text or older than 30 days are cleaned up.
+	//
 	restoreDraft() {
-		let draft = null;
-		try { draft = JSON.parse(localStorage.getItem(this.draftKey()) || 'null'); } catch (e) { /* no storage */ }
-		if (!draft || draft.base !== this.saved || JSON.stringify(draft.fields) === this.saved) return;
-		this.toast(this.t('draft-found'), this.t('draft-restore'), () => {
-			this.fields = Object.assign(this.fields, draft.fields);
+		let found = null;
+		try {
+			for (let i = localStorage.length - 1; i >= 0; i--) {
+				const key = localStorage.key(i);
+				if (!key || !key.startsWith(this.draftPrefix())) continue;
+				const draft = JSON.parse(localStorage.getItem(key) || 'null');
+				if (!draft || JSON.stringify(Object.assign(JSON.parse(this.saved), draft.fields)) === this.saved || Date.now() - draft.at > 30 * 86400000) { localStorage.removeItem(key); continue; }
+				if (!found || draft.at > found.draft.at) found = { key, draft };
+			}
+		} catch (e) { return; }
+		if (!found) return;
+		const older = found.draft.base !== this.saved;
+		this.toast(this.t(older ? 'draft-found-changed' : 'draft-found'), this.t('draft-restore'), () => {
+			this.fields = Object.assign(this.fields, found.draft.fields);
+			try { if (found.key !== this.draftKey()) localStorage.removeItem(found.key); } catch (e) { /* no storage */ }
 			if (this.editMode === 'visual') this.loadVisual(); else this.loadMarkdown();
 			this.changed();
-		}, 12000);
+		}, older ? 30000 : 12000);
 	}
 
 	//
@@ -1255,12 +1285,30 @@ export class Editor {
 	async post(path, data, json = false) {
 		const body = new URLSearchParams(Object.assign({ csrfToken: this.cfg.csrf }, data));
 		const r = await fetch(this.cfg.root + path, { method: 'POST', body, credentials: 'same-origin', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-		return json ? r.json() : r;
+		if (!json) return r;
+		if (r.status === 404) return { missing: true };
+		return r.json();
 	}
 
-	async save() {
-		if (this.saving) return;
-		this.saving = true;
+	//
+	// Saving. A save asked for while one runs, follows it, so the newest text is always sent (found by testing). Resolves
+	// to whether the text is stored.
+	//
+	save(force = false) {
+		if (this.saving) {
+			this.saveAgain = { force: force || this.saveAgain?.force };
+			return this.saving.then(() => !this.dirty());
+		}
+		this.saving = this.saveOnce(force).finally(() => {
+			this.saving = null;
+			const again = this.saveAgain;
+			this.saveAgain = null;
+			if (again && this.dirty()) return this.save(again.force);
+		});
+		return this.saving.then(() => !this.dirty());
+	}
+
+	async saveOnce(force, moved = false) {
 		const started = performance.now();
 		this.toast(this.t('saving'));
 		try {
@@ -1278,9 +1326,25 @@ export class Editor {
 			//
 			for (const k of ['title', 'section', 'author']) if (typeof fields[k] === 'string') fields[k] = fields[k].normalize('NFC');
 			if (Array.isArray(fields.tags)) fields.tags = fields.tags.map(tag => String(tag).normalize('NFC'));
-			const result = await this.post(`${this.cfg.page.language}/${this.cfg.page.name}/${view}`, { command: this.cfg.commands.save, md_fields: JSON.stringify(fields), md_renders: JSON.stringify(await this.renders()), ajax: '1' }, true);
+			const result = await this.post(`${this.cfg.page.language}/${this.cfg.page.name}/${view}`, { command: this.cfg.commands.save, md_fields: JSON.stringify(fields), md_renders: JSON.stringify(await this.renders()), md_base: String(this.revision ?? ''), md_force: force ? '1' : '', ajax: '1' }, true);
+			//
+			// Renamed or moved to another language by someone else: find the page by its id and save there once.
+			//
+			if (result.missing) {
+				if (!moved && await this.locate()) return this.saveOnce(force, true);
+				this.toast(this.t('page-gone'), null, null, 20000);
+				return;
+			}
 			window.mdeLastSave = { ms: performance.now() - started, server: result.ms };
+			if (result.conflict) {
+				//
+				// Someone else saved since this editor opened the text: the choice is the author's, the draft stays.
+				//
+				this.toast(this.t('conflict', { name: result.conflict.name || '?', at: result.conflict.at || '' }), this.t('conflict-overwrite'), () => this.save(true), 30000);
+				return;
+			}
 			if (!result.ok) { this.toast((result.errors || []).join(' ') || this.t('save-failed')); return; }
+			if (result.revision !== undefined && result.revision !== null) this.revision = result.revision;
 			this.saved = snapshot;
 			this.storeDraft();
 			this.updateChip();
@@ -1290,7 +1354,22 @@ export class Editor {
 			if (result.url && !this.article && result.url !== location.href.replace(/\/(edit|translate).*$/, '')) location.href = result.url;
 		}
 		catch (e) { this.toast(this.t('save-failed')); }
-		finally { this.saving = false; }
+	}
+
+	//
+	// The current address of this page, by its id (command mdLocate). Updates the page and the address bar.
+	//
+	async locate() {
+		if (!this.cfg.page.id) return false;
+		let r = null;
+		try { r = await this.post(`${this.cfg.page.language}/${this.cfg.page.name}`, { command: 'mdLocate', argument: this.cfg.page.id, ajax: '1' }, true); } catch (e) { return false; }
+		if (!r || !r.name) return false;
+		const view = this.cfg.commands.view || 'edit';
+		const from = `${this.cfg.page.language}/${this.cfg.page.name}`;
+		Object.assign(this.cfg.page, { language: r.language, name: r.name });
+		try { history.replaceState(null, '', this.cfg.root + r.language + '/' + r.name + '/' + view); } catch (e) { /* not essential */ }
+		this.toast(this.t('page-moved', { from, to: r.language + '/' + r.name }), null, null, 8000);
+		return true;
 	}
 
 	cancel() {
@@ -1439,19 +1518,19 @@ export class Editor {
 	}
 
 	async command(name, argument = '') {
-		if (this.dirty()) await this.save();
+		if (this.dirty() && !(await this.save())) return;
 		await this.post(`${this.cfg.page.language}/${this.cfg.page.name}`, { command: name, argument });
 		location.href = this.cfg.root + this.cfg.page.language + '/' + this.cfg.page.name;
 	}
 
 	async changeLanguage(language) {
-		if (this.dirty()) await this.save();
+		if (this.dirty() && !(await this.save())) return;
 		const r = await this.post(`${this.cfg.page.language}/${this.cfg.page.name}`, { command: this.cfg.commands.language, argument: language });
 		location.href = r.url && /\/edit/.test(r.url) ? r.url : this.cfg.root + language + '/' + this.cfg.page.name + '/edit';
 	}
 
 	async rename() {
-		if (this.dirty()) await this.save();
+		if (this.dirty() && !(await this.save())) return;
 		const r = await this.post(`${this.cfg.page.language}/${this.cfg.page.name}`, { command: this.cfg.commands.rename });
 		location.href = r.url || location.href;
 	}

@@ -1,6 +1,6 @@
 ---
 title: "Een artikel schrijven"
-revision: 4
+revision: 5
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -204,3 +204,4 @@ Artikelen die zijn gemaakt vóór de nieuwe tekst-editor, zijn opgeslagen als HT
 1. **Kan ik een artikel als `.md`-bestand opslaan?** Ja: met **Meer ▾ → download als .md**. Een `.md`-bestand kun je ook openen in de editor.
 2. **Wie ziet mijn artikel?** Zolang het niet is gepubliceerd, alleen de leden van de site.
 3. **Moet ik Markdown kennen?** Nee. In **Opmaak** werkt alles met knoppen. Markdown leer je terloops, als je wilt.
+4. **„… heeft deze tekst opgeslagen nadat jij hem opende.”** Iemand anders heeft het artikel opgeslagen terwijl jij het open had. Je eigen wijzigingen zijn niet weg: ze staan nog in de editor. Kies **Toch opslaan** om de versie van de ander te vervangen, of open het artikel opnieuw in een tweede tabblad en neem over wat je nodig hebt.

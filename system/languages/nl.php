@@ -1005,6 +1005,12 @@
 		"mde-ia-hosts" => "Scripts en stijlen van buiten alleen van: [[hosts]].",
 		"mde-ia-hosts-none" => "Scripts en stijlen van buiten zijn niet toegestaan.",
 		"mde-ia-sample-button" => "Klik",
+		"mde-conflict" => "[[name]] heeft deze tekst opgeslagen op [[at]], nadat jij hem opende. Je wijzigingen zijn niet opgeslagen; ze staan nog in de editor.",
+		"mde-conflict-overwrite" => "Toch opslaan (vervangt die versie)",
+		"mde-draft-found-changed" => "Er is een niet-opgeslagen versie, maar de tekst is intussen door iemand anders gewijzigd. Terugzetten vervangt die wijzigingen.",
+		"mde-page-moved" => "Iemand heeft deze pagina intussen verplaatst van [[from]] naar [[to]]; je tekst wordt daar opgeslagen.",
+		"mde-page-gone" => "Deze pagina bestaat niet meer. Je tekst staat nog in de editor: kopieer hem of download hem als .md.",
+		"mde-error-page-gone" => "Deze pagina is intussen hernoemd of verwijderd.",
 		// End of the Markdown editor
 	);
 

@@ -479,3 +479,9 @@ mde-ia-preview	Zo werkt het voor de lezer	How it works for the reader
 mde-ia-hosts	Scripts en stijlen van buiten alleen van: [[hosts]].	Scripts and styles from outside only from: [[hosts]].
 mde-ia-hosts-none	Scripts en stijlen van buiten zijn niet toegestaan.	Scripts and styles from outside are not allowed.
 mde-ia-sample-button	Klik	Click
+mde-conflict	[[name]] heeft deze tekst opgeslagen op [[at]], nadat jij hem opende. Je wijzigingen zijn niet opgeslagen; ze staan nog in de editor.	[[name]] saved this text on [[at]], after you opened it. Your changes are not saved; they are still in the editor.
+mde-conflict-overwrite	Toch opslaan (vervangt die versie)	Save anyway (replaces that version)
+mde-draft-found-changed	Er is een niet-opgeslagen versie, maar de tekst is intussen door iemand anders gewijzigd. Terugzetten vervangt die wijzigingen.	There is an unsaved version, but someone else changed the text meanwhile. Restoring replaces those changes.
+mde-page-moved	Iemand heeft deze pagina intussen verplaatst van [[from]] naar [[to]]; je tekst wordt daar opgeslagen.	Someone moved this page from [[from]] to [[to]] meanwhile; your text is saved there.
+mde-page-gone	Deze pagina bestaat niet meer. Je tekst staat nog in de editor: kopieer hem of download hem als .md.	This page no longer exists. Your text is still in the editor: copy it or download it as .md.
+mde-error-page-gone	Deze pagina is intussen hernoemd of verwijderd.	This page was renamed or deleted meanwhile.

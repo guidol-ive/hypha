@@ -220,6 +220,25 @@
 		Command mdPreferences (AJAX): stores the preferences of the logged-in user. The argument is JSON.
 	*/
 	registerCommandCallback('mdPreferences', 'hypha_mdeditorSetPreferences');
+
+	/*
+		Function: hypha_mdeditorLocate
+		Command mdLocate (AJAX): the current language and name of a page, by its id, for an editor whose page was renamed
+		or moved to another language by someone else meanwhile. A global command, so it runs before the page is looked up
+		by its old address. Prefers the language the editor asks from.
+	*/
+	registerCommandCallback('mdLocate', 'hypha_mdeditorLocate');
+	function hypha_mdeditorLocate($argument) {
+		global $O_O;
+		if (!isUser()) hypha_mdeditorJson(['ok' => false]);
+		$page = hypha_getPageById((string)$argument);
+		if (!$page) hypha_mdeditorJson(['ok' => false]);
+		$languages = iterator_to_array($page->findXPath('language'));
+		if (!$languages) hypha_mdeditorJson(['ok' => false]);
+		$wanted = $O_O->getContentLanguage();
+		$language = current(array_filter($languages, fn ($l) => $l->getAttribute('id') === $wanted)) ?: $languages[0];
+		hypha_mdeditorJson(['ok' => true, 'language' => $language->getAttribute('id'), 'name' => $language->getAttribute('name')]);
+	}
 	function hypha_mdeditorSetPreferences($argument) {
 		global $hyphaXml, $O_O;
 		if (!isUser()) hypha_mdeditorJson(['ok' => false]);

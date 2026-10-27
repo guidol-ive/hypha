@@ -140,6 +140,7 @@ An article keeps only its latest state:
 | `source/frontmatter` | Frontmatter keys that are not fields of the article, kept as written |
 | `retraction` | Reason shown to readers of a withdrawn article; `at` and `by` |
 | `lapsed_approves` | Approvals that lapsed because the author took the article back from review |
+| `article/@md_revision`, `@md_saved_by` | Number of the last save from the editor and the id of who made it, for the version check |
 | `featured_image` | Under the root, not in `context`: the existing code reads it there |
 | `pageList/page/@retracted` | `on` for a withdrawn article: left out of page lists, and `noindex` for search engines |
 
@@ -163,20 +164,30 @@ Hypha has no database and no transactions; the unit of atomic change is one file
 |---|---|---|
 | Atomicity | Yes: the new content goes to `<file>.tmp_for_writing` and `rename()` replaces the file in one step; a failed write leaves the old file | No: each file is written on its own |
 | Consistency | Partly: always well-formed as written, but no schema check; one XML-illegal character makes the file unreadable (#539) | No: references between `hypha.xml` (page list, tags, users) and page files are not checked |
-| Isolation | Writers are serialised by an exclusive `flock` (re-checked after `rename()`); readers take no lock and see the old or the new file | No: a read-modify-write that spans requests (an editor that stays open) is last-writer-wins, with no version check |
+| Isolation | Writers are serialised by an exclusive `flock` (re-checked after `rename()`); readers take no lock and see the old or the new file | Partly: the Markdown editor checks a version (below); WYMeditor and the other screens are last-writer-wins |
 | Durability | Mostly: no `fsync()` of the file or the directory, so the last write may be lost on power failure or a kernel crash | No |
 
 Consequences for the Markdown editor:
 
 1. The Markdown source and the XHTML of an article (and of a text page version) are in one file and
    written in one `saveAndUnlock()`, so they cannot diverge.
-2. Saving an article is two separate atomic writes: tags in `hypha.xml` (`mdSaveTags()`), then the
-   page file. Withdrawing writes the page file, then `@retracted` in the page list. A failure
-   between the two leaves the first one done; saving again repairs it. The locks are taken one
-   after the other, never nested, so these paths cannot deadlock with each other.
-3. Two editors on the same article: the last save wins without a warning (no optimistic version
-   check); the localStorage draft of a tab is only offered when its base equals the saved state.
-4. A consistent copy of a whole site needs `data/` copied while nobody writes (see
+2. Saving an article is two separate atomic writes: the page file, then the tags in `hypha.xml`
+   (`mdSaveTags()`). The tags are only set by the save whose text is stored (`article/@md_revision`
+   is compared after taking the lock on `hypha.xml`), so text and tags always come from the same
+   save. Withdrawing writes the page file, then `@retracted` in the page list. A failure between the
+   two leaves the first one done; saving again repairs it. The locks are taken one after the other,
+   never nested, so these paths cannot deadlock with each other.
+3. Optimistic version check: the editor sends the version it loaded (`md_base`: `article/@md_revision`,
+   or the `at` of the newest source version of a text page). When another save came in between, the
+   server answers with a conflict (who and when) instead of saving; the author can save anyway
+   (`md_force`). Status changes (retract, withdraw, edit again, rename, language) check the status
+   again after taking the lock.
+4. The page list node is looked up by page id after `lockAndReload()` of `hypha.xml`, so a concurrent
+   rename or language change does not break a save; an editor that gets a 404 asks the current
+   address with the global command `mdLocate` (page id).
+5. Drafts in localStorage are kept per page id and per tab; a draft on an older version is offered
+   with a warning.
+6. A consistent copy of a whole site needs `data/` copied while nobody writes (see
    [`OPERATIONS.md`](OPERATIONS.md)).
 
 ## Personal data

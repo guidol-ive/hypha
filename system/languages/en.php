@@ -1010,6 +1010,12 @@
 		"mde-ia-hosts" => "Scripts and styles from outside only from: [[hosts]].",
 		"mde-ia-hosts-none" => "Scripts and styles from outside are not allowed.",
 		"mde-ia-sample-button" => "Click",
+		"mde-conflict" => "[[name]] saved this text on [[at]], after you opened it. Your changes are not saved; they are still in the editor.",
+		"mde-conflict-overwrite" => "Save anyway (replaces that version)",
+		"mde-draft-found-changed" => "There is an unsaved version, but someone else changed the text meanwhile. Restoring replaces those changes.",
+		"mde-page-moved" => "Someone moved this page from [[from]] to [[to]] meanwhile; your text is saved there.",
+		"mde-page-gone" => "This page no longer exists. Your text is still in the editor: copy it or download it as .md.",
+		"mde-error-page-gone" => "This page was renamed or deleted meanwhile.",
 		// End of the Markdown editor
 	);
 

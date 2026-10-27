@@ -80,3 +80,11 @@ its `/edit` view. A script for this is a next step (part of NS-GLE-2026W44-hypha
 
 Use a copy of real data only locally. It contains personal data
 ([DATA_MODEL.md](DATA_MODEL.md#personal-data)); never commit it or attach it to an issue.
+
+**Concurrent requests on a macOS bind mount.** With `data/` on a Docker Desktop or OrbStack bind mount,
+many requests at once sometimes see a file as missing for a moment while another request replaces it
+with `rename()`: `Cannot lock file data/hypha.xml, open failed: … No such file or directory`. On Linux,
+and with `data/` on a Docker volume or tmpfs, this does not happen (0 errors in 4,924 requests at 8
+clients, measured 2026-10-27), so `tests/integratie/bekende-meldingen.txt` lists it and
+`test_gelijktijdig.py` does not count a round with a failed request. Files on the host may also lag
+behind the container; tests that race read the result through Hypha.

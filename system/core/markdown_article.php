@@ -132,7 +132,7 @@
 		 * @param array $renders SVG and MathML from the browser (see HyphaMarkdown::toXhtml())
 		 * @return array{errors: list<string>, messages: list<array>} errors stop the save; messages are for the checklist
 		 */
-		public function mdSave(array $fields, array $renders): array {
+		public function mdSave(array $fields, array $renders, ?string $base = null, bool $force = false): array {
 			$fields = hypha_markdownCleanFields($fields);
 			$settings = hypha_mdeditorSettings();
 			$user = $this->O_O->getUser();
@@ -166,7 +166,8 @@
 			$nodes = [];
 			foreach ($xhtml as $field => $html) $nodes[$field] = hypha_markdownWikify($scratch, $html);
 
-			$tags = $this->mdSaveTags(array_values(array_filter(array_map('trim', (array)($fields['tags'] ?? [])))));
+			$labels = array_values(array_filter(array_map('trim', (array)($fields['tags'] ?? []))));
+			$unknown = $this->mdUnknownTags($labels);
 
 			$image = trim((string)($fields['image'] ?? ''));
 			if (str_starts_with($image, HyphaImage::ROOT_URL)) $image = substr($image, strlen(HyphaImage::ROOT_URL));
@@ -174,6 +175,17 @@
 
 			$this->xml->lockAndReload();
 			$article = $this->xml->findOneXPath('article');
+			//
+			// Someone else saved since the editor loaded this article: no silent overwrite, unless the author chooses it.
+			//
+			$revision = (int)$article->getAttribute('md_revision');
+			if (!$force && $base !== null && $base !== '' && (int)$base !== $revision) {
+				$this->xml->unlock();
+				return ['errors' => [], 'messages' => $messages, 'conflict' => $this->mdSavedBy($article), 'revision' => $revision];
+			}
+			$revision++;
+			$article->setAttribute('md_revision', (string)$revision);
+			$article->setAttribute('md_saved_by', $user ? $user->getAttribute('id') : '');
 			$article->setAttribute(self::FIELD_NAME_AUTHOR, trim((string)($fields['author'] ?? '')));
 			$article->setAttribute(self::FIELD_NAME_UPDATED_AT, 't' . time());
 			$this->xml->findOneXPath('article/context/title')->setText($title);
@@ -195,10 +207,62 @@
 			$frontmatter = trim(str_replace(["\r\n", "\r"], "\n", (string)($fields['frontmatter'] ?? '')));
 			if ($frontmatter !== '') hypha_markdownSetCdata($source->getOrCreate('frontmatter'), $frontmatter);
 			elseif ($node = $source->findOneXPath('frontmatter')) $source->removeChild($node);
-			if ($tags['unknown']) $source->setAttribute('unknownTags', json_encode($tags['unknown'], JSON_UNESCAPED_UNICODE));
+			if ($unknown) $source->setAttribute('unknownTags', json_encode($unknown, JSON_UNESCAPED_UNICODE));
 			else $source->removeAttribute('unknownTags');
 			$this->xml->saveAndUnlock();
-			return ['errors' => [], 'messages' => $messages];
+			//
+			// The tags after the text, and only by the save whose text is stored: with two saves at once the tags and the
+			// text come from the same person (two files cannot be written in one step, see DATA_MODEL.md, ACID).
+			//
+			$this->mdSaveTags($labels, $revision);
+			return ['errors' => [], 'messages' => $messages, 'revision' => $revision];
+		}
+
+		/**
+		 * Who saved the article last and when, for the message about a conflict.
+		 */
+		protected function mdSavedBy(DOMElement $article): array {
+			$user = hypha_getUserById($article->getAttribute('md_saved_by'));
+			return ['name' => $user ? $user->getAttribute('fullname') : '', 'at' => hypha_markdownDate((int)ltrim($article->getAttribute(self::FIELD_NAME_UPDATED_AT), 't'), $this->language, true)];
+		}
+
+		/**
+		 * The labels that are not a tag of the site; for an administrator none, because saving makes them (BR-98).
+		 */
+		protected function mdUnknownTags(array $labels): array {
+			global $hyphaXml;
+			if (isAdmin()) return [];
+			$nfc = fn (string $s) => class_exists('Normalizer') ? (Normalizer::normalize($s, Normalizer::FORM_C) ?: $s) : $s;
+			$known = [];
+			foreach ($hyphaXml->findXPath('tagList/tag/language[@id=' . xpath_encode($this->language) . ']') as $node) $known[$nfc($node->getAttribute('label'))] = true;
+			return array_values(array_filter(array_unique(array_map($nfc, $labels)), fn ($label) => !isset($known[$label])));
+		}
+
+		/**
+		 * Looks the page up again in hypha.xml after lockAndReload(), by its id: another request may have renamed it or
+		 * changed its language meanwhile. Unlocks hypha.xml and returns false when the page is gone.
+		 */
+		protected function mdLockPageList(): bool {
+			global $hyphaXml;
+			$hyphaXml->lockAndReload();
+			$node = hypha_getPageById($this->pageListNode->getAttribute('id'));
+			if (!$node) {
+				$hyphaXml->unlock();
+				return false;
+			}
+			$this->replacePageListNode($node);
+			return true;
+		}
+
+		/**
+		 * The status as stored now, read without a lock: hypha.xml is locked by the caller, and locking the page file too
+		 * would take the locks in the opposite order of ensureStructure() (page file, then hypha.xml).
+		 */
+		protected function mdStoredStatus(): string {
+			$doc = new DOMDocument();
+			if (!@$doc->loadXML((string)$this->xml->file->read())) return '';
+			$article = $doc->getElementsByTagName('article')->item(0);
+			return $article ? $article->getAttribute(self::FIELD_NAME_STATUS) : '';
 		}
 
 		/**
@@ -208,10 +272,18 @@
 		 *
 		 * @return array{unknown: list<string>}
 		 */
-		protected function mdSaveTags(array $labels): array {
+		protected function mdSaveTags(array $labels, int $revision): array {
 			global $hyphaXml;
-			$hyphaXml->lockAndReload();
-			$this->replacePageListNode(hypha_getPage($this->language, $this->pagename));
+			if (!$this->mdLockPageList()) return ['unknown' => []];
+			//
+			// A later save already stored its text: its own tags follow, these are not set.
+			//
+			$doc = new DOMDocument();
+			$stored = @$doc->loadXML((string)$this->xml->file->read()) ? (int)$doc->getElementsByTagName('article')->item(0)?->getAttribute('md_revision') : $revision;
+			if ($stored !== $revision) {
+				$hyphaXml->unlock();
+				return ['unknown' => []];
+			}
 			$ids = [];
 			$unknown = [];
 			//
@@ -464,7 +536,15 @@
 			if ($this->mdRole() !== 'author') return 'mde-error-only-author';
 			if (!in_array($this->getStatus(), [self::STATUS_REVIEW, self::STATUS_APPROVED], true)) return 'art-unsupported-status-change';
 			$this->xml->lockAndReload();
+			//
+			// Again under the lock: the article may have been published meanwhile (found by testing two requests at once).
+			//
+			if (!in_array($this->getStatus(), [self::STATUS_REVIEW, self::STATUS_APPROVED], true)) {
+				$this->xml->unlock();
+				return 'art-unsupported-status-change';
+			}
 			$this->xml->findOneXPath('article')->setAttribute(self::FIELD_NAME_STATUS, self::STATUS_DRAFT);
+			$this->xml->findOneXPath('article')->setAttribute(self::FIELD_NAME_PUBLISHED_AT, '');
 			$approves = $this->xml->findOneXPath(self::FIELD_NAME_APPROVE_CONTAINER);
 			$lapsed = $this->xml->documentElement->getOrCreate('lapsed_approves');
 			foreach (iterator_to_array($approves->childNodes) as $approve) {
@@ -472,6 +552,7 @@
 				$lapsed->appendChild($approve);
 			}
 			$this->xml->saveAndUnlock();
+			$this->mdSetPrivate();
 			$this->sendStatusChangeMail();
 			return null;
 		}
@@ -491,6 +572,10 @@
 			if ($this->getStatus() !== self::STATUS_PUBLISHED) return 'art-unsupported-status-change';
 			if (trim($reason) === '') return 'mde-error-reason';
 			$this->xml->lockAndReload();
+			if ($this->getStatus() !== self::STATUS_PUBLISHED) {
+				$this->xml->unlock();
+				return 'art-unsupported-status-change';
+			}
 			$article = $this->xml->findOneXPath('article');
 			$article->setAttribute(self::FIELD_NAME_STATUS, self::MD_STATUS_RETRACTED);
 			foreach (iterator_to_array($article->findXPath('retraction')) as $old) $article->removeChild($old);
@@ -517,6 +602,10 @@
 			if ($this->mdRole() !== 'author') return 'mde-error-only-author';
 			if ($this->getStatus() !== self::MD_STATUS_RETRACTED) return 'art-unsupported-status-change';
 			$this->xml->lockAndReload();
+			if ($this->getStatus() !== self::MD_STATUS_RETRACTED) {
+				$this->xml->unlock();
+				return 'art-unsupported-status-change';
+			}
 			$article = $this->xml->findOneXPath('article');
 			$article->setAttribute(self::FIELD_NAME_STATUS, self::STATUS_DRAFT);
 			$article->setAttribute(self::FIELD_NAME_PUBLISHED_AT, '');
@@ -527,16 +616,19 @@
 			foreach (iterator_to_array($approves->childNodes) as $approve) $lapsed->appendChild($approve);
 			$this->xml->saveAndUnlock();
 			$this->mdSetRetractedFlag(false);
-			//
-			// A draft is private until it is published (BR-23).
-			//
+			$this->mdSetPrivate();
+			return null;
+		}
+
+		/**
+		 * A draft is private until it is published (BR-23).
+		 */
+		protected function mdSetPrivate(): void {
 			global $hyphaXml;
-			$hyphaXml->lockAndReload();
-			$this->replacePageListNode(hypha_getPage($this->language, $this->pagename));
-			hypha_setPage($this->pageListNode, $this->language, $this->pagename, 'on');
+			if (!$this->mdLockPageList()) return;
+			$this->pageListNode->setAttribute('private', 'on');
 			$this->privateFlag = true;
 			$hyphaXml->saveAndUnlock();
-			return null;
 		}
 
 		/**
@@ -544,8 +636,7 @@
 		 */
 		protected function mdSetRetractedFlag(bool $retracted): void {
 			global $hyphaXml;
-			$hyphaXml->lockAndReload();
-			$this->replacePageListNode(hypha_getPage($this->language, $this->pagename));
+			if (!$this->mdLockPageList()) return;
 			if ($retracted) $this->pageListNode->setAttribute('retracted', 'on');
 			else $this->pageListNode->removeAttribute('retracted');
 			$hyphaXml->saveAndUnlock();
@@ -571,12 +662,12 @@
 			if (!in_array($language, hypha_mdeditorLanguages(), true)) return 'mde-error-language';
 			if ($language === $this->language) return null;
 			global $hyphaXml;
-			$hyphaXml->lockAndReload();
-			if (hypha_getPage($language, $this->pagename)) {
+			if (!$this->mdLockPageList()) return 'mde-error-page-gone';
+			$this->pagename = hypha_pageGetLanguage($this->pageListNode, $this->language)?->getAttribute('name') ?: $this->pagename;
+			if (hypha_getPage($language, $this->pagename) || !in_array($this->mdStoredStatus(), [self::STATUS_DRAFT, self::STATUS_REVIEW, self::STATUS_APPROVED], true)) {
 				$hyphaXml->unlock();
 				return 'page-name-conflict';
 			}
-			$this->replacePageListNode(hypha_getPage($this->language, $this->pagename));
 			foreach ($this->pageListNode->findXPath('language') as $node) if ($node->getAttribute('id') === $this->language) $node->setAttribute('id', $language);
 			$hyphaXml->saveAndUnlock();
 			$this->language = $language;
@@ -600,8 +691,11 @@
 			if (!in_array($this->mdRole(), ['author', 'admin'], true)) return null;
 			if ($this->getStatus() === self::STATUS_PUBLISHED || $this->getStatus() === self::MD_STATUS_RETRACTED) return null;
 			global $hyphaXml;
-			$hyphaXml->lockAndReload();
-			$this->replacePageListNode(hypha_getPage($this->language, $this->pagename));
+			if (!$this->mdLockPageList()) return null;
+			if (in_array($this->mdStoredStatus(), [self::STATUS_PUBLISHED, self::MD_STATUS_RETRACTED], true)) {
+				$hyphaXml->unlock();
+				return null;
+			}
 			$own = $this->pageListNode;
 			$name = hypha_markdownPageName($this->getTitle(), function ($n) use ($own) {
 				$page = hypha_getPage($this->language, $n);
@@ -628,7 +722,7 @@
 			$config = [
 				'kind' => 'article',
 				'fields' => $this->mdFields(),
-				'page' => ['language' => $this->language, 'name' => $this->pagename, 'private' => $this->privateFlag, 'status' => $this->getStatus(), 'approves' => $approves, 'approvesNeeded' => self::APPROVES_NEEDED, 'role' => $this->mdRole(), 'published' => $this->getStatus() === self::STATUS_PUBLISHED],
+				'page' => ['language' => $this->language, 'name' => $this->pagename, 'private' => $this->privateFlag, 'status' => $this->getStatus(), 'approves' => $approves, 'approvesNeeded' => self::APPROVES_NEEDED, 'role' => $this->mdRole(), 'published' => $this->getStatus() === self::STATUS_PUBLISHED, 'id' => $this->pageListNode->getAttribute('id'), 'revision' => (int)$this->xml->findOneXPath('article')->getAttribute('md_revision')],
 				'checks' => array_map(fn ($c) => ['status' => $c['status'], 'label' => $c['label']], $checks),
 				'checkStatus' => $checkStatus,
 				'settings' => ['sections' => $settings['sections'], 'statute' => $settings['statute'], 'level' => hypha_mdeditorLevel($this->O_O->getUser(), $settings), 'scriptHosts' => $settings['scriptHosts'], 'frameHosts' => $settings['frameHosts'], 'peertubeHosts' => $settings['peertubeHosts']],
@@ -653,11 +747,13 @@
 			$renders = json_decode((string)($post['md_renders'] ?? ''), true);
 			if (!is_array($fields)) $fields = [];
 			if (!is_array($renders)) $renders = [];
-			$result = $this->mdSave($fields, $renders);
+			$result = $this->mdSave($fields, $renders, isset($post['md_base']) ? (string)$post['md_base'] : null, ($post['md_force'] ?? '') === '1');
 			if (($post['ajax'] ?? '') === '1') {
 				list($checkStatus, $checks) = $this->runChecks();
 				hypha_mdeditorJson([
-					'ok' => !$result['errors'],
+					'ok' => !$result['errors'] && empty($result['conflict']),
+					'conflict' => $result['conflict'] ?? null,
+					'revision' => $result['revision'] ?? null,
 					'errors' => array_map(fn ($e) => __($e), $result['errors']),
 					'messages' => $result['messages'],
 					'checks' => array_map(fn ($c) => ['status' => $c['status'], 'label' => $c['label']], $checks),
@@ -665,7 +761,8 @@
 					'ms' => round((microtime(true) - $started) * 1000),
 				]);
 			}
-			if ($result['errors']) foreach ($result['errors'] as $error) notify('error', __($error));
+			if (!empty($result['conflict'])) notify('error', __('mde-conflict', ['name' => $result['conflict']['name'], 'at' => $result['conflict']['at']]));
+			elseif ($result['errors']) foreach ($result['errors'] as $error) notify('error', __($error));
 			else notify('success', ucfirst(__('art-successfully-updated')));
 			return $this->mdRedirect();
 		}
