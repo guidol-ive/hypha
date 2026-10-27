@@ -282,6 +282,7 @@ mde-slash-quote	Citaat (opvallende uitspraak)	Quote (striking statement)
 mde-slash-callout	Kader met uitleg	Box with explanation
 mde-slash-warning	Kader: let op	Box: note
 mde-slash-list	Opsomming	List
+mde-slash-olist	Genummerde lijst	Numbered list
 mde-slash-footnote	Voetnoot	Footnote
 mde-slash-table	Tabel (3 kolommen)	Table (3 columns)
 mde-slash-image	Beeld	Image
@@ -345,7 +346,7 @@ mde-tb-diagram-edit	Diagram bewerken…	Edit diagram…
 mde-tb-diagram-edit-help	Diagram bewerken… (opent een venster)	Edit diagram… (opens a window)
 mde-summary-tags	[[n]] tags	[[n]] tags
 mde-summary-image	met beeld	with image
-mde-tb-blocks	Alle blokken (typ / aan het begin van een regel)	All blocks (type / at the start of a line)
+mde-tb-blocks	Alle blokken (in Markdown ook: typ / aan het begin van een regel)	All blocks (in Markdown also: type / at the start of a line)
 mde-tb-download	.md	.md
 mde-tb-download-help	Het artikel downloaden als Markdown-bestand (.md)	Download the article as a Markdown file (.md)
 mde-tb-open	Een Markdown-bestand (.md) openen	Open a Markdown file (.md)

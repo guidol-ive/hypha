@@ -734,7 +734,7 @@ export class Dialogs {
 	slashItems() {
 		return [
 			['heading', 'header', '### '], ['subheading', 'header', '#### '], ['quote', 'quote-left', '> [!quote]'], ['callout', 'square-o', '> [!info]'], ['warning', 'exclamation-triangle', '> [!warning]'],
-			['list', 'list-ul', '- '], ['footnote', 'superscript', '[^1]'], ['table', 'table', '| … |'], ['image', 'picture-o', '![…](…)'], ['diagram', 'sitemap', '```mermaid'],
+			['list', 'list-ul', '- '], ['olist', 'list-ol', '1. '], ['footnote', 'superscript', '[^1]'], ['table', 'table', '| … |'], ['image', 'picture-o', '![…](…)'], ['diagram', 'sitemap', '```mermaid'],
 			['math', 'calculator', '$$ … $$'], ['code', 'code', '```php'], ['rule', 'minus', '---'],
 			...(this.ed.markdownOptions(false).level >= 2 ? [['interactive', 'puzzle-piece', '```html interactief']] : []),
 		].map(([k, icon, md]) => ({ key: k, icon, md, label: this.t('slash-' + k) }));
@@ -777,8 +777,61 @@ export class Dialogs {
 		}, 150);
 	}
 
-	showSlash() {
-		if (this.ed.editMode !== 'markdown') return;
+	//
+	// 'Alle blokken' in Opmaak: the items of the / menu as a menu at the button, inserted as in the Markdown view
+	// (design step 3: "In Opmaak doen de knoppen van de werkbalk hetzelfde").
+	//
+	showBlocks(button) {
+		const menu = $('#mdeMoreMenu', this.root);
+		if (!menu.hidden) return this.closeMenu(menu, button);
+		menu.innerHTML = this.slashItems().map(x => `<button type="button" role="menuitem" data-block="${x.key}"><i class="fa fa-${x.icon}" aria-hidden="true"></i><span class="lbl">${esc(x.label)}</span></button>`).join('');
+		const r = button.getBoundingClientRect();
+		menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 268)) + 'px';
+		menu.style.top = r.bottom + 4 + 'px';
+		menu.hidden = false;
+		if (r.bottom + 4 + menu.offsetHeight > window.innerHeight) menu.style.top = Math.max(8, r.top - 4 - menu.offsetHeight) + 'px';
+		button.setAttribute('aria-expanded', 'true');
+		menu.onclick = e => { const b = e.target.closest('[data-block]'); if (b) { this.closeMenu(menu, button, false); this.visualBlock(b.dataset.block); } };
+		menu.onkeydown = e => this.menuKeys(e, menu, button);
+		setTimeout(() => menu.querySelector('button')?.focus(), 0);
+	}
+
+	visualBlock(key) {
+		const ed = this.ed, v = ed.activePm(), n = schema.nodes, { commands, schemaList } = PM;
+		const run = cmd => { cmd(v.state, v.dispatch, v); v.focus(); };
+		const inList = type => { for (let d = v.state.selection.$from.depth; d > 0; d--) if (v.state.selection.$from.node(d).type === type) return true; return false; };
+		switch (key) {
+			case 'heading': case 'subheading': return run(commands.setBlockType(n.heading, { level: key === 'heading' ? 3 : 4 }));
+			case 'list': case 'olist': {
+				//
+				// A second click takes the paragraph out of the list again.
+				//
+				const type = key === 'list' ? n.bullet_list : n.ordered_list;
+				return run(inList(type) ? schemaList.liftListItem(n.list_item) : schemaList.wrapInList(type));
+			}
+			case 'quote': return ed.wrapCallout(v, 'quote', '');
+			case 'callout': return ed.wrapCallout(v, 'info', this.t('callout-title-sample'));
+			case 'warning': return ed.wrapCallout(v, 'warning', this.t('warning-sample-title'));
+			case 'footnote': {
+				let count = 0;
+				v.state.doc.descendants(x => { if (x.type === n.footnote_def) count++; });
+				const label = String(count + 1);
+				const tr = v.state.tr.replaceSelectionWith(n.footnote_ref.create({ label }), false);
+				tr.insert(tr.doc.content.size, n.footnote_def.create({ label }, schema.text(this.t('footnote-sample'))));
+				v.dispatch(tr.scrollIntoView());
+				return v.focus();
+			}
+			case 'table': return this.tableOp('new', 3);
+			case 'image': case 'diagram': return ed.action(key);
+			case 'math': return ed.insertBlock('$$\n\\tfrac{a}{b}\n$$');
+			case 'code': return ed.insertBlock('```php\n// code\n```');
+			case 'rule': return ed.insertBlock('---');
+			case 'interactive': return this.openInteractive({});
+		}
+	}
+
+	showSlash(button) {
+		if (this.ed.editMode !== 'markdown') return this.showBlocks(button || $('.toolbar [data-act="slash"]', this.root));
 		const cm = this.ed.cm, line = cm.state.doc.lineAt(cm.state.selection.main.head);
 		const insert = line.text.trim() ? '\n/' : '/';
 		const at = line.text.trim() ? line.to : line.from;
@@ -851,7 +904,7 @@ export class Dialogs {
 			return cm.focus();
 		}
 		cm.dispatch({ changes: { from: p.from, to: p.to, insert: '' } });
-		const samples = { heading: '### ', subheading: '#### ', list: '- ', rule: '---\n', footnote: null, code: '```php\n\n```' };
+		const samples = { heading: '### ', subheading: '#### ', list: '- ', olist: '1. ', rule: '---\n', footnote: null, code: '```php\n\n```' };
 		if (item.key === 'interactive') return this.openInteractive(this.currentInteractive());
 		if (['image', 'diagram', 'table'].includes(item.key)) return item.key === 'table' ? this.tableOp('new', 3) : this.ed.action(item.key);
 		if (item.key === 'quote' || item.key === 'callout') return this.ed.markdownAction(item.key);

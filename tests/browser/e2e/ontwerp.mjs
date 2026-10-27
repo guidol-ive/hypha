@@ -128,6 +128,28 @@ export default async function (t) {
 		assert(text.includes('[[Nieuwe proefpagina]]') && !text.includes('\\['), 'text: ' + text);
 	});
 
+	t.test('Opmaak: Alle blokken inserts a numbered list, a subheading, a footnote, code and a dividing line', async () => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.waitForTimeout(200);
+		await setText('Eerste alinea.\n');
+		const block = async key => {
+			await editor(() => { const v = window.hyphaMdeditor.editor.pm; v.dispatch(v.state.tr.setSelection(v.state.selection.constructor.atEnd(v.state.doc))); v.focus(); });
+			await page.click('.toolbar [data-act="slash"]');
+			await page.waitForSelector('#mdeMoreMenu:not([hidden])');
+			await page.click(`#mdeMoreMenu [data-block="${key}"]`);
+			await page.waitForTimeout(150);
+		};
+		await block('olist');
+		await block('olist');
+		await block('subheading');
+		await block('footnote');
+		await block('code');
+		await block('rule');
+		const text = await editor(() => window.hyphaMdeditor.editor.fields.text);
+		assert(/^#### Eerste alinea\.\[\^1\]/m.test(text), 'subheading and footnote: ' + text);
+		assert(/^\[\^1\]: /m.test(text) && /```php/.test(text) && /^---$/m.test(text), 'footnote, code, rule: ' + text);
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

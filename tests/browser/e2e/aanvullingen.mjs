@@ -68,7 +68,7 @@ export default async function (t) {
 		let prompted = false;
 		page.once('dialog', d => { prompted = true; d.dismiss(); });
 		await page.evaluate(() => { const v = window.hyphaMdeditor.editor.pm; v.dispatch(v.state.tr.setSelection(v.state.selection.constructor.near(v.state.doc.resolve(3)))); v.focus(); });
-		await page.click('.toolbar [data-act="callout"]');
+		await page.evaluate(() => window.hyphaMdeditor.editor.action('callout'));
 		await page.waitForTimeout(100);
 		assert(!prompted, 'a prompt was shown');
 		assert(await page.evaluate(() => document.activeElement?.matches('input.callout-title')), 'title field has focus');

@@ -255,7 +255,7 @@ export class Editor {
 					${tb('list', 'list-ul', 'tb-list', 'tb-list-help')}${tb('quote', 'quote-left', 'tb-quote', 'tb-quote-help')}${tb('callout', 'square-o', 'tb-callout', 'tb-callout-help')}
 					${tb('table', 'table', 'tb-table', 'tb-table-help', 'aria-haspopup="menu" aria-expanded="false"').replace('</span></button>', '</span> <i class="fa fa-caret-down" aria-hidden="true"></i></button>')}<span class="sep"></span>
 					${tb('link', 'link', 'tb-link', 'tb-link-help')}${tb('image', 'picture-o', 'tb-image', 'tb-image-help', 'aria-haspopup="dialog"')}${tb('math', 'calculator', 'tb-math', 'tb-math-help')}${tb('diagram', 'sitemap', 'tb-diagram', 'tb-diagram-help', 'aria-haspopup="dialog"')}
-					${tb('slash', 'ellipsis-h', '', 'tb-blocks', 'data-md-only="1"').replace('class="tb"', 'class="tb md-only"')}<span class="sep"></span>
+					${tb('slash', 'plus-square-o', '', 'tb-blocks', 'aria-haspopup="menu"')}<span class="sep"></span>
 					${this.article ? tb('download', 'download', 'tb-download', 'tb-download-help') + tb('openmd', 'file-text-o', '', 'tb-open') : ''}
 					${tb('help', 'question-circle', '', 'tb-help', 'data-md-only="1" aria-haspopup="dialog"').replace('class="tb"', 'class="tb md-only"')}
 					<button class="tb tbmore" id="mdeMore" type="button" title="${t('tb-more-help')}" aria-haspopup="menu" aria-expanded="false" aria-label="${t('tb-more')}" hidden><i class="fa fa-ellipsis-h more-icon" aria-hidden="true"></i><span class="lbl">${t('tb-more')}</span> <i class="fa fa-caret-down" aria-hidden="true"></i></button>
@@ -1128,7 +1128,10 @@ export class Editor {
 		if (!fits()) modes.classList.add('compact');
 		const hidden = [];
 		for (let i = items.length - 1; i >= 0 && !fits(); i--) {
-			if (items[i].dataset.act === 'help') continue;
+			//
+			// Help and 'Alle blokken' stay on the toolbar: through them everything else can be reached.
+			//
+			if (items[i].dataset.act === 'help' || items[i].dataset.act === 'slash') continue;
 			items[i].classList.add('moved');
 			hidden.unshift(items[i]);
 			more.hidden = false;
@@ -1177,7 +1180,7 @@ export class Editor {
 			case 'image': return this.dialogs.openImage(this.dialogs.currentImage());
 			case 'diagram': return this.dialogs.openDiagram(this.dialogs.currentDiagram());
 			case 'table': return this.dialogs.toggleTableMenu(button || $('[data-act="table"]', this.root));
-			case 'slash': return this.dialogs.showSlash(true);
+			case 'slash': return this.dialogs.showSlash(button);
 		}
 		if (visual) this.visualAction(act); else this.markdownAction(act);
 	}
