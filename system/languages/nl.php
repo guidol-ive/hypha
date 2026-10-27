@@ -972,6 +972,15 @@
 		"mde-diagram-waardeketen-desc" => "Onderdelen naar zichtbaarheid en volwassenheid (Wardley)",
 		"mde-diagram-soorten-problemen-name" => "Soorten problemen",
 		"mde-diagram-soorten-problemen-desc" => "Problemen indelen naar aanpak (Cynefin)",
+		"mde-new-title" => "titel van het artikel",
+		"mde-new-address" => "webadres: [[address]]",
+		"mde-new-question" => "Hoe wil je meestal schrijven?",
+		"mde-new-visual" => "Opmaak",
+		"mde-new-visual-help" => "zoals in Word: je ziet direct de opmaak",
+		"mde-new-markdown" => "Markdown",
+		"mde-new-markdown-help" => "met tekens als ### en **",
+		"mde-new-remember" => "onthoud mijn keuze",
+		"mde-new-pagename" => "paginanaam",
 		// End of the Markdown editor
 	);
 

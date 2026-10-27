@@ -70,6 +70,10 @@
 		if ($dir == 'system/languages') return true;
 		if ($dir == 'system/php-dom-wrapper') return true;
 		if ($dir == 'system/wymeditor') return true;
+		// The Markdown editor (issue #520): its renderer, its browser code and the libraries of both.
+		if ($dir == 'system/core/markdown') return true;
+		if ($dir == 'system/mdeditor' || str_starts_with($dir, 'system/mdeditor/')) return true;
+		if ($dir == 'system/vendor' || str_starts_with($dir, 'system/vendor/')) return true;
 		return false;
 	}
 
@@ -85,8 +89,9 @@
 		if ($handle = opendir($dir)) {
 			while (false !== ($file = readdir($handle))) {
 				if ($file != "." && $file != "..") {
-					if (isAllowedFile($dir.'/'.$file)) $index[preg_replace("/^\.\//i","",$dir.'/'.$file)] = filemtime($dir.'/'.$file);
-					elseif (is_dir($dir.'/'.$file)) $index = array_merge($index, index($dir.'/'.$file));
+					// A folder first: a subfolder of an allowed folder (system/mdeditor/vendor) is not a file.
+					if (is_dir($dir.'/'.$file)) $index = array_merge($index, index($dir.'/'.$file));
+					elseif (isAllowedFile($dir.'/'.$file)) $index[preg_replace("/^\.\//i","",$dir.'/'.$file)] = filemtime($dir.'/'.$file);
 				}
 			}
 			closedir($handle);

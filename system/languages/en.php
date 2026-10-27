@@ -977,6 +977,15 @@
 		"mde-diagram-waardeketen-desc" => "Parts by visibility and maturity (Wardley)",
 		"mde-diagram-soorten-problemen-name" => "Kinds of problems",
 		"mde-diagram-soorten-problemen-desc" => "Sort problems by approach (Cynefin)",
+		"mde-new-title" => "title of the article",
+		"mde-new-address" => "address: [[address]]",
+		"mde-new-question" => "How do you usually want to write?",
+		"mde-new-visual" => "Visual",
+		"mde-new-visual-help" => "like in Word: you see the layout at once",
+		"mde-new-markdown" => "Markdown",
+		"mde-new-markdown-help" => "with characters such as ### and **",
+		"mde-new-remember" => "remember my choice",
+		"mde-new-pagename" => "page name",
 		// End of the Markdown editor
 	);
 

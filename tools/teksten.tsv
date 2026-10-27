@@ -445,3 +445,12 @@ mde-diagram-waardeketen-name	Waardeketen	Value chain
 mde-diagram-waardeketen-desc	Onderdelen naar zichtbaarheid en volwassenheid (Wardley)	Parts by visibility and maturity (Wardley)
 mde-diagram-soorten-problemen-name	Soorten problemen	Kinds of problems
 mde-diagram-soorten-problemen-desc	Problemen indelen naar aanpak (Cynefin)	Sort problems by approach (Cynefin)
+mde-new-title	titel van het artikel	title of the article
+mde-new-address	webadres: [[address]]	address: [[address]]
+mde-new-question	Hoe wil je meestal schrijven?	How do you usually want to write?
+mde-new-visual	Opmaak	Visual
+mde-new-visual-help	zoals in Word: je ziet direct de opmaak	like in Word: you see the layout at once
+mde-new-markdown	Markdown	Markdown
+mde-new-markdown-help	met tekens als ### en **	with characters such as ### and **
+mde-new-remember	onthoud mijn keuze	remember my choice
+mde-new-pagename	paginanaam	page name

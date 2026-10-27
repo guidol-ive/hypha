@@ -132,6 +132,16 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 3. Opgelost: een lege tekst gaf een fout bij het zoeken van het blok van de cursor.
 4. Alleen met de hand: plakken uit de echte programma's (de documenten van Word en Google Docs zijn nagebouwd, dat van LibreOffice is een echte export).
 
+### T14 Packaging, Docker en Compose (2026-10-27)
+
+1. Gebouwd: `hypha.php` neemt `system/core/markdown/`, `system/mdeditor/` en `system/vendor/` mee (3 regels in `isAllowedFile()`); `index()` daalt nu eerst af in een map, want een submap van een toegestane map (zoals `system/mdeditor/vendor/`) werd als bestand gezien. Het image van `docs/container/Containerfile` neemt de nieuwe mappen vanzelf mee; `KeepAlive Off` in de vhost (zie T08). Compose is ongewijzigd.
+2. Tests en uitkomsten: `sh tests/packaging/run.sh 8.2` en `8.4`: `hypha.php` gebouwd met zijn eigen build-opdracht (2,7 MB), geïnstalleerd in een lege map, alle bestanden van de editor aanwezig en de geïnstalleerde kopie zet Markdown om: 11 van 11 op beide versies. De images `hypha-md:php8.2` tot en met `php8.5` zijn met de nieuwe vhost gebouwd.
+3. Bevinding in bestaande code: de installatie met `hypha.php` faalt zonder map `data/` en pakt het standaardthema niet in (`data/themes/default/`); de test maakt de map zelf. Niet opgelost (buiten deze issue).
+
+### Stap 1: nieuwe pagina (2026-10-27)
+
+1. Gebouwd: in `system/core/mdeditor.php` een script dat `newPage()` van `pages.php` omwikkelt: bij het type *artikel met review* vraagt de popup de titel, toont het webadres eronder, en vraagt eenmalig *Opmaak* of *Markdown* met „onthoud mijn keuze” (BR-25, besluit 22); andere types houden de paginanaam. `pages.php` zelf is niet gewijzigd.
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.
@@ -142,6 +152,7 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 7. **De afbeelding bij het uittreksel staat onder de wortel** (`hypha/featured_image`), niet in `article/context` (§14.1): daar leest en schrijft de bestaande code haar.
 8. **Doorschakelen in `process()`** in plaats van in `editView()` en `editAction()` (§13.13): de nieuwe opdrachten (terugtrekken, goedkeuren met redactiestatuut, taal, webadres) hebben eigen routes, en zo blijft het bij één regel. In totaal raken de wijzigingen 27 regels van `peer_reviewed_article.php`, 2 van `pages.php` en 1 van `index.php` (het ontwerp schatte zes regels en geen wijziging in `index.php`).
 11. **De bron van een tekstpagina staat in `source/language[@id]/version[@at]`**, niet met `xml:id` zoals de inhoud: een `xml:id` moet uniek zijn in het document, en de versie van de bron heeft hetzelfde tijdstip als die van de inhoud. Opslaan gebeurt met een eigen kleine functie in plaats van `storeWikiContent()` (de terugvaloptie van §19).
+12. **Een `.md`-bestand openen in de popup van stap 1** is niet gebouwd; openen en slepen kan in de werkbalk van de editor, direct na het aanmaken.
 9. **Een tekstpagina houdt haar paginanaam als titel** (§9: „de paginanaam zoals Hypha hem toont”); het webadres uit de titel (kleine letters, koppeltekens) geldt alleen voor artikelen. Anders zou het menu „over-ons” tonen in plaats van „Over ons”.
 10. **Goedkeuren met het redactiestatuut gebeurt in de leesweergave**, waar beoordelaars nu ook goedkeuren, in een venster; de editor toont de status en de knop *trek terug*.
 6. **Ingesloten inhoud krijgt `sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"`**: de spelers van YouTube en Vimeo werken niet zonder hun eigen herkomst. Een `<iframe>` mag alleen naar het pad van de speler van een dienst (§13.5 noemde alleen de host).

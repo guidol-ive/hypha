@@ -47,7 +47,9 @@
 		$save = $config['kind'] === 'article' ? __('art-save') : __('save');
 		$commands->appendChild(makeButton($cancel, 'window.hyphaMdeditor ? hyphaMdeditor.cancel() : (window.location = ' . htmlspecialchars(json_encode($page->language . '/' . $page->pagename)) . ');', 'mdeCancel'));
 		$commands->appendChild(makeButton($save, 'window.hyphaMdeditor && hyphaMdeditor.save();', 'mdeSave', 'editButton'));
-		registerPostProcessingFunction('hypha_mdeditorPostProcess');
+		static $registered = false;
+		if (!$registered) registerPostProcessingFunction('hypha_mdeditorPostProcess');
+		$registered = true;
 		return null;
 	}
 
@@ -58,6 +60,10 @@
 	*/
 	function hypha_mdeditorPostProcess($html) {
 		$head = $html->findOneXPath('head');
+		//
+		// Only once: the import map must come before the module that uses it.
+		//
+		if ($head->findXPath('script[@type="importmap"]')->length) return;
 		$version = hypha_mdeditorVersion();
 		$meta = $head->createChild('meta');
 		$meta->setAttribute('name', 'robots');
@@ -261,4 +267,89 @@
 		}
 		$query = in_array($mode, ['visual', 'markdown'], true) ? '?mode=' . $mode : '';
 		return ['redirect', $O_O->getRequest()->getRootUrl() . $language . '/' . $name . '/edit' . $query];
+	}
+
+	/*
+		Function: hypha_mdeditorNewPagePopup
+		Step 1 of the design: in the existing popup 'nieuwe pagina', an article with review asks for its title instead
+		of a page name, shows the address that follows from it (BR-27), and asks once how the author usually writes
+		(BR-25, decision 22). The popup of pages.php is not changed: this script wraps its newPage() and changes the form
+		only while the page type is peer_reviewed_article. The server makes the page name again (mdNewArticle), so
+		the preview here is only a preview.
+	*/
+	registerPostProcessingFunction('hypha_mdeditorNewPagePopup');
+	function hypha_mdeditorNewPagePopup($html) {
+		global $O_O;
+		if (!isUser()) return;
+		$preferences = hypha_mdeditorPreferences($O_O->getUser());
+		$texts = [];
+		foreach (['title', 'address', 'question', 'visual', 'visual-help', 'markdown', 'markdown-help', 'remember', 'pagename'] as $key) $texts[$key] = __('mde-new-' . $key);
+		ob_start();
+?>
+<script>
+	(function () {
+		var texts = <?=json_encode($texts, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP)?>;
+		var preferences = <?=json_encode($preferences)?>;
+		function slug(text) {
+			var words = { 'ß': 'ss', 'æ': 'ae', 'Æ': 'ae', 'ø': 'o', 'Ø': 'o', 'œ': 'oe', 'Œ': 'oe', 'ĳ': 'ij', 'Ĳ': 'ij', '€': ' euro ', '&': ' en ', '’': '', "'": '', '%': ' procent ' };
+			var s = String(text).replace(/[ßæÆøØœŒĳĲ€&’'%]/g, function (c) { return words[c]; });
+			s = s.normalize('NFD').replace(/[̀-ͯ]+/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+			if (s.length > 80) { var cut = s.slice(0, 81).lastIndexOf('-'); s = s.slice(0, cut > 0 ? cut : 80).replace(/-+$/, ''); }
+			return s;
+		}
+		function setup() {
+			var type = document.getElementById('newPageType'), name = document.getElementById('newPagename'), submit = document.getElementById('newPageSubmit');
+			if (!type || !name || !submit || type.getAttribute('data-mde')) return;
+			type.setAttribute('data-mde', '1');
+			var row = name.closest('tr'), label = row.querySelector('th');
+			var originalLabel = label.textContent, originalKeyup = name.getAttribute('onkeyup'), originalBlur = name.getAttribute('onblur'), originalClick = submit.getAttribute('onclick');
+			var extra = document.createElement('tr');
+			extra.innerHTML = '<td></td><td><p class="mde-address" aria-live="polite"></p>'
+				+ (preferences.remember ? '' : '<fieldset class="mde-modes"><legend></legend><label><input type="radio" name="mdMode" value="visual" checked> <b></b> <span></span></label><br><label><input type="radio" name="mdMode" value="markdown"> <b></b> <span></span></label><br><label><input type="checkbox" name="mdRemember"> <span></span></label></fieldset>')
+				+ '</td>';
+			row.parentNode.insertBefore(extra, row.nextSibling);
+			var address = extra.querySelector('.mde-address');
+			if (!preferences.remember) {
+				extra.querySelector('legend').textContent = texts.question;
+				var labels = extra.querySelectorAll('label');
+				labels[0].querySelector('b').textContent = texts.visual; labels[0].querySelector('span').textContent = texts['visual-help'];
+				labels[1].querySelector('b').textContent = texts.markdown; labels[1].querySelector('span').textContent = texts['markdown-help'];
+				labels[2].querySelector('span').textContent = texts.remember;
+				if (preferences.mode === 'markdown') labels[1].querySelector('input').checked = true;
+			}
+			function update() {
+				var article = type.value === 'peer_reviewed_article';
+				extra.style.display = article ? '' : 'none';
+				label.textContent = article ? texts.title : originalLabel;
+				if (article) {
+					name.removeAttribute('onkeyup');
+					name.removeAttribute('onblur');
+					var s = slug(name.value);
+					address.textContent = s ? texts.address.replace('[[address]]', s) : '';
+					submit.disabled = !s;
+					submit.onclick = function () {
+						hypha(<?=json_encode($O_O->getContentLanguage())?> + '/' + (slug(name.value) || 'nieuw'), 'mdNewArticle', name.value, $(this).closest('form'));
+						return false;
+					};
+				}
+				else {
+					name.setAttribute('onkeyup', originalKeyup);
+					name.setAttribute('onblur', originalBlur);
+					submit.onclick = null;
+					submit.setAttribute('onclick', originalClick);
+				}
+			}
+			type.addEventListener('change', update);
+			name.addEventListener('input', update);
+			update();
+		}
+		document.addEventListener('DOMContentLoaded', function () {
+			if (typeof window.newPage !== 'function') return;
+			var original = window.newPage;
+			window.newPage = function () { original.apply(this, arguments); setup(); };
+		});
+	})();
+</script>
+<?php
+		$html->writeScript(ob_get_clean());
 	}
