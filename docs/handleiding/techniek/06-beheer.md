@@ -7,7 +7,7 @@ date_last_review:
 
 # Beheer: back-up, logboeken, e-mail en updates
 
-Deze pagina is voor wie een Hypha-site draaiend houdt. Ze beschrijft de back-up, het logboek, e-mail en de samenvatting, updates en het geheugen van de server. De Engelstalige details staan in [`docs/technical/OPERATIONS.md`](../../technical/OPERATIONS.md).
+Deze pagina is voor wie een Hypha-site draaiend houdt. Ze beschrijft de back-up, het logboek, e-mail en de samenvatting, updates en de capaciteit van de server. De Engelstalige details staan in [`docs/technical/OPERATIONS.md`](../../technical/OPERATIONS.md).
 
 ## Back-up
 
@@ -111,11 +111,127 @@ Een lijst die je invult, vervangt de standaardlijst helemaal. Pas `hypha.xml` aa
 
 Hypha draait op **PHP 8.2 tot en met 8.5**. Controleer de versie voor je van hosting wisselt, met `php -v` en de lijst met extensies in [Installatie](02-installatie.md#wat-je-nodig-hebt). PHP 8.2 krijgt van php.net beveiligingsupdates tot en met 31 december 2026.
 
-## Geheugen en drukte
+## Specificaties en capaciteit
 
-1. Elke werker van Apache met PHP gebruikt ongeveer 85 MB, vooral voor het inlezen van `hypha.xml`.
-2. Zet het aantal werkers (`MaxRequestWorkers` of `pm.max_children`) op ongeveer het geheugen voor de webserver gedeeld door 100 MB.
-3. Te veel werkers laten de server swappen, en dan reageert de site voor niemand meer. Met een grens wachten extra verzoeken even in de rij.
+Hypha leest bij elk verzoek het hele bestand `hypha.xml` in: de leden, de lijst met pagina's en de tags. Een pagina zelf staat in `data/pages/<id>`. Daarom bepalen het aantal pagina's en het aantal leden hoeveel geheugen en rekentijd elk verzoek kost.
+
+De getallen hieronder zijn gemeten op 27 oktober 2026, met verzonnen proefsites (`tests/gouden/maak.php`), PHP 8.4.27 met OPcache, Apache 2.4 met mod_php (prefork) in de container van [Installatie](02-installatie.md). De machine was een Apple M1 (8 kernen) met OrbStack (8 CPU's, 7,8 GB). Tegelijk draaiden er andere tests, dus reken op een paar procent ruis. Een steekproef op PHP 8.2.35 gaf dezelfde getallen (binnen 10%). Wat *afgeleid* heet, is berekend uit de metingen en niet zelf gemeten.
+
+### Kort: wat heb je nodig
+
+| Site | Geheugen | CPU | Schijf |
+|---|---|---|---|
+| tot 1.000 pagina's | 256 MB met 2 werkers is ruim genoeg | 1 kern | 15 MB plus afbeeldingen |
+| tot 10.000 pagina's | 256 MB met 2 werkers, of 512 MB met 4 werkers | 1 tot 2 kernen | 130 MB plus afbeeldingen |
+| tot 25.000 pagina's | 1 GB met 4 werkers (afgeleid) | 2 kernen | 330 MB plus afbeeldingen (afgeleid) |
+| 50.000 pagina's | 1 GB met 2 werkers; de index duurt dan 2 seconden | 2 kernen | 625 MB plus afbeeldingen |
+
+1. Afbeeldingen en bestanden in `data/images/` en `data/files/` tellen niet mee in deze tabel. Die zijn op een echte site vaak het grootste deel.
+2. Boven ongeveer **25.000 pagina's** duurt de index van alle pagina's langer dan 1 seconde. Boven ongeveer **50.000 pagina's** duurt ook het openen van de editor langer dan 1 seconde. Gewone pagina's blijven onder 0,3 seconde.
+3. **Leden** kosten ongeveer evenveel als pagina's: 1.000 leden voegen 185 kB toe aan `hypha.xml`, ongeveer zoveel als 1.200 pagina's. Gemeten is tot 10.000 leden. Tel voor een grotere site 1.000 leden als 1.200 pagina's (afgeleid).
+
+### Schijf
+
+| Pagina's | `hypha.xml` | `data/` op schijf |
+|---|---|---|
+| 100 | 17 kB | 2,9 MB |
+| 1.000 | 154 kB | 14 MB |
+| 10.000 | 1,5 MB | 126 MB |
+| 50.000 | 7,6 MB | 625 MB |
+
+| Soort pagina | Bestand in `data/pages/` |
+|---|---|
+| Markdown-artikel | gemiddeld 14 kB: een derde de Markdown-bron, twee derde de XHTML |
+| Markdown-tekstpagina met 3 versies | gemiddeld 16,5 kB |
+| oude HTML-pagina of -artikel | 1 tot 2 kB (de proefteksten zijn kort) |
+| regel in `hypha.xml` per pagina | ongeveer 150 bytes |
+| regel in `hypha.xml` per lid | ongeveer 185 bytes |
+
+1. Een Markdown-pagina bewaart de tekst twee keer: als bron en als XHTML. Ze is daardoor ongeveer 1,5 keer zo groot als een HTML-pagina met dezelfde tekst (afgeleid).
+2. Een tekstpagina bewaart elke versie als verschil met de volgende. Een kleine wijziging kost ongeveer **0,2 kB** per versie, een helemaal nieuwe tekst van 4 kB ongeveer **2,4 kB** per versie.
+3. Een artikel houdt geen versies bij. Opslaan vervangt het bestand; het groeit niet.
+4. Het bestandssysteem rondt elk bestand af op 4 kB. Bij 10.000 pagina's is dat 129 MB op schijf voor 107 MB aan bestanden.
+
+### Rekentijd per verzoek
+
+Mediaan van de CPU-tijd in milliseconden. De wachttijd voor de bezoeker is ongeveer 1 ms meer.
+
+| Verzoek | 100 pagina's | 1.000 | 10.000 | 50.000 |
+|---|---|---|---|---|
+| artikel bekijken, bezoeker | 3 | 6 | 23 | 104 |
+| tekstpagina bekijken, bezoeker | 3 | 9 | 52 | 256 |
+| startpagina, bezoeker | 3 | 8 | 51 | 258 |
+| pagina bestaat niet (404) | 2 | 7 | 53 | 262 |
+| artikel bekijken, lid | 4 | 10 | 57 | 290 |
+| startpagina, lid | 3 | 11 | 89 | 457 |
+| inloggen | 2 | 4 | 19 | 88 |
+| editor openen (`/edit`) | 5 | 23 | 194 | 964 |
+| artikel opslaan | 6 | 15 | 113 | 508 |
+| pagina's met een tag (`/tag/nl/...`)¹ | 2 | 19 | 205 | 1.182 |
+| index van alle pagina's (`/index/nl`) | 5 | 40 | 377 | 1.895 |
+
+¹ Bij 50.000 pagina's gemeten in een container van 1 GB; in 256 MB stopte de werker (zie [Geheugen](#geheugen)).
+
+1. De rekentijd groeit ongeveer **lineair** met het aantal pagina's: per 1.000 pagina's ongeveer 2 ms voor een artikel, 5 ms voor een tekstpagina of de startpagina en 38 ms voor de index.
+2. Een pagina achteraan in de lijst is trager dan een pagina vooraan. Hypha zoekt een pagina op door de lijst van voor naar achter door te lopen. Bij 50.000 pagina's kost dat tot 150 ms extra.
+3. **Leden**: 10.000 leden maken elk verzoek op een site met 1.000 pagina's ongeveer 17 ms trager. Opslaan wordt 45 ms trager. Met 1.000 leden of minder is er geen merkbaar verschil.
+
+| Leden (site met 1.000 pagina's) | `hypha.xml` | artikel, bezoeker | startpagina | inloggen | opslaan | werker |
+|---|---|---|---|---|---|---|
+| 5 | 154 kB | 6 ms | 8 ms | 4 ms | 15 ms | 28 tot 35 MB |
+| 100 | 173 kB | 5 ms | 7 ms | 5 ms | 15 ms | 28 tot 35 MB |
+| 1.000 | 338 kB | 7 ms | 8 ms | 5 ms | 18 ms | 30 tot 37 MB |
+| 10.000 | 2,0 MB | 22 ms | 27 ms | 21 ms | 60 ms | 49 tot 71 MB |
+
+### Geheugen
+
+Elke werker van Apache met PHP houdt `hypha.xml` als boom (DOM) in het geheugen. Het geheugen van een werker (RSS) is:
+
+| Pagina's | na gewone pagina's | na de index of een tagpagina | `memory_get_peak_usage` |
+|---|---|---|---|
+| 100 | 26 MB | 26 MB | 0,4 tot 0,6 MB |
+| 1.000 | 28 MB | 32 tot 35 MB | 0,5 tot 0,8 MB |
+| 10.000 | 47 MB | 98 tot 103 MB | 1,8 tot 4,3 MB |
+| 50.000 | 133 MB | 400 tot 420 MB | 7,6 tot 19 MB |
+
+1. Een werker geeft geheugen niet terug. Na één keer de index of een tagpagina blijft hij groot, tot Apache hem vervangt (na 500 verzoeken, `MaxConnectionsPerChild`). Reken daarom met de kolom **na de index of een tagpagina**.
+2. Vuistregel (afgeleid): een werker heeft **30 MB plus 7,5 MB per 1.000 pagina's** nodig, en ongeveer 2 MB per 1.000 leden. Apache zelf heeft ongeveer 25 MB nodig.
+3. **`memory_limit` beschermt niet.** De boom van `hypha.xml` valt buiten de geheugenteller van PHP: PHP meldt hooguit 19 MB terwijl de werker 420 MB gebruikt. Alleen de grens van de container of de server stopt een werker. Die stopt hem dan hard: de bezoeker krijgt geen antwoord.
+4. Gemeten: bij 50.000 pagina's in een container van 256 MB stopte de tweede tagpagina de werker. Bij 10.000 pagina's met 8 werkers in 256 MB gebeurde hetzelfde onder drukte. Met 4 werkers in 512 MB of 8 in 1 GB ging het goed (300 en 600 MB in gebruik).
+
+Hoeveel werkers passen er (afgeleid uit de tabel, met 30 MB voor Apache en wat ruimte):
+
+| Pagina's | 256 MB | 512 MB | 1 GB |
+|---|---|---|---|
+| 1.000 | 6 | 12 | 25 |
+| 10.000 | 2 | 4 | 8 |
+| 50.000 | geen | 1 | 2 |
+
+### Drukte
+
+Bezoekers die tegelijk een artikel opvragen, aantal verzoeken per seconde. Gemeten met `ab`, 12 seconden per stap, met de standaardgrens van 2 werkers in 256 MB.
+
+| Site | CPU | 1 tegelijk | 2 | 4 | 8 |
+|---|---|---|---|---|---|
+| 1.000 pagina's | 1 kern | 123 | 132 | 133 | 132 |
+| 10.000 pagina's | 1 kern | 25 | 23 | 23 | 21 |
+| 10.000 pagina's | 2 kernen | 25 | 46 | 40 | 40 |
+| 10.000 pagina's, 4 werkers, 512 MB | 8 kernen | 24 | 46 | 81 | 64 |
+| 10.000 pagina's, 8 werkers, 1 GB | 8 kernen | 25 | 44 | 81 | 84 |
+
+1. Het aantal verzoeken per seconde is ongeveer **het aantal kernen gedeeld door de rekentijd** van één verzoek, met als grens het aantal werkers. Meer werkers dan kernen helpt niet.
+2. Extra bezoekers wachten in de rij. Bij 10.000 pagina's, 1 kern en 8 bezoekers tegelijk duurde een verzoek 0,33 seconde in plaats van 0,04.
+3. Afgeleid: een bezoeker vraagt tijdens het lezen ongeveer elke 10 seconden een pagina. Eén kern bedient dan bij 10.000 pagina's ongeveer **200 bezoekers tegelijk**, bij 1.000 pagina's ruim 1.000.
+4. Een redacteur kost meer: openen van de editor en opslaan samen ongeveer 0,3 seconde CPU bij 10.000 pagina's. Tien redacteuren die elke minuut opslaan, gebruiken samen ongeveer 5% van één kern.
+
+### Instellen
+
+1. Zet het aantal werkers (`MaxRequestWorkers` of `pm.max_children`) op het geheugen voor de webserver gedeeld door het geheugen van een werker uit de tabel hierboven. Meer dan twee werkers per kern helpt niet (advies, afgeleid uit de tabel bij Drukte).
+2. Te veel werkers laten de server swappen of de container stopt werkers. Dan reageert de site voor niemand meer. Met een grens wachten extra verzoeken even in de rij.
+3. `memory_limit` mag op 128 MB blijven staan: PHP zelf gebruikte nooit meer dan 19 MB. Het echte geheugen bewaak je met de grens van de container of de server.
+4. Houd de groei bij: kijk elke maand naar de grootte van `hypha.xml` en `data/`. Groeit `hypha.xml` boven 4 MB (ongeveer 25.000 pagina's), plan dan meer geheugen.
+
+Wil je de meting herhalen: maak een proefsite met `tests/gouden/maak.php` en start die zoals `tests/integratie/gouden.sh` doet. Zie [`docs/technical/TESTING.md`](../../technical/TESTING.md).
 
 ## Achter NGINX
 

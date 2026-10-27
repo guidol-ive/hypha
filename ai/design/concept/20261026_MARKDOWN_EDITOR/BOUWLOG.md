@@ -180,7 +180,21 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
    8. Lighthouse op de editor (ingelogd, zonder SEO): computer 96 / 95 / 100, telefoon 69 / 95 / 100. Op de telefoon rekent Lighthouse met traag 4G: de ruim 400 kB code van de editor haalt 95 daar niet. De eis „95 voor de editor” is op de telefoon dus niet gehaald.
 3. Gevonden in de testopstelling: een reeks ontbrekende afbeeldingen (404-pagina's van Hypha) houdt de twee Apache-werkers bezet en vertraagt de volgende pagina met seconden; voor de meting is de voorbeeldfoto uit het lange artikel gehaald.
 
-## Eindverslag (2026-10-27)
+### Verder gebouwd (2026-10-27, avond)
+
+Na het eindverslag, op verzoek „bouw verder”:
+
+1. **Punten uit de review van de editor**: samenvatting van dichtgevouwen blokken; *Beeld bewerken…* en *Diagram bewerken…* in de werkbalk als de cursor erin staat; een webadres geplakt over geselecteerde tekst wordt een link (beide weergaven); de titel van een kader is een veld in Opmaak, geselecteerd na invoegen (geen `prompt()` meer); diagrammen in het voorbeeld als één afbeelding (`role="img"`, `aria-label`); het voorbeeld van een interactief blok met dezelfde Content-Security-Policy als de server, en een `srcdoc` van de auteur valt weg zoals in HyphaFilter; op niveau 1 geen iframes in het voorbeeld. Gevonden en hersteld: een nieuw kader zonder selectie gaf een `RangeError` (twee transacties door elkaar).
+2. **Dialoog van het interactieve blok** (ontwerp 9c): code links, het werkende blok rechts met sandbox en CSP, verplichte beschrijving, hoogte; via het /-menu (niveau 2) en de knop *bewerken* in Opmaak. Verwijderen in de dialoog haalt de beschrijving mee weg (ook bij diagrammen).
+3. **Werkbalk boven het schermtoetsenbord** op de telefoon met `visualViewport` (§12.12); getest met een nagebootst toetsenbord.
+4. **Documentatie**: `docs/technical/DATA_MODEL.md` (`format="markdown"`, `source`, `mdeditor`, ACID), `docs/functional/PAGE_TYPES.md`, `ADMINISTRATION.md`; regel in `ai/DOCUMENTATION_LOG.md` gesloten.
+5. **Schermafdrukken in de handleiding**: 38 stuks van de verzonnen proefsite, ook van de delen van Hypha die niet veranderd zijn, met `tests/browser/schermafdrukken.sh`. Op verzoek in het thema van De Stadsbron: alleen de themamap en `data/css` uit een lokale sitemap (`HYPHA_THEME`), zonder de bestanden van het thema en zonder het statistiekscript; de browser kan alleen de proefsite bereiken. Het thema staat niet in git.
+6. **De editor in een smal thema** (gevonden met de schermafdrukken): Fork Awesome zit nu bij de editor (het thema van De Stadsbron laadt het niet; zonder die letter waren alle knoppen leeg); de indeling volgt de breedte van de editor (container queries); de balk *Bewerken als* plakt op de echte hoogte van de werkbalk; *naast elkaar* alleen als er ruimte is; het tekstvak van de diagramdialoog heeft zijn maat; het /-menu had geen opmaak (css-klassen klopten niet met de code), stond verkeerd als de pagina gescrold was en opent nu boven de cursor als er onder geen ruimte is.
+7. **Unicode** (controle door een subagent, `docs/handleiding/techniek/08-unicode.md`, `docs/technical/UNICODE.md`): in de editor hersteld: `dir`, `lang`, `<bdi>` en `<bdo>` door het filter; slug zonder intl gelijk aan de browser (volledige tabel van Latijnse letters); `[[link]]` met harde spatie; titel, rubriek, auteur en tags in NFC; titelteller in grafeemclusters; woorden met losse accenten en CJK; hoofdletters van paginanamen zoals de server; ongeldige UTF-8 in `md_fields`; meta-beschrijving op een grafeemgrens. Bewust niet: een titel in een ander schrift geeft `pagina` (paginanamen buiten ASCII werken niet in Hypha, #541, #543).
+8. **Capaciteit** (meting door een subagent, `06-beheer.md` *Specificaties en capaciteit*, `OPERATIONS.md`): schijf, CPU per verzoek, geheugen per werker en doorvoer bij 100 tot 50.000 pagina's en tot 10.000 leden.
+9. **Gouden dataset als site op 8.3 en 8.5**: 10.000 pagina's, 0 fouten (mediaan 44 en 45 ms).
+
+
 
 ### Wat klaar en getest is
 
@@ -189,26 +203,24 @@ Alle tests zijn opnieuw gedraaid op PHP 8.2.35, 8.3.36, 8.4.27 en 8.5.12 (`sh te
 | Onderdeel | 8.2 | 8.3 | 8.4 | 8.5 |
 |---|---|---|---|---|
 | `HyphaRequestTest.php` (bestaand) | 84 | 84 | 84 | 84 |
-| unit (`tests/markdown/`): filter, Markdown, niveau 2, 500 gouden items | 99 van 99 | 99 van 99 | 99 van 99 | 99 van 99 |
+| unit (`tests/markdown/`): filter, Markdown, niveau 2, 500 gouden items | 102 van 102 | 102 van 102 | 102 van 102 | 102 van 102 |
 | gouden manifest, alle 10.000 items | 10.000 | 10.000 | 10.000 | 10.000 |
 | integratie over HTTP: proefsite, artikel en reviewstroom, tekstpagina | 38 van 38 | 38 van 38 | 38 van 38 | 38 van 38 |
-| browser: unit-pagina's en end-to-end (zie hieronder) | 141 van 141 | 141 van 141 | 141 van 141 | 141 van 141 |
+| browser: unit-pagina's en end-to-end (zie hieronder) | 155 van 155 | 155 van 155 | 155 van 155 | 155 van 155 |
 | packaging: `hypha.php` bouwen en installeren | 11 van 11 | 11 van 11 | 11 van 11 | 11 van 11 |
-| gouden dataset als site, 10.000 pagina's | 0 fouten | – | 0 fouten | – |
+| gouden dataset als site, 10.000 pagina's | 0 fouten | 0 fouten | 0 fouten | 0 fouten |
 | nieuwe PHP-meldingen in het logboek | geen | geen | geen | geen (na `mail()`, zie hieronder) |
 
-De browsertests: bibliotheken 7, pariteit met league/commonmark 19, Opmaak heen en terug 42, plaktest 28, editor 14, plakken in de editor 9, nieuwe pagina 4, toegankelijkheid 11 (axe 0 overtredingen in 9 toestanden, aanraakvlakken ≥ 44 pt), prestaties 6; samen 141 (inclusief de runner-proef).
+De browsertests: bibliotheken 7, pariteit met league/commonmark 19, Opmaak heen en terug 42, plaktest 28, editor 14, aanvullingen 12, plakken in de editor 9, nieuwe pagina 4, toegankelijkheid 13 (axe 0 overtredingen in 10 toestanden, aanraakvlakken ≥ 44 pt, werkbalk boven het toetsenbord), prestaties 6; samen 155 (inclusief de runner-proef). Laatste ronde op alle vier versies na de avondwijzigingen (zie „Verder gebouwd”).
 
 Gebouwd volgens het ontwerp, per onderdeel van §18.2: 4 (server en filter), 5 (Markdown-weergave op CodeMirror 6), 6 (Opmaak op ProseMirror met eigen schema en serializer, verliesvrij wisselen), 7, 7a, 7b, 7c (artikelscherm, vaste velden, cursor bij wisselen, tabellen), 8 (beelddialoog met upload, `[[`-suggesties), 9 (diagrammen met 36 sjablonen), 9a–9e (niveau 1 en 2, HedgeDoc, interactief blok in de server, reviewstroom met redactiestatuut, terugtrekken), 10 (import en export van `.md`), 11 (regressie met oude artikelen en tekstpagina's), 12 (WCAG met axe, HIG-aanraakvlakken, teksten in nl en en), 13 en 19 (`hypha.php`, Docker), 14 en 15 (codemarkering en wiskunde), 16 (handleiding, 17 pagina's), 17 en 18 (gouden dataset, unit- en integratietests), 20 (plakken), 21 (prestaties en Lighthouse), 22 (tekstpagina's met versies, vertalen en terugzetten).
 
 ### Wat niet af is, en waarom
 
 1. **Lighthouse ≥ 95 overal**: een gepubliceerd artikel haalt met het standaardthema 96–100 / 94 / 100 / 91; met het advies `#0B7285` voor links (en `#5F656A` voor knoppen) en een `robots.txt` van de site 97–100 / 98 / 100 / 100. Beide zijn keuzes van het thema en de site, niet van de editor (standaardkeuze a). De editor op de telefoon haalt 69 voor prestaties (traag 4G met ruim 400 kB code); op de computer 96.
-2. **Interactief blok in de editor**: de server maakt het afgeschermde iframe, het voorbeeld toont het, maar er is geen eigen dialoog met codevenster en voorbeeld; bewerken gaat in Markdown, in Opmaak is het een grijs blok.
-3. **Punten uit de review die open staan** (zie „Review van de editor”): samenvatting van dichtgevouwen blokken, de knoptekst *Beeld bewerken* en *Diagram bewerken*, link maken door een webadres over geselecteerde tekst te plakken, de titel van een kader selecteren in plaats van vragen, werkbalk boven het schermtoetsenbord (`visualViewport`), `role="img"` op diagrammen in het voorbeeld, CSP in de `srcdoc` van het voorbeeld, en een voorbeeld dat op niveau 1 precies het filter van de server volgt.
-4. **Gouden dataset als site op 8.3 en 8.5**: draaide volledig op 8.2 en 8.4; op 8.3 en 8.5 alleen het manifest (10.000) en de integratietests.
-5. **Documentatie**: `docs/functional/` en `docs/technical/DATA_MODEL.md` beschrijven `format="markdown"` en het `source`-element nog niet (open regel in `ai/DOCUMENTATION_LOG.md`).
-6. **Bestaande problemen gevonden, niet opgelost** (buiten deze issue): `hypha.php` installeert niet zonder map `data/` en pakt het standaardthema niet in; een nieuw artikel via de oude popup zonder titel gaf een fatale fout (nu opgelost door de titel als tekst te schrijven); `strftime()` en enkele HTML-fouten in de sjablonen van Hypha (`bekende-meldingen.txt`); op PHP 8.5 meldt `mail()` een fout als de container geen sendmail heeft.
+2. Punten 2 tot en met 5 van de eerste versie van deze lijst (interactief blok, reviewpunten, gouden site op 8.3 en 8.5, documentatie) zijn af; zie „Verder gebouwd”.
+3. **Twee schrijvers tegelijk**: de laatste die opslaat, wint, zonder waarschuwing (geen versiecontrole); zie de ACID-tabel in `docs/technical/DATA_MODEL.md`. Een subagent onderzoekt gelijktijdig werken en de oude paginatypes; de uitkomst volgt.
+4. **Bestaande problemen gevonden, niet opgelost** (buiten deze issue): `hypha.php` installeert niet zonder map `data/` en pakt het standaardthema niet in; een nieuw artikel via de oude popup zonder titel gaf een fatale fout (nu opgelost door de titel als tekst te schrijven); `strftime()` en enkele HTML-fouten in de sjablonen van Hypha (`bekende-meldingen.txt`); op PHP 8.5 meldt `mail()` een fout als de container geen sendmail heeft.
 
 ### Gemelde fouten buiten deze issue
 
@@ -219,7 +231,15 @@ Fouten in bestaande code die bij de bouw zijn gevonden, staan als issue met een 
 3. #527 / PR #533: ongeldige HTML in vier sjablonen geeft op bijna elke pagina een PHP-waarschuwing;
 4. #528 / PR #534: een vertaling in dezelfde seconde krijgt dezelfde `xml:id`;
 5. #529 / PR #535: elk lid kan een goedgekeurd artikel publiceren door de opdracht te posten;
-6. #530 / PR #536: een onbekend versienummer geeft een fatale fout.
+6. #530 / PR #536: een onbekend versienummer geeft een fatale fout;
+7. #537 / PR #538: een nieuwe festivalpagina opent op „Page not found”;
+8. #546 / PR #547: het label van de festivalbeschrijving ontbreekt;
+9. #539 / PR #540: een stuurteken of ongeldige UTF-8 in een reactie of naam maakt een artikel of de hele site onleesbaar;
+10. #541 / PR #542: het pad van een verzoek wordt niet ontcijferd (pagina's buiten ASCII geven 404);
+11. #543: `validatePagename()` laat letters buiten ASCII weg (geen pull request: hangt af van #541 en #516);
+12. #544 / PR #545: een lang onderwerp van een e-mail wordt één te lang gecodeerd woord.
+
+Alle issues hebben passende labels (type, niveau, impact, paginatype, onderdeel, waarde); de pull requests het label *Status: Needs review*.
 
 Al eerder gemeld en daarom niet opnieuw: CSRF-controle stopt datatype-opdrachten niet (#420), stored XSS (#419), `strftime()` (#408), impliciet nullable parameters (#409), `${var}` (#407), `//featured_image` (#406). De branch `issue520-bouw` zelf is niet gepusht.
 
@@ -247,3 +267,6 @@ Bewuste afwijkingen van het ontwerp, met de reden. Het ontwerp is op deze punten
 10. **Goedkeuren met het redactiestatuut gebeurt in de leesweergave**, waar beoordelaars nu ook goedkeuren, in een venster; de editor toont de status en de knop *trek terug*.
 11. **De bron van een tekstpagina staat in `source/language[@id]/version[@at]`**, niet met `xml:id` zoals de inhoud: een `xml:id` moet uniek zijn in het document, en de versie van de bron heeft hetzelfde tijdstip als die van de inhoud. Opslaan gebeurt met een eigen kleine functie in plaats van `storeWikiContent()` (de terugvaloptie van §19).
 12. **Een `.md`-bestand openen in de popup van stap 1** is niet gebouwd; openen en slepen kan in de werkbalk van de editor, direct na het aanmaken.
+13. **Fork Awesome zit bij de editor** (`system/mdeditor/vendor/fork-awesome-1.2.0.*`, uit het standaardthema), want niet elk thema laadt het (§2 nam aan dat het thema van De Stadsbron dat doet).
+14. **Naast elkaar alleen met ruimte**: ook de kolom van het thema moet minstens 900 px breed zijn; in het thema van De Stadsbron (720 px) toont de knop het voorbeeld.
+15. **Een titel of kop in een ander schrift dan Latijn** geeft het adres `pagina` en het anker `kop-zonder-naam`, zolang paginanamen buiten ASCII in Hypha niet werken.

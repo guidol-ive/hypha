@@ -1,6 +1,6 @@
 ---
 title: "Opslag: hypha.xml en de map data"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -176,6 +176,27 @@ Lezers, zoekmachines, de samenvatting en de lijst met versies gebruiken de XHTML
 2. Wie tegelijk leest, ziet de oude of de nieuwe versie, nooit een half bestand.
 3. `hypha.xml` heeft één slot voor de hele site. Elke wijziging van een instelling, lid, tag of paginanaam schrijft het hele bestand opnieuw.
 4. Een wijziging die twee bestanden raakt (een nieuwe pagina en haar regel in `hypha.xml`), is niet in één keer: een kopie op dat moment kan half zijn. Zie [Beheer](06-beheer.md#back-up).
+
+### Wat Hypha wel en niet garandeert (ACID)
+
+Een database belooft vaak *ACID*: een wijziging gebeurt helemaal of niet (atomair), laat de gegevens kloppend achter (consistent), staat los van andere wijzigingen die tegelijk lopen (geïsoleerd) en blijft bewaard, ook na een storing (duurzaam). Hypha heeft geen database maar XML-bestanden. Per eigenschap geldt dit:
+
+| Eigenschap | Per bestand | Over meer bestanden heen |
+|---|---|---|
+| **Atomair** | ja: een nieuw bestand wordt in een tijdelijk bestand geschreven en met `rename()` in één keer op zijn plek gezet | nee: elk bestand wordt apart geschreven |
+| **Consistent** | gedeeltelijk: het bestand is altijd heel, maar Hypha controleert geen schema; één verboden teken kan het onleesbaar maken | nee: verwijzingen tussen `hypha.xml` en de paginabestanden worden niet gecontroleerd |
+| **Geïsoleerd** | voor schrijvers ja (`flock`, één schrijver tegelijk); lezers zien de oude of de nieuwe versie | nee: een bewerking die eerst leest en later schrijft (zoals een editor die open staat), kan een wijziging van iemand anders overschrijven |
+| **Duurzaam** | grotendeels: er is geen `fsync`, dus na een stroomstoring of crash van de server kan de laatste wijziging weg zijn | nee |
+
+Wat dat in de praktijk betekent:
+
+1. **Een bestand is nooit half.** Ook bij een volle schijf of een afgebroken verzoek blijft de vorige versie staan. Een achtergebleven `….tmp_for_writing` kun je weggooien.
+2. **De tekst van een artikel uit de nieuwe tekst-editor** (Markdown-bron en XHTML samen) staat in één bestand en wordt in één keer geschreven: bron en HTML lopen nooit uit elkaar. Bij een tekstpagina geldt dat ook voor de versie van de bron en de versie van de HTML.
+3. **Wijzigingen in twee bestanden zijn twee stappen.** Bij opslaan van een artikel schrijft Hypha eerst de tags in `hypha.xml` en daarna de tekst in het paginabestand; bij terugtrekken eerst het artikel en daarna de markering in `hypha.xml`; een nieuwe pagina schrijft `hypha.xml` en daarna haar eigen bestand. Gaat er tussen die stappen iets mis, dan is de eerste stap wel en de tweede niet gedaan. Opnieuw opslaan herstelt dat meestal.
+4. **De laatste die opslaat, wint.** Hypha merkt niet dat iemand anders hetzelfde artikel heeft opgeslagen terwijl jij het open had. Spreek af wie wanneer schrijft, of gebruik de discussies.
+5. **Er is geen terugdraaien over bestanden heen.** Een back-up van de hele map `data/` is de enige manier om de hele site naar één moment terug te zetten. Maak die op een rustig moment of met een momentopname (*snapshot*) van het bestandssysteem (zie [Beheer](06-beheer.md#back-up)).
+6. **Geen fsync.** Op gewone servers met een journaling-bestandssysteem (ext4, XFS, APFS) is het risico klein, maar niet nul. Een UPS of een virtuele server met betrouwbare opslag verkleint het verder.
+7. **Eén verboden teken kan een bestand onleesbaar maken.** De nieuwe tekst-editor haalt zulke tekens weg; oude formulieren nog niet (gemeld als [#539](https://github.com/PlanBCode/hypha/issues/539)). Zie [Tekens en talen](08-unicode.md).
 
 > [!warning] Persoonsgegevens
 > `hypha.xml` en de paginabestanden bevatten namen, e-mailadressen en wachtwoord-hashes van leden, en namen en e-mailadressen van mensen die reageren, zich aanmelden voor een nieuwsbrief of voor een festival. Behandel een kopie van `data/` als persoonsgegevens: niet in een repository of een ticket zetten.

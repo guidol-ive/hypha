@@ -154,6 +154,31 @@ Code changes data only through the `Xml` class: `lockAndReload()` takes an exclu
 Every change to `hypha.xml` rewrites the whole file. See
 [`../../ai/ARCHITECTURE.md`](../../ai/ARCHITECTURE.md#storage).
 
+### ACID
+
+Hypha has no database and no transactions; the unit of atomic change is one file
+(`HyphaFile::write()` in `system/core/database.php`).
+
+| Property | Within one file | Across files |
+|---|---|---|
+| Atomicity | Yes: the new content goes to `<file>.tmp_for_writing` and `rename()` replaces the file in one step; a failed write leaves the old file | No: each file is written on its own |
+| Consistency | Partly: always well-formed as written, but no schema check; one XML-illegal character makes the file unreadable (#539) | No: references between `hypha.xml` (page list, tags, users) and page files are not checked |
+| Isolation | Writers are serialised by an exclusive `flock` (re-checked after `rename()`); readers take no lock and see the old or the new file | No: a read-modify-write that spans requests (an editor that stays open) is last-writer-wins, with no version check |
+| Durability | Mostly: no `fsync()` of the file or the directory, so the last write may be lost on power failure or a kernel crash | No |
+
+Consequences for the Markdown editor:
+
+1. The Markdown source and the XHTML of an article (and of a text page version) are in one file and
+   written in one `saveAndUnlock()`, so they cannot diverge.
+2. Saving an article is two separate atomic writes: tags in `hypha.xml` (`mdSaveTags()`), then the
+   page file. Withdrawing writes the page file, then `@retracted` in the page list. A failure
+   between the two leaves the first one done; saving again repairs it. The locks are taken one
+   after the other, never nested, so these paths cannot deadlock with each other.
+3. Two editors on the same article: the last save wins without a warning (no optimistic version
+   check); the localStorage draft of a tab is only offered when its base equals the saved state.
+4. A consistent copy of a whole site needs `data/` copied while nobody writes (see
+   [`OPERATIONS.md`](OPERATIONS.md)).
+
 ## Personal data
 
 `hypha.xml` and the page files hold names, e-mail addresses and password hashes of members, and
