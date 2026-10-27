@@ -147,6 +147,11 @@
 			$title = trim((string)($fields['title'] ?? ''));
 			$section = trim((string)($fields['section'] ?? ''));
 			if ($title === '') $errors[] = 'mde-error-title';
+			$source = $this->xml->findOneXPath('article/source');
+			$old = implode("\n", array_map(fn ($f) => $this->mdSourceText($f), self::MD_FIELDS));
+			$new = implode("\n", array_map(fn ($f) => (string)($fields[$f] ?? ''), self::MD_FIELDS));
+			$level = hypha_markdownSaveLevel(hypha_mdeditorLevel($user, $settings), $source ? $source->getAttribute('level') : '', $old, $new);
+			if ($level === null) $errors[] = 'mde-error-level2';
 			if ($section !== '' && !in_array($section, $settings['sections'], true)) $errors[] = 'mde-error-section';
 
 			//
@@ -155,7 +160,7 @@
 			hypha_markdownLoad();
 			$markdown = new HyphaMarkdown([
 				'language' => $this->language,
-				'level' => hypha_mdeditorLevel($user, $settings),
+				'level' => $level ?? 1,
 				'frameHosts' => $settings['frameHosts'],
 				'peertubeHosts' => $settings['peertubeHosts'],
 				'scriptHosts' => $settings['scriptHosts'],
@@ -214,6 +219,7 @@
 			$frontmatter = trim(str_replace(["\r\n", "\r"], "\n", (string)($fields['frontmatter'] ?? '')));
 			if ($frontmatter !== '') hypha_markdownSetCdata($source->getOrCreate('frontmatter'), $frontmatter);
 			elseif ($node = $source->findOneXPath('frontmatter')) $source->removeChild($node);
+			$source->setAttribute('level', (string)$level);
 			if ($unknown) $source->setAttribute('unknownTags', json_encode($unknown, JSON_UNESCAPED_UNICODE));
 			else $source->removeAttribute('unknownTags');
 			$this->xml->saveAndUnlock();

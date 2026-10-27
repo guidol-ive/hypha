@@ -6,6 +6,13 @@ import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hypha import Client, run, test  # noqa: E402
+from test_artikel import article_xml, fields, new_article  # noqa: E402
+import hypha  # noqa: E402
+
+#
+# Only the helpers of test_artikel.py, not its tests.
+#
+hypha.TESTS.clear()
 
 WORK = os.environ.get("HYPHA_WORK", "")
 
@@ -57,6 +64,29 @@ def an_empty_form_brings_back_the_defaults(base):
     _, text, _ = beheer.get("settings/editor")
     assert "Politiek en bestuur" in text
 
+
+
+@test
+def an_article_keeps_its_level_when_a_member_without_level_2_saves_it(base):
+    import json
+    sanne = Client(base).login("sanne")
+    new_article(sanne, "Niveau van het artikel")
+    path, name = "nl/niveau-van-het-artikel", "niveau-van-het-artikel"
+    block = "%% beschrijving: proef %%\n```html interactief\n<p>Proef</p>\n```\n"
+
+    def post(text):
+        status, body, _ = sanne.post(path + "/edit", "md_save", "", {"md_fields": json.dumps(fields(title="Niveau van het artikel", text=text)), "md_renders": "{}", "ajax": "1"})
+        return json.loads(body)
+    assert post("Eerste versie.\n\n" + block)["ok"]
+    beheer = Client(base).login("beheer")
+    save(beheer, {"mdLevel2": "on", "mdLevel2Admin": "on"})
+    result = post("Tweede versie, het blok blijft.\n\n" + block)
+    assert result["ok"], result
+    text = ET.tostring(article_xml(name).find("article/content/text"), encoding="unicode")
+    assert "<iframe" in text and "Tweede versie" in text, "level 2 lost: " + text[:300]
+    result = post("Derde versie.\n\n" + block.replace("Proef", "Anders"))
+    assert not result["ok"] and result["errors"], result
+    save(beheer, {"mdLevel2": "on", "mdLevel2User": "on", "mdLevel2Admin": "on"})
 
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))

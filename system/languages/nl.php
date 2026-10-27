@@ -1040,6 +1040,7 @@
 		"mde-settings-level2-user" => "voor leden",
 		"mde-settings-level2-admin" => "voor beheerders",
 		"mde-settings-saved" => "De instellingen van de tekst-editor zijn opgeslagen.",
+		"mde-error-level2" => "Interactieve blokken en ingesloten inhoud kun je in dit artikel niet wijzigen of toevoegen: dat is voor jouw rol uitgezet. Laat ze staan zoals ze waren.",
 		// End of the Markdown editor
 	);
 

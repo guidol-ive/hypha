@@ -180,6 +180,32 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
    8. Lighthouse op de editor (ingelogd, zonder SEO): computer 96 / 95 / 100, telefoon 69 / 95 / 100. Op de telefoon rekent Lighthouse met traag 4G: de ruim 400 kB code van de editor haalt 95 daar niet. De eis „95 voor de editor” is op de telefoon dus niet gehaald.
 3. Gevonden in de testopstelling: een reeks ontbrekende afbeeldingen (404-pagina's van Hypha) houdt de twee Apache-werkers bezet en vertraagt de volgende pagina met seconden; voor de meting is de voorbeeldfoto uit het lange artikel gehaald.
 
+### Ontwerpcontrole en wat daaruit gebouwd is (2026-10-28, nacht)
+
+Een subagent legde het ontwerp punt voor punt naast de code en vond 20 gaten (verslag in de notitiemap van de sessie, `ontwerp-check/RAPPORT.md`). Gebouwd, elk met een test:
+
+1. **Link in Opmaak** (stap 5): één linkvenster in beide weergaven, met de pagina's van de site (privé met `*`, *nieuwe pagina …*), de tekst van de link en *link weghalen*; ⌘K, de knop *Link* en `[[` in Opmaak openen het. Vervangt de `prompt()`.
+2. **Alle blokken in Opmaak** (stap 3): de items van het `/`-menu als menu in Opmaak (subkop, genummerde lijst, voetnoot met het volgende nummer, code, scheidingslijn, waarschuwing, interactief blok); een lijstknop haalt een alinea weer uit de lijst; de knop blijft op de werkbalk.
+3. **Plakken** (§12.15): wat niet overgenomen is, blijft in de checklist tot *gezien*; plaatjes die als data meekomen (Word, LibreOffice) worden geüpload in plaats van als kapotte naam achtergelaten; ⌘⇧V plakt platte tekst ook in Safari.
+4. **Wat de server niet toont** (§10.1): `HyphaFilter` houdt bij wat het van de auteur weghaalt (`<script>`, `<macro>`, `onclick=` …) en de checklist meldt het na opslaan, net als een diagram zonder tekening; het vrijheidsniveau staat bij de feiten. Gecontroleerd dat de eigen markup van de editor geen meldingen geeft (2.000 gouden items: alleen de bewust kwaadaardige voorbeelden).
+5. **Rood in de Markdown-weergave** (BR-46, BR-63): links naar een ontbrekende pagina en foute formules.
+6. **Redactiestatuut in de checklist** tijdens de beoordeling, met „bevestigd door n van 3” (stap 8).
+7. **Schrijfwijze onthouden** bij wisselen; **export** met de status in woorden, `gepubliceerd` en `:::`-kaders als `> [!info]` (§9, §10.2); **liggende telefoon** in het voorbeeld verkleind (stap 7); **naast elkaar** scrolt het voorbeeld mee (iPad, §18.2-7).
+8. **Foto's** met `width`, `height` (uit het bestand) en `loading="lazy"` (§12.16-3); gouden manifest en pariteitsdata opnieuw gemaakt, en gecontroleerd dat zonder `loading` de oude manifest byte voor byte terugkomt. Grote foto's worden in de browser verkleind tot 2400 px voor de upload. HedgeDoc-code met regelnummers (`javascript=101`) krijgt kleuren.
+9. **Teruggetrokken artikel** ook niet in de index, en geen nieuwe discussies of reacties (BR-86).
+10. **JSON-LD `NewsArticle`** in de leesweergave van een gepubliceerd artikel (§12.10-2).
+11. **Popup nieuwe pagina** toont het echte adres met `-2` (stap 1-2), via de opdracht `mdNewName`.
+12. **Instellingenscherm** `/settings/editor` voor rubrieken, redactiestatuut, niveau 2 per rol en diensten (BR-47); twee regels in `settings.php`.
+13. **Niveau hoort bij het artikel** (§10.1): een lid zonder niveau 2 kan een artikel met niveau-2-onderdelen bewerken zonder dat die verdwijnen, maar ze niet wijzigen.
+
+Upstream: #577 (afronden bij het verkleinen van een upload, deel van #408), ook in deze branch. Niet gebouwd en waarom:
+
+1. **Het opgemerkte tekstdeel markeren** bij een beoordelingsopmerking (stap 8-2): bestaat ook in de huidige Hypha niet, en vraagt een wijziging in de bestaande discussies (L).
+2. **Opmerkingen bij vervallen goedkeuringen doorstrepen** (stap 8-4): de bestaande weergave van discussies kent geen koppeling naar de goedkeuring; vraagt een wijziging in bestaande code.
+3. **`<time datetime>` in de byline**: de byline komt uit de bestaande `defaultView()`.
+4. **Kaarten met miniatuur** in de popup (stap 1-3), **afkortingen** en **typografische aanhalingstekens** (optioneel), **regelnummers** in code, **beheerderscontrole in `tags.php`** (BR-98, aanbevolen; de editor controleert het zelf al) en een omschrijving bij een nieuwe tag.
+5. **Donkere modus en Dynamic Type** (HIG-aandachtspunten): het thema van de site is licht; een donkere editor in een lichte pagina zou vreemd staan.
+
 ### Hoogte van het interactieve blok (2026-10-28, nacht)
 
 1. Gebouwd volgens §10.1, regel 2: een interactief blok zonder `{hoogte=…}` meldt zijn hoogte met `postMessage` (`HyphaMarkdown::REPORT_HEIGHT` in de `srcdoc`, het iframe krijgt `data-height="auto"`); `system/mdeditor/lezer.js` in de leesweergave en `followHeights()` in het voorbeeld en de dialoog luisteren alleen naar dat ene iframe en houden de hoogte tussen 50 en 4000 px. Met een vaste hoogte gebeurt er niets.

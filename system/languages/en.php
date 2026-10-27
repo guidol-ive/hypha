@@ -1045,6 +1045,7 @@
 		"mde-settings-level2-user" => "for members",
 		"mde-settings-level2-admin" => "for administrators",
 		"mde-settings-saved" => "The settings of the text editor are saved.",
+		"mde-error-level2" => "You cannot change or add interactive blocks and embedded content in this article: that is turned off for your role. Leave them as they were.",
 		// End of the Markdown editor
 	);
 

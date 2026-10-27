@@ -113,10 +113,10 @@
 			if ($current) hypha_markdownSetCdata($current, diff($markdown, $current->textContent));
 		}
 
-		protected function mdRender(string $markdown, string $language): array {
+		protected function mdRender(string $markdown, string $language, ?int $level = null): array {
 			$settings = hypha_mdeditorSettings();
 			hypha_markdownLoad();
-			$renderer = new HyphaMarkdown(['language' => $language, 'level' => hypha_mdeditorLevel($this->O_O->getUser(), $settings), 'frameHosts' => $settings['frameHosts'], 'peertubeHosts' => $settings['peertubeHosts'], 'scriptHosts' => $settings['scriptHosts'], 'texts' => $this->mdHtmlTexts()]);
+			$renderer = new HyphaMarkdown(['language' => $language, 'level' => $level ?? hypha_mdeditorLevel($this->O_O->getUser(), $settings), 'frameHosts' => $settings['frameHosts'], 'peertubeHosts' => $settings['peertubeHosts'], 'scriptHosts' => $settings['scriptHosts'], 'texts' => $this->mdHtmlTexts()]);
 			return [$renderer, $renderer->toXhtml($markdown, $this->mdRenders)];
 		}
 
@@ -140,7 +140,13 @@
 			if ($translate && (!in_array($language, hypha_mdeditorLanguages(), true) || $language === $this->language)) return ['errors' => ['mde-error-language'], 'messages' => []];
 			$markdown = str_replace(["\r\n", "\r"], "\n", (string)($fields['text'] ?? ''));
 			$this->mdRenders = $renders;
-			[$renderer, $xhtml] = $this->mdRender($markdown, $language);
+			//
+			// The level the page was saved with stays when an author without level 2 leaves those parts alone.
+			//
+			$sourceLanguage = $this->xml->findOneXPath('source/language[@id=' . xpath_encode($language) . ']');
+			$level = hypha_markdownSaveLevel(hypha_mdeditorLevel($this->O_O->getUser(), hypha_mdeditorSettings()), $sourceLanguage ? $sourceLanguage->getAttribute('level') : '', $this->mdSource($language), $markdown);
+			if ($level === null) return ['errors' => ['mde-error-level2'], 'messages' => []];
+			[$renderer, $xhtml] = $this->mdRender($markdown, $language, $level);
 			foreach ($renderer->messages as $message) if ($message['code'] === 'interactive-without-description') return ['errors' => ['mde-error-interactive-description'], 'messages' => $renderer->messages];
 			$scratch = new Xml();
 			$nodes = hypha_markdownWikify($scratch, $xhtml);
@@ -173,6 +179,7 @@
 				return ['errors' => [], 'messages' => $renderer->messages, 'conflict' => $this->mdSavedBy($language), 'revision' => $this->mdNewestAt($language)];
 			}
 			$this->mdStoreVersion($language, $markdown, $xhtml, $this->O_O->getUser()->getAttribute('username'));
+			$this->xml->findOneXPath('source/language[@id=' . xpath_encode($language) . ']')?->setAttribute('level', (string)$level);
 			$this->xml->saveAndUnlock();
 			return ['errors' => [], 'messages' => $renderer->messages, 'pagename' => $pagename, 'language' => $language, 'revision' => $this->mdNewestAt($language)];
 		}

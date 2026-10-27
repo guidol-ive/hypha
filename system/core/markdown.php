@@ -106,6 +106,30 @@
 	}
 
 	/*
+		Function: hypha_markdownLevel2Parts
+		The parts of a Markdown text that need freedom level 2: interactive blocks, and lines with only a web address or
+		a HedgeDoc {%service id %} (embedded content). Compared to see whether an author without level 2 changed them.
+	*/
+	function hypha_markdownLevel2Parts(string $markdown): array {
+		preg_match_all('/^(`{3,}|~{3,})[ \t]*html[ \t]+(?:interactief|interactive)\b.*?^\1[ \t]*$/ms', $markdown, $blocks);
+		preg_match_all('/^[ \t]*(?:https?:\/\/\S+|\{%\s*\w+\s+\S+\s*%\})[ \t]*$/m', $markdown, $lines);
+		return array_merge(array_map('trim', $blocks[0]), array_map('trim', $lines[0]));
+	}
+
+	/*
+		Function: hypha_markdownSaveLevel
+		The freedom level to render a save with (design section 10.1: the level of an article is fixed when it is saved).
+		A user with a lower level than the text was saved with keeps that level, as long as the level 2 parts stay as
+		they were; null when such a user changed them, which is refused. Without a stored level (saved before this rule),
+		a text with level 2 parts counts as level 2.
+	*/
+	function hypha_markdownSaveLevel(int $user, string $stored, string $old, string $new): ?int {
+		$level = $stored !== '' ? (int)$stored : (hypha_markdownLevel2Parts($old) ? 2 : 1);
+		if ($user >= $level) return $user;
+		return hypha_markdownLevel2Parts($old) === hypha_markdownLevel2Parts($new) ? $level : null;
+	}
+
+	/*
 		Function: hypha_markdownPageName
 		The page name of a new article or text page, from its title (design section 13.14): the slug of the title,
 		made unique within the language by adding -2, -3, ... (BR-50).

@@ -104,6 +104,7 @@ Een beheerder past de instellingen van de tekst-editor aan via **Instellingen â†
 3. `frameHost` en `peertubeHost`: de diensten die je mag insluiten, zoals video en kaarten.
 4. `scriptHost`: de enige plekken waar een interactief blok scripts en stijlen vandaan mag halen.
 5. `level2="off"` zet ingesloten inhoud en interactieve blokken uit voor de hele site. Met `level2Off="user"` zet je ze alleen uit voor gewone leden, met `level2Off="user,admin"` voor iedereen.
+6. Het niveau hoort bij het artikel. Een lid voor wie niveau 2 uit staat, kan een artikel met een interactief blok of een ingesloten video gewoon bewerken; die onderdelen blijven werken. Ze wijzigen of toevoegen kan dat lid niet: de editor meldt dat bij opslaan.
 
 Een lijst die je invult, vervangt de standaardlijst helemaal. Pas je `hypha.xml` toch met de hand aan, doe dat dan als het rustig is op de site, en maak eerst een [back-up](#back-up).
 

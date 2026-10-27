@@ -169,6 +169,7 @@ Bugs in existing code found while building, testing and documenting the editor o
 | #571 | #572 | versions | Older versions of a page lose text that contains @@ |
 | #573 | #574 | performance | Theme files and scripts are never compressed: serveFile() always sends Content-Range |
 | #575 | #576 | user interface | The popup 'new page' shows 'textpage' and 'mailinglist' instead of their translated names |
+| #408 | #577 | deprecation | Round the size of a resized upload to whole pixels (part of #408 that #508 does not cover) |
 
 Also from the concurrency test: three saves of a WYMeditor text page in the same second give a duplicate `xml:id` within one language, the same cause as #528 (comment added there; PR #534 fixes it).
 
