@@ -153,14 +153,14 @@
 		$scratch - a document that stays alive while the nodes are used
 		$xhtml - XHTML from <HyphaMarkdown::toXhtml>
 	*/
-	function hypha_markdownWikify(Xml $scratch, string $xhtml): array {
+	function hypha_markdownWikify(Xml $scratch, string $xhtml, bool $wikify = true): array {
 		$element = $scratch->createElement('dummy');
 		if (trim($xhtml) !== '') {
 			$fragment = $scratch->createDocumentFragment();
 			if (!$fragment->appendXML($xhtml)) throw new UnexpectedValueException('XHTML of the Markdown renderer does not load as XML');
 			$element->appendChild($fragment);
 		}
-		if (function_exists('wikify')) wikify($element);
+		if ($wikify && function_exists('wikify')) wikify($element);
 		$nodes = [];
 		while ($element->firstChild) $nodes[] = $element->removeChild($element->firstChild);
 		return $nodes;
@@ -226,4 +226,37 @@
 		foreach ($hyphaXml->findXPath('tagList/tag/language[@id=' . xpath_encode($language) . ']') as $node) $labels[] = $node->getAttribute('label');
 		sort($labels, SORT_NATURAL | SORT_FLAG_CASE);
 		return $labels;
+	}
+
+	/*
+		Function: hypha_markdownStoreWikiXhtml
+		Like storeWikiContent(), but reads the XHTML as XML, so SVG and MathML keep their case-sensitive names. The same
+		version structure: the newest version in full, older ones as a diff to the next.
+
+		Returns:
+		The time stamp of the new version, or null when the content did not change.
+	*/
+	function hypha_markdownStoreWikiXhtml(HyphaDomElement $node, string $language, string $xhtml, string $author): ?int {
+		$node->ownerDocument->requireLock();
+		if (getWikiContent($node, $language, '') === $xhtml) return null;
+		$languageNode = getLangNode($node, $language);
+		$current = getCurrentVersionNode($languageNode);
+		$timestamp = time();
+		if ($current && $current->getAttribute('xml:id') >= 't' . $timestamp) $timestamp = (int)ltrim($current->getAttribute('xml:id'), 't') + 1;
+		//
+		// xml:id is unique in the whole document, also over the languages of a page.
+		//
+		$xpath = new DOMXPath($node->ownerDocument);
+		while ($xpath->query('//*[@xml:id="t' . $timestamp . '"]')->length) $timestamp++;
+		$new = $node->ownerDocument->createElement('version', '');
+		$new->setAttribute('xml:id', 't' . $timestamp);
+		$new->setAttribute('author', $author);
+		if (trim($xhtml) !== '') {
+			$fragment = $node->ownerDocument->createDocumentFragment();
+			if (!$fragment->appendXML($xhtml)) throw new UnexpectedValueException('XHTML of the Markdown renderer does not load as XML');
+			$new->appendChild($fragment);
+		}
+		$languageNode->appendChild($new);
+		if ($current) $current->setText(diff(getInnerHtml($new), getInnerHtml($current)));
+		return $timestamp;
 	}

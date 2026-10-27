@@ -80,6 +80,12 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
    2. een nieuw artikel via de oude popup zonder titel geeft een fatale fout in `process()` (`writeToElement('pagename', ' ')`); de nieuwe opdracht `mdNewArticle` zet de titel vooraf, dus de nieuwe editor raakt dit niet;
    3. `tags.php` schrijft `class` twee keer, het sterretje van een privépagina mist een `;`, de deellinks een `&amp;`, en `strftime()` is verouderd: allemaal in `bekende-meldingen.txt`.
 
+### T05 Opslag en datatypes: tekstpagina (2026-10-27)
+
+1. Gebouwd: trait `MarkdownPage` (`system/core/markdown_page.php`); in `text.php` een `use`-regel en één doorschakeling in `process()`. Een nieuwe, lege tekstpagina opent in de nieuwe editor. De XHTML staat in de bestaande versiestructuur (versielijst, verschillen, digest en terugzetten blijven werken), de bron in een eigen knooppunt `source/language/version` met hetzelfde tijdstip. Opslaan en tonen lezen de XHTML als XML (`hypha_markdownStoreWikiXhtml()`), omdat `storeWikiContent()` en `writeToElement()` de HTML-parser gebruiken, die `viewBox` kleine letters geeft.
+2. Tests en uitkomsten: `tests/integratie/test_tekstpagina.py`, 8 tests (nieuwe pagina, drie versies met gelijke tijdstempels, `viewBox` in de leesweergave, oude versie voor leden, terugzetten van XHTML en bron samen, vertalen, hernoemen en privé, oude tekstpagina blijft in WYMeditor en ongewijzigd). PHP 8.2.35 en 8.4.27: 8 van 8 (en 26 en 3 van T01 en T04), geen nieuwe PHP-meldingen.
+3. Gevonden en opgelost: twee talen die in dezelfde seconde worden bewaard, kregen dezelfde `xml:id`; de tijdstempel wordt nu verhoogd tot hij uniek is in het document. (De bestaande `storeWikiContent()` heeft hetzelfde probleem bij vertalen; niet aangepast.)
+
 ## Afwijkingen
 
 1. **Enkele tilde is subscript, niet doorhalen.** GFM 0.29 kent `~tekst~` als doorhalen; HedgeDoc als subscript (§10.2). Het ontwerp kiest beide. Gebouwd: `~~tekst~~` is doorhalen, `~tekst~` (zonder spatie erin) subscript, zoals markdown-it met de sub-plug-in. Ontwerp §10 bijgewerkt.
@@ -89,6 +95,7 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
 5. **Temml 0.14.0** zoals in het prototype; highlight.php kent HTML als `xml`, dus tien talen met negen definities.
 7. **De afbeelding bij het uittreksel staat onder de wortel** (`hypha/featured_image`), niet in `article/context` (§14.1): daar leest en schrijft de bestaande code haar.
 8. **Doorschakelen in `process()`** in plaats van in `editView()` en `editAction()` (§13.13): de nieuwe opdrachten (terugtrekken, goedkeuren met redactiestatuut, taal, webadres) hebben eigen routes, en zo blijft het bij één regel. In totaal raken de wijzigingen 27 regels van `peer_reviewed_article.php`, 2 van `pages.php` en 1 van `index.php` (het ontwerp schatte zes regels en geen wijziging in `index.php`).
+11. **De bron van een tekstpagina staat in `source/language[@id]/version[@at]`**, niet met `xml:id` zoals de inhoud: een `xml:id` moet uniek zijn in het document, en de versie van de bron heeft hetzelfde tijdstip als die van de inhoud. Opslaan gebeurt met een eigen kleine functie in plaats van `storeWikiContent()` (de terugvaloptie van §19).
 9. **Een tekstpagina houdt haar paginanaam als titel** (§9: „de paginanaam zoals Hypha hem toont”); het webadres uit de titel (kleine letters, koppeltekens) geldt alleen voor artikelen. Anders zou het menu „over-ons” tonen in plaats van „Over ons”.
 10. **Goedkeuren met het redactiestatuut gebeurt in de leesweergave**, waar beoordelaars nu ook goedkeuren, in een venster; de editor toont de status en de knop *trek terug*.
 6. **Ingesloten inhoud krijgt `sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"`**: de spelers van YouTube en Vimeo werken niet zonder hun eigen herkomst. Een `<iframe>` mag alleen naar het pad van de speler van een dienst (§13.5 noemde alleen de host).

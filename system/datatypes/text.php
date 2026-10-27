@@ -7,6 +7,9 @@
 	<Page>
 */
 	class textpage extends HyphaDatatypePage {
+		// The Markdown editor (system/core/markdown_page.php) for pages with format="markdown" and for new pages.
+		use MarkdownPage;
+
 		/** @var Xml */
 		protected $xml;
 
@@ -33,6 +36,9 @@
 
 		public function process(HyphaRequest $request) {
 			$this->html->writeToElement('pagename', showPagename($this->pagename) . ' ' . asterisk($this->privateFlag));
+
+			$markdownResult = $this->mdProcess($request);
+			if ($markdownResult !== false) return $markdownResult;
 
 			switch ([$request->getView(), $request->getCommand()]) {
 				case [null,                 null]:                return $this->defaultView($request);
