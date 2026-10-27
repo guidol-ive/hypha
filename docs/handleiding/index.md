@@ -1,6 +1,6 @@
 ---
 title: "Handleiding van Hypha"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -64,7 +64,7 @@ flowchart LR
 ## Openen en publiceren met Obsidian
 
 1. Open in Obsidian de map `docs/handleiding/` als *vault* (**Open folder as vault**).
-2. Obsidian toont de front matter bovenaan elke pagina als *eigenschappen* en tekent de diagrammen zelf; er is geen plug-in nodig.
+2. Obsidian toont de Frontmatter bovenaan elke pagina als *eigenschappen* en tekent de diagrammen zelf; er is geen plug-in nodig.
 3. Publiceer met *Obsidian Publish*, of maak een PDF met **Export to PDF**.
 4. De pagina's zijn gewone Markdown. Je kunt ze ook op GitHub of in een andere Markdown-viewer lezen.
 

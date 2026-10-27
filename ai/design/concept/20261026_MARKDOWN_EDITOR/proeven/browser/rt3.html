@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>Proef heen en terug 2</title></head>
+<body><div id="mk" style="width:700px"></div>
+<script src="docs.js"></script><script src="pm.js"></script>
+<script>
+//
+// Round trip through plain ProseMirror with prosemirror-markdown.
+//
+(async () => {
+	try {
+		const rt = {};
+		for (const [k, md0] of Object.entries(DOCS)) {
+			const md = md0.trim();
+			const root = document.createElement('div'); document.getElementById('mk').appendChild(root);
+			const m = makePM(root, md);
+			const a = md.split('\n'), b = m.ser().trim().split('\n'); const d = [];
+			for (let i = 0; i < Math.max(a.length, b.length); i++) if (a[i] !== b[i]) d.push([a[i], b[i]]);
+			rt[k] = { regels: a.length, verschillend: d.length, voorbeelden: d.slice(0, 12) };
+			m.view.destroy(); root.remove();
+		}
+		window.R = rt;
+	} catch (e) { window.R = { fout: String(e && e.stack || e) }; }
+})();
+</script></body></html>

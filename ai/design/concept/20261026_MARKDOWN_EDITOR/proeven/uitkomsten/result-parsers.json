@@ -1,0 +1,143 @@
+{
+ "spec": {
+  "marked 12 (gfm)": {
+   "pass": 598,
+   "total": 652,
+   "pct": 91.7,
+   "worst": [
+    [
+     "Links",
+     15
+    ],
+    [
+     "Images",
+     7
+    ],
+    [
+     "Lists",
+     6
+    ],
+    [
+     "Hard line breaks",
+     5
+    ]
+   ]
+  },
+  "marked 12 (pedantic uit, gfm uit)": {
+   "pass": 602,
+   "total": 652,
+   "pct": 92.3,
+   "worst": [
+    [
+     "Links",
+     15
+    ],
+    [
+     "Images",
+     7
+    ],
+    [
+     "Lists",
+     6
+    ],
+    [
+     "Hard line breaks",
+     5
+    ]
+   ]
+  },
+  "markdown-it 14 (commonmark)": {
+   "pass": 652,
+   "total": 652,
+   "pct": 100,
+   "worst": []
+  },
+  "commonmark.js 0.31": {
+   "pass": 652,
+   "total": 652,
+   "pct": 100,
+   "worst": []
+  }
+ },
+ "gfm": {
+  "marked 12 (gfm)": {
+   "pass": 22,
+   "total": 24
+  },
+  "markdown-it 14 (default, linkify)": {
+   "pass": 14,
+   "total": 24
+  }
+ },
+ "parity": {
+  "marked 12 (gfm)": {
+   "start": {
+    "blocks": 27,
+    "different": 0,
+    "first": []
+   },
+   "plaktest": {
+    "blocks": 24,
+    "different": 3,
+    "first": [
+     [
+      "<ul><li>De route loopt langs het stadspark. ",
+      "<ul><li>De route loopt langs het stadspark."
+     ],
+     [
+      "<ul><li>Er komt een tweede brug. ",
+      "<ul><li>Er komt een tweede brug."
+     ]
+    ]
+   }
+  },
+  "markdown-it 14 (default)": {
+   "start": {
+    "blocks": 27,
+    "different": 0,
+    "first": []
+   },
+   "plaktest": {
+    "blocks": 24,
+    "different": 3,
+    "first": [
+     [
+      "<th align=\"right\">Kosten</th> ",
+      "<th style=\"text-align:right\">Kosten</th> "
+     ],
+     [
+      "<td align=\"right\">€ 1,6 miljoen</td> ",
+      "<td style=\"text-align:right\">€ 1,6 miljoen</td> "
+     ]
+    ]
+   }
+  },
+  "commonmark.js 0.31": {
+   "start": {
+    "blocks": 27,
+    "different": 0,
+    "first": []
+   },
+   "plaktest": {
+    "blocks": 24,
+    "different": 12,
+    "first": [
+     [
+      "<table><thead><tr><th>Onderdeel</th> ",
+      "<p>| Onderdeel | Kosten | Klaar | |-----------|-------:|-------| | <strong>Fietspad</strong> | € 1,6 miljoen |"
+     ],
+     [
+      "<th align=\"right\">Kosten</th> ",
+      "<p>Van de 37 raadsleden stemden er 4 tegen: $\\frac{4}{37} \\approx 11%$ van de raad.</p> "
+     ]
+    ]
+   }
+  }
+ },
+ "speed": {
+  "marked 12 (gfm)": "1.6 ms / 6k woorden",
+  "marked 12 (pedantic uit, gfm uit)": "1.2 ms / 6k woorden",
+  "markdown-it 14 (commonmark)": "1.8 ms / 6k woorden",
+  "commonmark.js 0.31": "1 ms / 6k woorden"
+ }
+}

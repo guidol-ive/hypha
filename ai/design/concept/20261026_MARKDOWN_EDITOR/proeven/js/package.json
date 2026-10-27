@@ -1,0 +1,29 @@
+{
+  "name": "hypha-markdown-editor-proeven",
+  "private": true,
+  "description": "Proeven voor het technisch ontwerp van de Markdown-editor; alleen op de ontwikkelmachine",
+  "type": "module",
+  "dependencies": {
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language-data": "^6.5.2",
+    "@milkdown/kit": "^7.23.0",
+    "@milkdown/plugin-math": "^7.5.9",
+    "codemirror": "^6.0.2",
+    "commonmark": "^0.31.2",
+    "esbuild": "^0.24.2",
+    "jsdom": "^25.0.1",
+    "lighthouse": "^12.8.2",
+    "markdown-it": "^14.3.3",
+    "markdown-it-footnote": "^4.0.0",
+    "marked": "^12.0.2",
+    "prosemirror-commands": "^1.7.2",
+    "prosemirror-history": "^1.5.1",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-markdown": "^1.13.9",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-tables": "^1.8.5",
+    "prosemirror-view": "^1.42.8",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2"
+  }
+}

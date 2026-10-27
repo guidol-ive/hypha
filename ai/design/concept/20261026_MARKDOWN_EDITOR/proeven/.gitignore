@@ -1,0 +1,13 @@
+php/
+js/node_modules/
+js/package-lock.json
+data/spec.json
+data/gfm-spec.txt
+data/pele.global.js
+data/temml.min.js
+data/svg/
+data/math.html
+data/league-corpus.json
+browser/*.js
+lezer/
+*.lh.json

@@ -1,0 +1,200 @@
+{
+    "php": "8.2.35",
+    "spec": {
+        "league/commonmark": {
+            "pass": 652,
+            "total": 652,
+            "pct": 100,
+            "worst": []
+        },
+        "parsedown": {
+            "pass": 341,
+            "total": 652,
+            "pct": 52.3,
+            "worst": {
+                "Emphasis and strong emphasis": 63,
+                "Links": 49,
+                "Fenced code blocks": 25,
+                "HTML blocks": 23,
+                "List items": 20
+            }
+        },
+        "parsedown-extra": {
+            "pass": 324,
+            "total": 652,
+            "pct": 49.7,
+            "worst": {
+                "Emphasis and strong emphasis": 63,
+                "Links": 49,
+                "HTML blocks": 40,
+                "Fenced code blocks": 25,
+                "List items": 20
+            }
+        },
+        "michelf/markdown-extra": {
+            "pass": 391,
+            "total": 652,
+            "pct": 60,
+            "worst": {
+                "Emphasis and strong emphasis": 43,
+                "Links": 32,
+                "HTML blocks": 28,
+                "List items": 25,
+                "Fenced code blocks": 18
+            }
+        }
+    },
+    "gfm": {
+        "league/commonmark (GFM)": {
+            "pass": 24,
+            "total": 24
+        },
+        "parsedown-extra": {
+            "pass": 5,
+            "total": 24
+        },
+        "michelf/markdown-extra": {
+            "pass": 2,
+            "total": 24
+        }
+    },
+    "corpus": {
+        "words_6k": 5753,
+        "words_20k": 18305
+    },
+    "speed": {
+        "league/commonmark (Hypha-omgeving)": {
+            "6k_ms": 11.6,
+            "20k_ms": 35.5
+        },
+        "league/commonmark": {
+            "6k_ms": 8.5,
+            "20k_ms": 29.5
+        },
+        "parsedown": {
+            "6k_ms": 2.2,
+            "20k_ms": 7.3
+        },
+        "parsedown-extra": {
+            "6k_ms": 2.4,
+            "20k_ms": 7.4
+        },
+        "michelf/markdown-extra": {
+            "6k_ms": 4.1,
+            "20k_ms": 12.9
+        },
+        "peak_mb": 14
+    },
+    "xhtml": {
+        "start": {
+            "loadXML": false,
+            "errors": [
+                "Entity 'nbsp' not defined @34"
+            ],
+            "bytes": 3232
+        },
+        "plaktest": {
+            "loadXML": true,
+            "errors": [],
+            "bytes": 1343
+        }
+    },
+    "filter": {
+        "GFM tagfilter alleen": {
+            "vectors_ok": 11,
+            "vectors_total": 25,
+            "failed": [
+                "img onerror => <img src=\"x.jpg\" onerror=\"alert(1)\">\n",
+                "a javascript: => <p><a href=\"javascript:alert(1)\">x</a></p>\n",
+                "a javascript: entity => <p><a href=\"jav&#x61;script:alert(1)\">x</a></p>\n",
+                "iframe youtube-nocookie => &lt;iframe src=\"https://www.youtube-nocookie.com/embed/abc\" title=\"Video\">&lt;/iframe>\n",
+                "svg onload => <p><svg onload=\"alert(1)\"><rect width=\"1\" height=\"1\"/></svg></p>\n",
+                "svg foreignObject => <p><svg><foreignObject>&lt;iframe src=\"https://evil.example\">&lt;/iframe></foreignObject></svg></p>\n",
+                "svg a javascript: => <p><svg><a href=\"javascript:alert(1)\"><text>x</text></a></svg></p>\n",
+                "svg use extern => <p><svg><use href=\"https://evil.example/x.svg#a\"/></svg></p>\n",
+                "style met url() => <p><svg><rect style=\"fill:url(javascript:alert(1))\"/></svg></p>\n",
+                "form => <form action=\"https://evil.example\"><input name=\"w\"></form>\n",
+                "object => <p><object data=\"x.swf\"></object></p>\n",
+                "data: in link => <p><a href=\"data:text/html,&lt;script>alert(1)&lt;/script>\">x</a></p>\n",
+                "macro (niveau 3, niet gebouwd) => <p><macro name=\"pagelist\" tags=\"Raadsnieuws\"/><p>na</p></p>\n",
+                "onclick op span => <p><span class=\"x\" onclick=\"a()\">t</span></p>\n"
+            ],
+            "svg_kept": "36 / 36",
+            "svg_ms_total": 13.9,
+            "mathml_kept": "3 / 3 mfrac, 8 / 8 math"
+        },
+        "symfony/html-sanitizer": {
+            "vectors_ok": 21,
+            "vectors_total": 25,
+            "failed": [
+                "iframe youtube-nocookie => <iframe src=\"https://www.youtube-nocookie.com/embed/abc\" title=\"Video\"></iframe>",
+                "style met url() => <svg><rect style=\"fill:url(javascript:alert(1))\"></rect></svg>",
+                "relatieve link blijft => <a>x</a>",
+                "svg viewBox blijft => <svg><rect width=\"5\" height=\"5\"></rect></svg>"
+            ],
+            "svg_kept": "0 / 36",
+            "svg_ms_total": 15.2,
+            "mathml_kept": "1 / 3 mfrac, 8 / 8 math"
+        },
+        "eigen filter (masterminds/html5 + allowlist)": {
+            "vectors_ok": 25,
+            "vectors_total": 25,
+            "failed": [],
+            "svg_kept": "36 / 36",
+            "svg_ms_total": 18.3,
+            "mathml_kept": "3 / 3 mfrac, 8 / 8 math"
+        }
+    },
+    "yaml": {
+        "keys": [
+            "titel",
+            "auteur",
+            "uittreksel",
+            "tags",
+            "afbeelding",
+            "beschrijving",
+            "bijschrift",
+            "fotograaf",
+            "bijsluiter",
+            "bronnen",
+            "robots"
+        ],
+        "bijsluiter_lines": 3,
+        "ms": 0.052,
+        "broken": "Malformed inline YAML string at line 3.",
+        "types": {
+            "titel": "string",
+            "uittreksel": "integer",
+            "tags": "string"
+        }
+    },
+    "highlight": {
+        "lines": 100,
+        "ms": 1.03,
+        "classes": [
+            "hljs-meta",
+            "hljs-function",
+            "hljs-keyword",
+            "hljs-title",
+            "hljs-params",
+            "hljs-comment"
+        ],
+        "languages": 185
+    },
+    "save": {
+        "6k_ms": 22.5,
+        "6k_xml_kb": 88,
+        "20k_ms": 71.3,
+        "20k_xml_kb": 278
+    },
+    "notices": {
+        "parsedown-extra: erusev/parsedown-extra/ParsedownExtra.php:213 Undefined array key \"text\"": 2939,
+        "parsedown-extra: erusev/parsedown-extra/ParsedownExtra.php:213 preg_match(): Passing null to parameter #2 ($subject) of type string is deprecated": 2939,
+        "parsedown-extra: erusev/parsedown-extra/ParsedownExtra.php:249 Undefined array key \"text\"": 30,
+        "parsedown-extra: erusev/parsedown-extra/ParsedownExtra.php:249 preg_match(): Passing null to parameter #2 ($subject) of type string is deprecated": 30,
+        "parsedown-extra: erusev/parsedown-extra/ParsedownExtra.php:232 Undefined array key \"markup\"": 34,
+        "parsedown-extra: erusev/parsedown-extra/ParsedownExtra.php:480 mb_convert_encoding(): Passing null to parameter #1 ($string) of type array|string is deprecated": 34,
+        "parsedown-extra: erusev/parsedown-extra/ParsedownExtra.php:480 mb_convert_encoding(): Handling HTML entities via mbstring is deprecated; use htmlspecialchars, htmlentities, or mb_enco": 2,
+        "parsedown-extra: erusev/parsedown-extra/ParsedownExtra.php:397 Use of \"self\" in callables is deprecated": 14
+    }
+}

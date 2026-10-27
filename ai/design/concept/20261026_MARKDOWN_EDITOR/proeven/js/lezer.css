@@ -1,0 +1,21 @@
+@font-face { font-family: Lora; src: url(fonts/lora-regular.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: Lora; font-weight: 700; src: url(fonts/lora-bold.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: Lora; font-style: italic; src: url(fonts/lora-italic.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: Lato; src: url(fonts/lato-regular.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: Lato; font-weight: 700; src: url(fonts/lato-bold.woff2) format('woff2'); font-display: swap; }
+:root { --black: #1d2021; --orange: #fe9900; --action: #0B7285; --grey: #505458; --serif: Lora, Georgia, serif; --sans: Lato, Helvetica, Arial, sans-serif; }
+body { margin: 0; background: #fff; color: var(--black); font-family: var(--serif); }
+.site { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #ddd; font-family: var(--sans); }
+.site .logo { font: 700 26px var(--serif); color: var(--black); text-decoration: none; }
+.site nav a { background: var(--orange); color: var(--black); padding: 8px 10px; text-decoration: none; font-size: 13px; text-transform: uppercase; display: inline-block; min-height: 24px; }
+main { max-width: 720px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 32px; line-height: 40px; margin: 6px 0 12px; }
+.kicker, .byline { font-family: var(--sans); font-size: 14px; color: var(--grey); margin: 0; }
+.intro { font-weight: 700; font-size: 18px; line-height: 26px; }
+p, li { font-size: 17px; line-height: 1.65; }
+h2, h3 { font-family: var(--sans); font-size: 20px; line-height: 26px; margin: 28px 0 8px; }
+a { color: var(--action); }
+.callout { display: block; margin: 20px 0; padding: 12px 16px; background: #E1F2F5; border-left: 4px solid #0c8599; }
+.callout.quote { background: none; border: 0; border-top: 4px solid var(--orange); font-style: italic; font-size: 21px; }
+figure { margin: 20px 0; } figure svg { max-width: 100%; height: auto; } figcaption { font: 14px var(--sans); color: var(--grey); }
+.bijsluiter { border-top: 1px solid #ddd; margin-top: 32px; }

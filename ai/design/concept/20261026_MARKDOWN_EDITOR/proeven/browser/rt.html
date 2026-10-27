@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>Proef heen en terug</title></head>
+<body>
+<div id="mk" style="width:700px"></div><div id="cm" style="width:700px;height:400px;overflow:auto"></div>
+<script src="docs.js"></script><script src="mk.js"></script><script src="cm.js"></script>
+<script>
+//
+// Round trip through Milkdown (CommonMark + GFM) and typing latency in CodeMirror 6.
+//
+window.PROEF = (async () => {
+	try {
+	const docs = { start: DOCS['start.md'], plaktest: DOCS['plaktest.md'], kenmerken: DOCS['kenmerken.md'] };
+	const rt = {};
+	for (const [k, md] of Object.entries(docs)) {
+		const root = document.createElement('div'); document.getElementById('mk').appendChild(root);
+		const t0 = performance.now(); const m = await makeMK(root, md); const ms = performance.now() - t0;
+		const back = m.ser();
+		const a = md.trim().split('\n'), b = back.trim().split('\n'); const diff = [];
+		for (let i = 0; i < Math.max(a.length, b.length); i++) if (a[i] !== b[i]) diff.push([a[i], b[i]]);
+		rt[k] = { regels: a.length, verschillend: diff.length, open_ms: +ms.toFixed(0), voorbeelden: diff.slice(0, 14) };
+		m.editor.destroy(); root.remove();
+	}
+	//
+	// Typing: 200 single-character insertions in an article of about 20,000 words, time until the next frame.
+	//
+	const long = (docs.start + '\n\n' + docs.plaktest + '\n\n').repeat(35);
+	const t0 = performance.now(); const v = makeCM(document.getElementById('cm'), long); const openMs = performance.now() - t0;
+	v.dispatch({ selection: { anchor: Math.floor(long.length / 2) } }); v.focus();
+	const lat = [];
+	for (let i = 0; i < 200; i++) {
+		const s = performance.now();
+		v.dispatch(v.state.replaceSelection('a'));
+		//
+		// Force style and layout, as the browser does before it paints (rAF does not run in a hidden pane).
+		//
+		v.contentDOM.getBoundingClientRect(); v.coordsAtPos(v.state.selection.main.head);
+		lat.push(performance.now() - s);
+		if (i % 20 === 0) await new Promise(r => setTimeout(r, 0));
+	}
+	lat.sort((x, y) => x - y);
+	return window.R = { rt, cm: { woorden: long.split(/\s+/).length, open_ms: +openMs.toFixed(0), p50: +lat[100].toFixed(1), p95: +lat[190].toFixed(1), max: +lat[199].toFixed(1) } };
+	} catch (e) { return window.R = { fout: String(e && e.stack || e) }; }
+})();
+</script>
+</body></html>

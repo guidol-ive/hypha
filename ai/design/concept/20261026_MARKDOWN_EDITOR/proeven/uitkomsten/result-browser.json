@@ -1,0 +1,125 @@
+{
+ "gemeten": "2026-10-27, Chromium in de Browser van Claude Code op macOS, MacBook (Apple silicon)",
+ "bundels_gzip_bytes": {
+  "codemirror6+markdown": 177873,
+  "milkdown commonmark+gfm": 144605,
+  "milkdown + math (KaTeX)": 225372,
+  "prosemirror+prosemirror-markdown+markdown-it": 123203,
+  "markdown-it": 53585,
+  "turndown+gfm": 4829
+ },
+ "modules_en_pakketten": {
+  "codemirror6": [
+   22,
+   21
+  ],
+  "milkdown": [
+   228,
+   87
+  ],
+  "prosemirror+prosemirror-markdown": [
+   88,
+   15
+  ],
+  "markdown-it": [
+   77,
+   4
+  ],
+  "turndown": [
+   3,
+   2
+  ]
+ },
+ "heen_en_terug_regels_anders": {
+  "milkdown standaard": {
+   "start": "27/49",
+   "plaktest": "11/28",
+   "kenmerken": "27/50"
+  },
+  "milkdown met instellingen en math": {
+   "start": "26/49",
+   "plaktest": "8/28",
+   "kenmerken": "21/50"
+  },
+  "prosemirror-markdown standaard": {
+   "start": "32/49",
+   "plaktest": "15/28",
+   "kenmerken": "45/50"
+  },
+  "prototype (contenteditable + eigen omzetting)": {
+   "start": "0/49",
+   "plaktest": "11/28",
+   "kenmerken": "6/50"
+  }
+ },
+ "betekenis_verloren": {
+  "milkdown standaard": [
+   "\\\\% en \\\\, in formules",
+   "[[link]] en > [!type] ge-escaped",
+   "{.klein-rechts} achter ```mermaid"
+  ],
+  "milkdown met math": [
+   "$$…$$ op één regel wordt $…$",
+   "[[link]] en > [!type] ge-escaped",
+   "{.klein-rechts}"
+  ],
+  "prosemirror-markdown standaard": [
+   "tabellen",
+   "doorhalen",
+   "[[link]] en > [!type] ge-escaped"
+  ],
+  "prototype": [
+   "`code`",
+   "~~doorhalen~~",
+   "takenlijst",
+   "<details>"
+  ]
+ },
+ "typen_20000_woorden_ms": {
+  "codemirror6": {
+   "p50": 4.5,
+   "p95": 10.8,
+   "max": 20.7,
+   "openen": 6
+  },
+  "textarea met opgemaakte laag (prototype)": {
+   "p50": 2.8,
+   "p95": 4.0,
+   "max": 6.4
+  }
+ },
+ "plakken_turndown_vs_eigen": {
+  "documenten_regels_anders": {
+   "word": [
+    28,
+    0
+   ],
+   "google-docs": [
+    38,
+    0
+   ],
+   "libreoffice": [
+    78,
+    0
+   ]
+  },
+  "losse_gevallen_goed": {
+   "turndown+gfm": "4/19",
+   "eigen omzetter": "19/19"
+  },
+  "ms": {
+   "word": [
+    3.4,
+    0.8
+   ],
+   "google-docs": [
+    3.0,
+    0.7
+   ],
+   "libreoffice": [
+    0.8,
+    0.4
+   ]
+  }
+ }
+}

@@ -301,9 +301,24 @@ details.meta[open] summary .fa-caret-right { transform: rotate(90deg); }
 // can be dimmed without shifting the text.
 */
 .panes { display: grid; grid-template-columns: minmax(0, 1fr); border: 1px solid var(--line); border-top: 0; background: #fff; min-height: 460px; }
-.panes.side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); height: calc(100vh - 130px); min-height: 420px; }
+.panes.side { grid-template-columns: minmax(0, var(--split, 50%)) 9px minmax(0, 1fr); height: calc(100vh - 130px); min-height: 420px; }
 .panes.side .editorpane, .panes.side .previewpane { overflow: auto; }
-.panes.side .previewpane { border-left: 1px solid var(--line); }
+/*
+// Side by side uses the full width of the screen; the checklist keeps its own column.
+*/
+body.wide main { max-width: none; }
+/*
+// Divider between text and preview: drag it, or use the arrow keys when it has focus.
+*/
+.splitter { display: none; position: relative; cursor: col-resize; touch-action: none; background: #fff; }
+.panes.side .splitter { display: block; }
+.splitter::before { content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 1px; background: var(--line); }
+.splitter::after { content: ""; position: absolute; top: 50%; left: 2px; width: 5px; height: 36px; margin-top: -18px; border-radius: 3px; background: #9AA1A6; }
+.splitter:hover::before, .splitter.drag::before, .splitter:focus-visible::before { left: 3px; width: 3px; background: var(--action); }
+.splitter:hover::after, .splitter.drag::after, .splitter:focus-visible::after { background: var(--action); }
+.splitter:focus-visible { outline: none; }
+body.splitting { cursor: col-resize; user-select: none; }
+body.splitting iframe { pointer-events: none; }
 .editorpane { position: relative; }
 .panes.preview-only .editorpane, .panes.write-only .previewpane { display: none; }
 /*
@@ -482,7 +497,8 @@ dialog h2 button { border: 0; background: none; font-size: 20px; color: var(--da
 .dlist { flex: 1 1 45%; list-style: none; margin: 0; padding: 6px; overflow: auto; }
 .dlist li { padding: 6px 10px; border-radius: 4px; cursor: pointer; }
 .dlist li small { display: block; color: var(--darkgrey); font-size: 12px; }
-.dlist li[aria-selected=true], .dlist li:hover { background: var(--bluegreen-light); }
+.dlist li[aria-selected=true], .dlist li[role=option]:hover { background: var(--bluegreen-light); }
+.dlist li.dgroup { cursor: default; margin-top: 8px; border-top: 1px solid var(--line); border-radius: 0; padding-top: 10px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; color: var(--darkgrey); }
 @media (max-width: 700px) { .dpanel { flex-direction: column; max-height: 70vh; } .dprev { border-right: 0; border-bottom: 1px solid var(--line); } .dprev .dpv { min-height: 140px; } }
 #diagSrc { width: 100%; min-height: 220px; font-family: var(--mono); font-size: 14px; border: 1px solid #9AA1A6; border-radius: 3px; padding: 10px; }
 #diagView { border: 1px solid var(--line); border-radius: 4px; min-height: 220px; padding: 10px; display: grid; place-items: center; overflow: auto; }
@@ -503,7 +519,6 @@ dialog h2 button { border: 0; background: none; font-size: 20px; color: var(--da
 @media (max-width: 1020px) {
 	.layout { grid-template-columns: 1fr; }
 	aside.side { position: static; max-height: none; overflow: visible; }
-	.panes.side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 @media (max-width: 700px) {
 	main { padding: 10px 10px 90px; }
@@ -610,7 +625,7 @@ dialog h2 button { border: 0; background: none; font-size: 20px; color: var(--da
 					</div>
 					<details class="wyshead" id="wyshead" open>
 						<summary class="wh-label" title="Artikelkop open- of dichtvouwen"><i class="fa fa-caret-right tw" aria-hidden="true"></i><i class="fa fa-pencil-square-o" aria-hidden="true"></i> artikelkop · vaste velden <span class="hint">– de vakken zijn bewerkbaar</span><span class="sumtext" id="sumHead"></span></summary>
-						<textarea id="fTitle" class="wh-title" rows="1" aria-label="Titel" placeholder="Titel" title="Titel van het artikel (in Markdown: regel 1 van de front matter)"></textarea>
+						<textarea id="fTitle" class="wh-title" rows="1" aria-label="Titel" placeholder="Titel" title="Titel van het artikel (in Markdown: regel 1 van de Frontmatter)"></textarea>
 						<div class="count" id="titleCount"></div>
 						<div class="wh-row"><span class="wh-key">door</span><input type="text" id="fAuthor" aria-label="Auteur" placeholder="Auteur" autocomplete="off" title="Auteur van het artikel (in Markdown: regel 2)"></div>
 						<!--
@@ -632,7 +647,7 @@ dialog h2 button { border: 0; background: none; font-size: 20px; color: var(--da
 								<div class="count" id="excerptCount"></div>
 							</div>
 						</div>
-						<div class="tags" id="tagBox"><span class="wh-key">tags</span><select id="tagAdd" aria-label="Tag toevoegen" title="Tag toevoegen uit de vaste lijst van de site. De eerste tag is de rubriek. Alleen een beheerder maakt nieuwe tags."></select></div>
+						<div class="tags" id="tagBox"><label class="wh-key" for="fRubriek">rubriek</label><select id="fRubriek" title="Rubriek: één uit de rubrieken van de site (in Markdown: regel 4)"></select><span class="wh-key">tags</span><select id="tagAdd" aria-label="Tag toevoegen" title="Tag toevoegen uit de vaste lijst van de site. Alleen een beheerder maakt nieuwe tags."></select></div>
 					</details>
 					<div class="wys art" id="wys" contenteditable="true" lang="nl" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Tekst van het artikel, met opmaak"></div>
 					<!--
@@ -641,11 +656,11 @@ dialog h2 button { border: 0; background: none; font-size: 20px; color: var(--da
 					<div class="wysfoot" id="wysfoot">
 						<details class="fbox" id="footMethod" open>
 							<summary class="wh-label" id="lblMethod" title="Bijsluiter open- of dichtvouwen"><i class="fa fa-caret-right tw" aria-hidden="true"></i><i class="fa fa-pencil-square-o" aria-hidden="true"></i> bijsluiter · vast veld <span class="hint">(verplicht)</span><span class="sumtext" id="sumMethod"></span></summary>
-							<div class="wf-field" id="wysMethod" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Bijsluiter" lang="nl" spellcheck="true" title="Wie ben je, hoe kwam dit artikel tot stand, welke belangen spelen er? (in Markdown: bijsluiter in de front matter)" data-ph="Wie ben je, hoe kwam dit artikel tot stand, welke belangen spelen er?"></div>
+							<div class="wf-field" id="wysMethod" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Bijsluiter" lang="nl" spellcheck="true" title="Wie ben je, hoe kwam dit artikel tot stand, welke belangen spelen er? (in Markdown: bijsluiter in de Frontmatter)" data-ph="Wie ben je, hoe kwam dit artikel tot stand, welke belangen spelen er?"></div>
 						</details>
 						<details class="fbox" id="footSources" open>
 							<summary class="wh-label" id="lblSources" title="Bronnen open- of dichtvouwen"><i class="fa fa-caret-right tw" aria-hidden="true"></i><i class="fa fa-pencil-square-o" aria-hidden="true"></i> bronnen · vast veld <span class="hint">(aanbevolen)</span><span class="sumtext" id="sumSources"></span></summary>
-							<div class="wf-field" id="wysSources" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Bronnen" lang="nl" spellcheck="true" title="Bronnen van het artikel, één per regel (in Markdown: bronnen in de front matter)" data-ph="Bron 1, bron 2, …"></div>
+							<div class="wf-field" id="wysSources" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Bronnen" lang="nl" spellcheck="true" title="Bronnen van het artikel, één per regel (in Markdown: bronnen in de Frontmatter)" data-ph="Bron 1, bron 2, …"></div>
 						</details>
 					</div>
 					<div class="ed" id="ed">
@@ -654,6 +669,7 @@ dialog h2 button { border: 0; background: none; font-size: 20px; color: var(--da
 						<p class="sr" id="srcHelp">Typ een schuine streep aan het begin van een regel voor alle blokken, of twee blokhaken voor een link naar een pagina. Kies met de pijltjestoetsen en Enter.</p>
 					</div>
 				</div>
+				<div class="splitter" id="splitter" role="separator" tabindex="0" aria-orientation="vertical" aria-controls="editorpane" aria-label="Verdeling tussen tekst en voorbeeld" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" title="Sleep om de breedte van tekst en voorbeeld te verdelen. Pijltjes werken ook; dubbelklik zet terug op de helft."></div>
 				<div class="previewpane" id="previewPane">
 					<div class="devicebar"><span>Bekijk als:</span>
 						<button type="button" data-device="desktop" aria-pressed="true" title="Voorbeeld op een computerscherm"><i class="fa fa-desktop" aria-hidden="true"></i> Computer</button>
@@ -791,7 +807,7 @@ dialog h2 button { border: 0; background: none; font-size: 20px; color: var(--da
 			<tr><td style="font-family:var(--mono)">$\frac{4}{37}$ en $$ … $$</td><td>Formule in LaTeX-notatie, in de zin of als blok.</td></tr>
 			<tr><td style="font-family:var(--mono)">```php … ```</td><td>Code, met kleuren voor de taal (php, js, sql, python, html, css, json, yaml, bash, xml, …).</td></tr>
 			<tr><td style="font-family:var(--mono)">/</td><td>Aan het begin van een regel: alle blokken (tabel, diagram, beeld, formule, code, …).</td></tr>
-			<tr><td style="font-family:var(--mono)">--- … ---</td><td>Bovenaan: de vaste velden (titel, auteur, uittreksel, tags, afbeelding, bijsluiter, bronnen).</td></tr>
+			<tr><td style="font-family:var(--mono)">--- … ---</td><td>Bovenaan: de vaste velden (titel, auteur, uittreksel, rubriek, tags, afbeelding, bijsluiter, bronnen).</td></tr>
 		</table>
 		<div class="dlg-actions"><button class="btn primary" value="ok">sluiten</button></div>
 	</form>
@@ -818,11 +834,13 @@ const PRIVATE = new Set(['Dossier wijkraden']);
 const START = {
 	title: 'Vertrekkend raadslid Bram Hoekstra: twintig jaar strijd voor open bestuur',
 	author: 'Sanne de Vries',
-	tags: ['Politiek en bestuur', 'Raadsnieuws'],
+	rubriek: 'Politiek en bestuur',
+	tags: ['Raadsnieuws'],
 	excerpt: 'Twintig jaar lang vroeg Bram Hoekstra in de raad van Eemstad om openbare stukken en debatten. Nu neemt de fractievoorzitter van Open Eemstad afscheid, met een paar adviezen voor zijn opvolgers.',
 	hero: { path: 'beeld/hoekstra.jpg', alt: 'Bram Hoekstra in de raadszaal van Eemstad', caption: 'Bram Hoekstra na twintig jaar in de raad van Eemstad.', credit: 'Foto (naam fotograaf)' },
 	status: 'draft', approvals: 0, lang: 'nl', reviews: [], retraction: null,
 	knownTags: ['Cultuur', 'Geschiedenis', 'Onderzoek', 'Opinie', 'Politiek en bestuur', 'Raadsnieuws'],
+	rubrieken: ['Politiek en bestuur', 'Wonen en wijken', 'Verkeer', 'Cultuur', 'Onderwijs', 'Zorg en welzijn', 'Economie', 'Opinie'],
 	fields: {
 		text: `Bram Hoekstra (1962) was bibliothecaris in de wijk Eemstad-Noord toen buurtbewoners hem in 2005 vroegen of hij iets wilde doen met al hun klachten over het stadhuis. Stukken kwamen pas na de vergadering online, en wie wilde inspreken moest dat een week van tevoren per brief melden.
 
@@ -884,7 +902,8 @@ START.images['beeld/hoekstra.jpg'] = PH_HERO;
 
 //
 // Diagram examples, sorted by expected use in local journalism.
-// The first five are shown as buttons; the rest in the 'meer soorten' list.
+// The first five are shown as buttons; the rest in the 'meer soorten' list,
+// with the technical types (g: 'tech') last under their own heading.
 //
 const DIAGRAMS = [
 	{ k: 'Tijdlijn', d: 'Gebeurtenissen op volgorde van datum', s: 'timeline\n    title Titel van de tijdlijn\n    2014 : Eerste gebeurtenis\n    2018 : Tweede gebeurtenis\n    2026 : Derde gebeurtenis' },
@@ -911,7 +930,21 @@ const DIAGRAMS = [
 	{ k: 'Samenstelling', d: 'Onderdelen naast elkaar (blokken)', s: 'block\n    columns 3\n    a["Raad (37)"]:3\n    b["Coalitie (20)"]:2 c["Oppositie (17)"]' },
 	{ k: 'Netwerk', d: 'Wie met wie verbonden is', s: 'flowchart LR\n    H[Hoekstra] --- O[Open Eemstad]\n    H --- B[Bibliotheek]\n    O --- W[Wijkraad Noord]\n    B --- W' },
 	{ k: 'Indeling', d: 'Hoofdstukken of onderdelen als boom', s: 'treeView-beta\n    Rapport/\n        Samenvatting\n        Hoofdstuk 1 Aanleiding\n        Hoofdstuk 2 Onderzoek\n        Bijlagen/\n            Cijfers' },
-	{ k: 'Gegevens', d: 'Hoe gegevens samenhangen (datajournalistiek)', s: 'erDiagram\n    PARTIJ ||--o{ RAADSLID : heeft\n    RAADSLID ||--o{ MOTIE : dient_in\n    MOTIE }o--|| VERGADERING : in' }
+	{ k: 'Gegevens', d: 'Hoe gegevens samenhangen (datajournalistiek)', s: 'erDiagram\n    PARTIJ ||--o{ RAADSLID : heeft\n    RAADSLID ||--o{ MOTIE : dient_in\n    MOTIE }o--|| VERGADERING : in' },
+	//
+	// Technical types: relevant for a small group of authors, such as articles about software or data.
+	//
+	{ g: 'tech', k: 'Klassen', d: 'Klassen en hun overerving (UML)', s: 'classDiagram\n    class HyphaDatatypePage {\n        +build()\n    }\n    class peer_reviewed_article {\n        +createEditForm()\n    }\n    class peer_reviewed_article_md {\n        +renderMarkdown()\n    }\n    HyphaDatatypePage <|-- peer_reviewed_article\n    HyphaDatatypePage <|-- peer_reviewed_article_md' },
+	{ g: 'tech', k: 'Systeemcontext', d: 'Een systeem met gebruikers en koppelingen (C4)', s: 'C4Context\n    title Tekst-editor in Hypha\n    Person(auteur, "Auteur", "schrijft een artikel")\n    System(hypha, "Hypha", "PHP 8.2, opslag in XML")\n    System_Ext(mail, "E-mail", "meldingen aan beoordelaars")\n    Rel(auteur, hypha, "bewerkt in de browser")\n    Rel(hypha, mail, "verstuurt")' },
+	{ g: 'tech', k: 'Architectuur', d: 'Diensten en hun verbindingen', s: 'architecture-beta\n    group server(server)[Webserver]\n    service php(server)[Hypha] in server\n    service data(disk)[XML-bestanden] in server\n    service web(internet)[Browser]\n    web:R -- L:php\n    php:R -- L:data' },
+	{ g: 'tech', k: 'Versiebeheer', d: 'Takken en samenvoegingen (git)', s: 'gitGraph\n    commit id: "basis"\n    branch markdown-editor\n    commit id: "datatype"\n    commit id: "editor"\n    checkout main\n    commit id: "bugfix"\n    merge markdown-editor id: "samenvoegen"' },
+	{ g: 'tech', k: 'Bitindeling', d: 'De velden van een bestand of netwerkpakket', s: 'packet\n0-63: "Handtekening"\n64-95: "Lengte"\n96-127: "Type (IHDR)"\n128-159: "Breedte"\n160-191: "Hoogte"\n192-199: "Bitdiepte"\n200-207: "Kleurtype"' },
+	{ g: 'tech', k: 'Eisen', d: 'Eisen en wat eraan voldoet', s: 'requirementDiagram\n  requirement snel {\n    id: 1\n    text: Getypte tekst binnen 100 ms in beeld\n    risk: medium\n    verifymethod: test\n  }\n  element editor {\n    type: component\n  }\n  editor - satisfies -> snel' },
+	{ g: 'tech', k: 'Gebeurtenissen', d: 'Schermen, opdrachten en gebeurtenissen (event modeling)', s: "eventmodeling\n\ntimeframe 01 ui Editor\ntimeframe 02 command Opslaan [[Opslaan01]]\ntimeframe 03 event ArtikelBewaard [[ArtikelBewaard]]\n\ndata Opslaan01 {\n  titel: 'Afscheid van de raad'\n}\n\ndata ArtikelBewaard {\n  titel: string\n  versie: number\n}" },
+	{ g: 'tech', k: 'Verwerkingsstappen', d: 'Stappen in een geautomatiseerde verwerking (agentflow)', s: 'agentflow-beta LR\n  flow invoer["Invoer"]\n    plak["Plakken uit Word"]@{ shape: input }\n  end\n  flow omzetten["Omzetten"]\n    schoon["Opschonen"]@{ shape: task }\n    md["Naar Markdown"]@{ shape: task }\n    schoon --> md\n  end\n  flow uitvoer["Uitvoer"]\n    toon["Tonen in de editor"]@{ shape: action }\n  end\n  plak --> schoon\n  md --> toon' },
+	{ g: 'tech', k: 'Notatie', d: 'De opbouw van een taal of notatie (spoorwegdiagram)', s: 'railroad-ebnf-beta\ntitle "Tussenkop in Markdown"\n\ntussenkop = ( "###" | "####" ) " " tekst ;\ntekst = teken+ ;' },
+	{ g: 'tech', k: 'Waardeketen', d: 'Onderdelen naar zichtbaarheid en volwassenheid (Wardley)', s: 'wardley-beta\ntitle Waardeketen van een artikel\n\nanchor Lezer [0.95, 0.60]\ncomponent Artikel [0.80, 0.45]\ncomponent Editor [0.60, 0.35]\ncomponent Hypha [0.40, 0.50]\ncomponent Webserver [0.15, 0.85]\n\nLezer -> Artikel\nArtikel -> Editor\nEditor -> Hypha\nHypha -> Webserver\n\nevolve Editor 0.60' },
+	{ g: 'tech', k: 'Soorten problemen', d: 'Problemen indelen naar aanpak (Cynefin)', s: 'cynefin-beta\n  title Vraagstukken bij de redactie\n\n  complex\n    "Nieuw verdienmodel"\n\n  complicated\n    "Overstap op een nieuwe editor"\n\n  clear\n    "Artikel publiceren"\n\n  chaotic\n    "Site uit de lucht"\n\n  chaotic --> complex : "Gestabiliseerd"' }
 ];
 const TOP_DIAGRAMS = 5;
 
@@ -1194,7 +1227,7 @@ async function renderDiagrams(root) {
 
 function renderPreview() {
 	const p = $('preview');
-	const kicker = state.tags.length ? state.tags.join(' || ') : '';
+	const kicker = state.rubriek || '';
 	const body = renderMarkdown(state.fields.text, state.images);
 	const method = state.fields.method.trim() ? renderMarkdown(state.fields.method, state.images) : '';
 	const sources = state.fields.sources.trim() ? renderMarkdown(state.fields.sources, state.images) : '';
@@ -1217,7 +1250,7 @@ function renderPreview() {
 	const ld = document.createElement('script'); ld.type = 'application/ld+json';
 	ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: state.title, description: state.excerpt,
 		author: { '@type': 'Person', name: state.author }, keywords: state.tags.join(', '), inLanguage: state.lang || 'nl', wordCount: words(state.fields.text),
-		articleSection: state.tags[0] || undefined, image: heroSrc() && state.hero.alt ? { '@type': 'ImageObject', caption: state.hero.caption, description: state.hero.alt } : undefined });
+		articleSection: state.rubriek || undefined, image: heroSrc() && state.hero.alt ? { '@type': 'ImageObject', caption: state.hero.caption, description: state.hero.alt } : undefined });
 	p.appendChild(ld);
 	renderDiagrams(p).then(followCaret);
 	fitFrame();
@@ -1348,6 +1381,7 @@ function checks() {
 		{ ...ok(state.fields.sources.trim().length > 0, state.fields.sources.trim() ? 'heeft één of meer bronnen' : 'bronnen worden aangeraden'), req: false, go: 'sources' },
 		{ ...ok(state.excerpt.trim().length > 0, state.excerpt.trim() ? 'heeft een uittreksel' : 'een uittreksel is verplicht'), req: true },
 		{ ...ok(!!heroSrc(), heroSrc() ? 'heeft een afbeelding bij uittreksel' : 'een afbeelding bij het uittreksel wordt aangeraden'), req: false },
+		{ ...ok(!!state.rubriek, state.rubriek ? 'heeft een rubriek' : 'een rubriek is verplicht'), req: true },
 		{ ...ok(state.tags.length > 0, state.tags.length ? 'heeft één of meer tags' : 'één of meer tags zijn verplicht'), req: true },
 		...state.tags.filter(t => !(state.knownTags || []).includes(t)).map(t => ({ ok: false, t: `tag „${t}” staat niet in de lijst van de site; kies een bestaande tag (alleen een beheerder maakt nieuwe)`, req: true }))
 	];
@@ -1526,7 +1560,7 @@ function renderFacts() {
 		Object.entries(LANGS).map(([k, v]) => `<option value="${k}"${k === (state.lang || 'nl') ? ' selected' : ''}>${v}</option>`).join('') + '</select></li>';
 }
 //
-// Front matter: title, author, excerpt, tags and the image with the excerpt as fixed lines at the top
+// Frontmatter: title, author, excerpt, section, tags and the image with the excerpt as fixed lines at the top
 // of the Markdown of the article.
 //
 function yamlStr(v) { v = String(v ?? ''); return /[:#\[\]{},'"\n]|^\s|\s$|^$/.test(v) ? JSON.stringify(v) : v; }
@@ -1534,7 +1568,7 @@ const FRONT_RE = /^---[ \t]*\n[\s\S]*?\n---[ \t]*(\n|$)/;
 function heroSrc() { const h = state.hero || {}; return h.path ? state.images[h.path] || PH_HERO : ''; }
 function frontText(extra = []) {
 	const h = state.hero || {};
-	return ['---', `titel: ${yamlStr(state.title)}`, `auteur: ${yamlStr(state.author)}`, `uittreksel: ${yamlStr(state.excerpt)}`, 'tags:',
+	return ['---', `titel: ${yamlStr(state.title)}`, `auteur: ${yamlStr(state.author)}`, `uittreksel: ${yamlStr(state.excerpt)}`, `rubriek: ${yamlStr(state.rubriek || '')}`, 'tags:',
 		...state.tags.map(t => `  - ${yamlStr(t)}`),
 		`afbeelding: ${yamlStr(h.path)}`, `beschrijving: ${yamlStr(h.alt)}`, `bijschrift: ${yamlStr(h.caption)}`, `fotograaf: ${yamlStr(h.credit)}`,
 		...yamlBlock('bijsluiter', state.fields.method), ...yamlBlock('bronnen', state.fields.sources),
@@ -1548,7 +1582,7 @@ function yamlBlock(key, v) {
 	return v ? [`${key}: |`, ...v.split('\n').map(l => l ? '  ' + l : '')] : [`${key}: ""`];
 }
 //
-// Put a new value in the Markdown field while keeping the cursor at the same place in the text below the front matter.
+// Put a new value in the Markdown field while keeping the cursor at the same place in the text below the Frontmatter.
 //
 function setSrcKeepCaret(v) {
 	const oldFm = (src.value.match(FRONT_RE) || [''])[0].length, newFm = (v.match(FRONT_RE) || [''])[0].length;
@@ -1593,8 +1627,17 @@ $('fTitle').addEventListener('keydown', e => { if (e.key === 'Enter') e.preventD
 function renderMeta() {
 	$('pageTitle').textContent = state.title || 'Zonder titel';
 	$('fTitle').value = state.title; $('fAuthor').value = state.author; $('fExcerpt').value = state.excerpt;
-	renderTags(); renderHero(); counts(); requestAnimationFrame(autosize);
+	renderRubriek(); renderTags(); renderHero(); counts(); requestAnimationFrame(autosize);
 }
+//
+// Section: exactly one from the fixed list of the site, separate from the tags.
+//
+function renderRubriek() {
+	const list = state.rubrieken || START.rubrieken;
+	$('fRubriek').innerHTML = (state.rubriek ? '' : '<option value="" selected>kies een rubriek</option>') + list.map(r => `<option${r === state.rubriek ? ' selected' : ''}>${esc(r)}</option>`).join('')
+		+ (state.rubriek && !list.includes(state.rubriek) ? `<option selected>${esc(state.rubriek)}</option>` : '');
+}
+$('fRubriek').addEventListener('change', e => { state.rubriek = e.target.value; src.value = editorValue(field); renderChecks(); renderSteps(); markDirty(); if (mode !== 'write') renderPreview(); });
 function counts() {
 	const n = state.title.length;
 	$('titleCount').textContent = `${n} tekens` + (n > 90 ? ' · liever korter dan 90' : '');
@@ -1654,6 +1697,7 @@ function onInput() {
 			state.title = String(fm.props.titel ?? fm.props.title ?? state.title);
 			state.author = String(fm.props.auteur ?? fm.props.author ?? state.author);
 			state.excerpt = String(fm.props.uittreksel ?? fm.props.excerpt ?? state.excerpt);
+			if (fm.props.rubriek !== undefined) state.rubriek = String(fm.props.rubriek);
 			if (Array.isArray(fm.props.tags)) state.tags = fm.props.tags.map(String);
 			const pr = fm.props;
 			state.hero = { path: String(pr.afbeelding ?? ''), alt: String(pr.beschrijving ?? ''), caption: String(pr.bijschrift ?? ''), credit: String(pr.fotograaf ?? '') };
@@ -1920,7 +1964,7 @@ for (const [id, f] of [['wysMethod', 'method'], ['wysSources', 'sources']])
 	});
 //
 // 'bijsluiter invullen' and 'bronnen invullen' in the checklist go to the field: the block at the end in visual mode,
-// the property in the front matter in Markdown.
+// the property in the Frontmatter in Markdown.
 //
 function goToField(f) {
 	if (mode === 'preview') setMode('write');
@@ -2093,7 +2137,7 @@ document.querySelectorAll('[data-edit]').forEach(b => {
 // Keep the cursor in the same place when switching between Markdown and visual mode.
 // Blocks (paragraphs, headings, boxes, figures, tables) are counted the same way in both. Within a block the
 // visible characters are matched one by one, skipping the Markdown characters such as ** and ###.
-// In the front matter the cursor goes to the matching field of the article head, and back.
+// In the Frontmatter the cursor goes to the matching field of the article head, and back.
 //
 let lastWysRange = null, lastEdit = 'text';
 document.addEventListener('selectionchange', () => {
@@ -2103,7 +2147,7 @@ document.addEventListener('selectionchange', () => {
 $('wyshead').addEventListener('focusin', e => { if (e.target.id) { lastEdit = e.target.id; } });
 $('wysfoot').addEventListener('focusin', e => { if (e.target.id) { lastEdit = e.target.id; } });
 wys.addEventListener('focusin', () => { lastEdit = 'text'; });
-const HEAD_KEYS = { titel: 'fTitle', auteur: 'fAuthor', uittreksel: 'fExcerpt', tags: 'tagAdd', afbeelding: 'heroBtn', beschrijving: 'fHeroAlt', bijschrift: 'fHeroCap', fotograaf: 'fHeroCredit', bijsluiter: 'wysMethod', bronnen: 'wysSources' };
+const HEAD_KEYS = { titel: 'fTitle', auteur: 'fAuthor', uittreksel: 'fExcerpt', rubriek: 'fRubriek', tags: 'tagAdd', afbeelding: 'heroBtn', beschrijving: 'fHeroAlt', bijschrift: 'fHeroCap', fotograaf: 'fHeroCredit', bijsluiter: 'wysMethod', bronnen: 'wysSources' };
 function blockRanges(text) {
 	const res = []; let pos = 0, start = -1, inFence = false;
 	for (const line of text.split('\n')) {
@@ -2551,7 +2595,7 @@ function imgMarkdown() {
 function updImgMd() {
 	if (placeValue('place') === 'bovenaan') {
 		const { path } = imgMarkdown();
-		$('imgMd').innerHTML = '<b>DIT KOMT IN DE FRONT MATTER (AFBEELDING BIJ UITTREKSEL)</b>' + esc([`afbeelding: ${yamlStr(path)}`, `beschrijving: ${yamlStr($('imgAlt').value.trim())}`, `bijschrift: ${yamlStr($('imgCap').value.trim())}`, `fotograaf: ${yamlStr($('imgCredit').value.trim())}`].join('\n'));
+		$('imgMd').innerHTML = '<b>DIT KOMT IN DE FRONTMATTER (AFBEELDING BIJ UITTREKSEL)</b>' + esc([`afbeelding: ${yamlStr(path)}`, `beschrijving: ${yamlStr($('imgAlt').value.trim())}`, `bijschrift: ${yamlStr($('imgCap').value.trim())}`, `fotograaf: ${yamlStr($('imgCredit').value.trim())}`].join('\n'));
 	} else $('imgMd').innerHTML = '<b>DIT KOMT IN JE TEKST TE STAAN</b>' + esc(imgMarkdown().md);
 	$('imgOk').disabled = !$('imgAlt').value.trim() || !imgData;
 	$('imgNeed').textContent = !imgData ? 'Kies eerst een foto.' : !$('imgAlt').value.trim() ? 'Vul eerst in wat er op de foto staat.' : '';
@@ -2614,7 +2658,7 @@ onDialogOk('imgDlg', () => {
 });
 $('heroBtn').addEventListener('click', () => openImage('hero'));
 //
-// Image with the excerpt in the article head: the same four properties as in the front matter.
+// Image with the excerpt in the article head: the same four properties as in the Frontmatter.
 //
 function heroChanged() {
 	if (field === 'text' && editMode === 'markdown') setSrcKeepCaret(editorValue('text'));
@@ -2643,14 +2687,14 @@ const dSvg = new Map();
 function dPreview(i) {
 	const x = DIAGRAMS[TOP_DIAGRAMS + i]; if (!x) return;
 	dSel = i;
-	$('dlist').querySelectorAll('li').forEach((li, j) => li.setAttribute('aria-selected', j === i));
+	$('dlist').querySelectorAll('li[role=option]').forEach((li, j) => li.setAttribute('aria-selected', j === i));
 	$('dlist').setAttribute('aria-activedescendant', 'dt-' + i);
 	$('dpd').innerHTML = `<b>${esc(x.k)}</b> – ${esc(x.d)}`;
 	if (!dSvg.has(x.k)) { try { dSvg.set(x.k, drawDiagram(x.s)); } catch (e) { dSvg.set(x.k, '<span class="small">geen voorbeeld beschikbaar</span>'); } }
 	$('dpv').innerHTML = dSvg.get(x.k);
 }
 function openTypes() {
-	$('dlist').innerHTML = DIAGRAMS.slice(TOP_DIAGRAMS).map((x, i) => `<li role="option" id="dt-${i}" data-i="${i}" aria-selected="false" title="${esc(x.d)}"><b>${esc(x.k)}</b><small>${esc(x.d)}</small></li>`).join('');
+	$('dlist').innerHTML = DIAGRAMS.slice(TOP_DIAGRAMS).map((x, i, a) => (x.g === 'tech' && (!i || a[i - 1].g !== 'tech') ? '<li role="presentation" class="dgroup">Technisch</li>' : '') + `<li role="option" id="dt-${i}" data-i="${i}" aria-selected="false" title="${esc(x.d)}"><b>${esc(x.k)}</b><small>${esc(x.d)}</small></li>`).join('');
 	$('dpanel').hidden = false; $('moreTypes').setAttribute('aria-expanded', 'true');
 	$('dlist').focus();
 	loadPele().then(() => dPreview(0), () => { $('dpv').textContent = 'Diagrammen kunnen niet geladen worden (geen verbinding).'; });
@@ -2661,8 +2705,8 @@ function closeTypes(focusBtn) {
 }
 function useTemplate(x) { renderTemplates(x.k); $('diagSrc').value = x.s; diagPreview(); }
 $('moreTypes').addEventListener('click', () => $('dpanel').hidden ? openTypes() : closeTypes());
-$('dlist').addEventListener('mouseover', e => { const li = e.target.closest('li'); if (li && +li.dataset.i !== dSel) dPreview(+li.dataset.i); });
-$('dlist').addEventListener('click', e => { const li = e.target.closest('li'); if (li) { useTemplate(DIAGRAMS[TOP_DIAGRAMS + +li.dataset.i]); closeTypes(true); } });
+$('dlist').addEventListener('mouseover', e => { const li = e.target.closest('li[role=option]'); if (li && +li.dataset.i !== dSel) dPreview(+li.dataset.i); });
+$('dlist').addEventListener('click', e => { const li = e.target.closest('li[role=option]'); if (li) { useTemplate(DIAGRAMS[TOP_DIAGRAMS + +li.dataset.i]); closeTypes(true); } });
 $('dlist').addEventListener('keydown', e => {
 	const n = DIAGRAMS.length - TOP_DIAGRAMS;
 	if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); dPreview((dSel + (e.key === 'ArrowDown' ? 1 : -1) + n) % n); $('dt-' + dSel).scrollIntoView({ block: 'nearest' }); }
@@ -2769,7 +2813,42 @@ function setMode(m) {
 //
 function applyPanes() {
 	$('panes').className = 'panes ' + ({ write: 'write-only', preview: 'preview-only', side: 'side' }[mode]);
+	document.body.classList.toggle('wide', mode === 'side');
+	fitFrame();
 }
+//
+// Share of the width for the text in side by side, in percent: 20 to 80, remembered per user.
+//
+function applySplit(pct, keep) {
+	pct = Math.round(Math.min(80, Math.max(20, pct || 50)));
+	$('panes').style.setProperty('--split', pct + '%');
+	$('splitter').setAttribute('aria-valuenow', pct);
+	$('splitter').setAttribute('aria-valuetext', `tekst ${pct}%, voorbeeld ${100 - pct}%`);
+	fitFrame();
+	if (keep) { prefs.split = pct; persist(); }
+	return pct;
+}
+$('splitter').addEventListener('pointerdown', e => {
+	if (e.button) return;
+	const sp = $('splitter'), r = $('panes').getBoundingClientRect();
+	sp.setPointerCapture(e.pointerId); sp.classList.add('drag'); document.body.classList.add('splitting');
+	const move = ev => applySplit((ev.clientX - r.left - 4) / r.width * 100);
+	const up = ev => {
+		sp.removeEventListener('pointermove', move); sp.removeEventListener('pointerup', up); sp.removeEventListener('pointercancel', up);
+		sp.classList.remove('drag'); document.body.classList.remove('splitting');
+		applySplit(+sp.getAttribute('aria-valuenow'), true); followCaret();
+	};
+	sp.addEventListener('pointermove', move); sp.addEventListener('pointerup', up); sp.addEventListener('pointercancel', up);
+	e.preventDefault();
+});
+$('splitter').addEventListener('dblclick', () => applySplit(50, true));
+$('splitter').addEventListener('keydown', e => {
+	const now = +$('splitter').getAttribute('aria-valuenow');
+	const to = { ArrowLeft: now - 5, ArrowRight: now + 5, Home: 20, End: 80, Enter: 50 }[e.key];
+	if (to === undefined) return;
+	e.preventDefault(); applySplit(to, true);
+});
+applySplit(prefs.split);
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 document.querySelectorAll('[data-device]').forEach(b => b.addEventListener('click', () => {
 	device = b.dataset.device;
@@ -2869,6 +2948,7 @@ $('importFile').addEventListener('change', e => {
 		state.title = props.titel || props.title || f.name.replace(/\.md$/, '');
 		state.author = props.auteur || props.author || state.author;
 		state.tags = Array.isArray(props.tags) ? props.tags.map(String) : [];
+		state.rubriek = String(props.rubriek || '');
 		state.excerpt = props.uittreksel || '';
 		state.hero = { path: String(props.afbeelding || ''), alt: String(props.beschrijving || ''), caption: String(props.bijschrift || ''), credit: String(props.fotograaf || '') };
 		state.fields = { text: body.trim(), method, sources };

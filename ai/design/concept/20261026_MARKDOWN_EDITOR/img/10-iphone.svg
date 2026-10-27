@@ -157,5 +157,5 @@ c0 -106 -86 -192 -192 -192h-384c-106 0 -192 86 -192 192v704c0 282 230 512 512 51
   <text x="459" y="890" font-size="13" fill="#505458" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif">Geen tabbladen:</text>
   <text x="459" y="910" font-size="13" fill="#505458" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif">titel, bijsluiter en</text>
   <text x="459" y="930" font-size="13" fill="#505458" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif">bronnen staan in</text>
-  <text x="459" y="950" font-size="13" fill="#505458" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif">de front matter.</text>
+  <text x="459" y="950" font-size="13" fill="#505458" font-family="Lato, 'Helvetica Neue', Helvetica, Arial, sans-serif">de Frontmatter.</text>
 </svg>

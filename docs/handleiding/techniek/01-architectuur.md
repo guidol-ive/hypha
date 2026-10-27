@@ -1,6 +1,6 @@
 ---
 title: "Architectuur: van verzoek tot pagina"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -43,7 +43,7 @@ flowchart TB
 
 ## Van verzoek tot pagina
 
-Een adres als `/nl/Afscheid_Hoekstra/edit` bestaat uit drie delen: de taal (`nl`), de paginanaam (`Afscheid_Hoekstra`) en de weergave (`edit`). Het diagram laat zien wat er gebeurt als een lid die pagina opent.
+Een adres als `/nl/afscheid-van-bram-hoekstra/edit` bestaat uit drie delen: de taal (`nl`), de paginanaam (`afscheid-van-bram-hoekstra`) en de weergave (`edit`). Bij een nieuw artikel volgt de paginanaam uit de titel: kleine letters, met streepjes tussen de woorden. Het diagram laat zien wat er gebeurt als een lid die pagina opent.
 
 ```mermaid
 sequenceDiagram
@@ -52,7 +52,7 @@ sequenceDiagram
     participant I as index.php
     participant D as Datatype (artikel met review)
     participant X as data/ (XML)
-    B->>A: GET /nl/Afscheid_Hoekstra/edit
+    B->>A: GET /nl/afscheid-van-bram-hoekstra/edit
     A->>I: alles wat geen bestaand bestand is
     I->>I: kern laden, thema laden, gebruiker uit de sessie
     I->>X: hypha.xml: welke pagina, welk type?
@@ -129,6 +129,99 @@ flowchart LR
     server --> html[(content en context: HTML)]
     html --> lezer([lezer en zoekmachine])
     src --> editor([tekst-editor bij bewerken])
+```
+
+## De tekst-editor van binnen
+
+Dit deel is voor ontwikkelaars en beheerders. Het eerste diagram laat zien waar elk onderdeel van de nieuwe tekst-editor draait: het bewerken en het tekenen van diagrammen en formules gebeurt in de browser, het omzetten, filteren en bewaren op de server.
+
+```mermaid
+flowchart TB
+    subgraph Browser["Browser van de auteur"]
+        CM["Markdown-weergave<br/>CodeMirror 6"]
+        PM["Opmaak-weergave<br/>ProseMirror"]
+        MI["markdown-it<br/>+ Hypha-plug-ins"]
+        PE["Pele en Temml<br/>diagram → SVG, formule → MathML"]
+        CM <--> MI
+        PM <--> MI
+        MI --> PE
+    end
+    subgraph Server["Hypha op PHP 8.2+"]
+        DT["artikel met review<br/>of tekstpagina"]
+        LC["league/commonmark<br/>+ Hypha-uitbreidingen"]
+        FI["HTML-filter<br/>(masterminds/html5)"]
+        XML[("XML: XHTML + bron")]
+        DT --> LC --> FI --> XML
+    end
+    Browser -- "opslaan" --> DT
+    XML -- "kant-en-klare XHTML" --> Lezer["Lezer"]
+```
+
+Het tweede diagram laat zien wat er gebeurt als een auteur op **opslaan** klikt. Alles gebeurt in één vergrendelde schrijfactie, zodat de Markdown en de HTML niet uit elkaar kunnen lopen.
+
+```mermaid
+sequenceDiagram
+    participant E as Editor (browser)
+    participant D as Datatype (PHP)
+    participant C as league/commonmark
+    participant F as HTML-filter
+    participant X as XML-bestand
+    E->>D: velden in Markdown, rubriek, tags, SVG en MathML
+    D->>X: vergrendelen en opnieuw lezen
+    D->>C: Markdown → HTML
+    C-->>D: HTML
+    D->>D: SVG en MathML invullen op de vingerafdruk van de bron
+    D->>F: alleen toegestane HTML, SVG en MathML
+    F-->>D: XHTML
+    D->>X: XHTML en Markdown-bron wegschrijven, ontgrendelen
+    D-->>E: opgeslagen
+```
+
+Het derde diagram laat zien hoe de nieuwe code naast de bestaande staat. De bestaande paginatypes blijven; een *trait* schakelt naar de nieuwe editor als een artikel of pagina een Markdown-bron heeft (`format="markdown"`).
+
+```mermaid
+classDiagram
+    class HyphaDatatypePage
+    class peer_reviewed_article
+    class textpage
+    class MarkdownArticle {
+        <<trait>>
+        +isMarkdown()
+    }
+    class MarkdownPage {
+        <<trait>>
+    }
+    class HyphaMarkdown {
+        +toXhtml()
+    }
+    class HyphaFilter {
+        +filter()
+    }
+    HyphaDatatypePage <|-- peer_reviewed_article
+    HyphaDatatypePage <|-- textpage
+    peer_reviewed_article ..> MarkdownArticle : use
+    textpage ..> MarkdownPage : use
+    MarkdownArticle --> HyphaMarkdown
+    MarkdownPage --> HyphaMarkdown
+    HyphaMarkdown --> HyphaFilter
+```
+
+Het vierde diagram laat zien wat het HTML-filter met ingevoerde HTML doet.
+
+```mermaid
+flowchart TD
+    in["HTML uit de Markdown,<br/>SVG en MathML uit de browser"] --> p["inlezen met een HTML5-parser"]
+    p --> q{"element op de lijst?"}
+    q -->|nee, gevaarlijk| weg["weg, met inhoud<br/>(script, style, form, macro)"]
+    q -->|nee, onschuldig| tekst["element weg, tekst blijft"]
+    q -->|ja| a{"attribuut op de lijst<br/>en veilig adres?"}
+    a -->|nee| aweg["attribuut weg"]
+    a -->|ja| houd["blijft"]
+    houd --> fr{"iframe?"}
+    fr -->|ja, dienst van de lijst| sb["sandbox, lazy, referrerpolicy"]
+    fr -->|ja, onbekend| weg
+    fr -->|nee| uit["XHTML voor de opslag"]
+    sb --> uit
 ```
 
 ## Gebruikers en beveiliging

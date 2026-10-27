@@ -1,6 +1,6 @@
 ---
 title: "Een artikel schrijven"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -39,8 +39,9 @@ flowchart LR
 
 1. Klik op **nieuwe pagina**.
 2. Kies als type **artikel met review**.
-3. Geef de pagina een naam, bijvoorbeeld `Afscheid_Hoekstra`. De naam is ook het adres: `/nl/Afscheid_Hoekstra`.
-4. Kies **opslaan**. Het artikel heeft nu de status *schets* en is alleen zichtbaar voor leden.
+3. Typ de **titel** van het artikel. Het webadres volgt er vanzelf uit: de woorden in kleine letters, met streepjes ertussen en zonder accenten, bijvoorbeeld `/nl/vertrekkend-raadslid-bram-hoekstra-twintig-jaar-strijd-voor-open-bestuur`. Je ziet het adres meteen onder de titel. Bestaat het al, dan komt er `-2` achter.
+4. Een nieuw artikel opent **altijd in de nieuwe tekst-editor**.
+5. Kies **maak pagina**. Het artikel heeft nu de status *schets* en is alleen zichtbaar voor leden. Het webadres ligt nu vast; verander je de titel later flink, dan stelt de checklist voor het adres bij te werken, zolang het artikel nog niet gepubliceerd is.
 
 ### 2. Kiezen hoe je schrijft
 
@@ -55,7 +56,7 @@ Rechts in de werkbalk kies je wat je ziet:
 
 1. **Schrijven**: alleen de tekst;
 2. **Voorbeeld**: het artikel zoals de lezer het ziet;
-3. **Naast elkaar**: tekst en voorbeeld naast elkaar. Het voorbeeld scrolt mee met de plek waar je typt.
+3. **Naast elkaar**: tekst en voorbeeld naast elkaar, over de hele breedte van het scherm. Het voorbeeld scrolt mee met de plek waar je typt. Sleep de streep tussen tekst en voorbeeld om de ruimte anders te verdelen; met de pijltjestoetsen kan het ook, en dubbelklikken zet de streep terug in het midden. Je keuze wordt onthouden.
 
 ### 3. De artikelkop invullen
 
@@ -66,21 +67,22 @@ Bovenaan staat de **artikelkop** met vaste velden. Ze horen bij elk artikel:
 | titel | de kop van het artikel, liefst korter dan 90 tekens | ja |
 | auteur | je naam, zoals die boven het artikel komt | ja |
 | uittreksel | twee à drie zinnen die lezers naar het artikel trekken (de *ankeiler*) | ja |
+| rubriek | de rubriek waar het artikel onder valt, één uit de lijst van de site | ja |
 | tags | één of meer onderwerpen uit de vaste lijst van de site | ja |
 | afbeelding | een foto bij het uittreksel, met beschrijving, bijschrift en fotograaf | aangeraden |
 
-1. Tags kies je uit een lijst. Een nieuwe tag kan alleen een beheerder maken; vraag het de redactie als je er een mist.
+1. De **rubriek** en de tags kies je uit een lijst. Een artikel heeft precies één rubriek en één of meer tags. Een nieuwe tag kan alleen een beheerder maken; vraag het de redactie als je er een mist.
 2. De **beschrijving** van een foto is voor wie de foto niet kan zien, bijvoorbeeld met voorleessoftware. Beschrijf wat er op de foto staat.
 
-In Markdown staan dezelfde velden als *front matter* bovenaan de tekst, tussen twee regels `---`:
+In Markdown staan dezelfde velden als *Frontmatter* bovenaan de tekst, tussen twee regels `---`:
 
 ```markdown
 ---
 titel: "Vertrekkend raadslid Bram Hoekstra: twintig jaar strijd voor open bestuur"
 auteur: Sanne de Vries
 uittreksel: "Twintig jaar lang vroeg Bram Hoekstra in de raad van Eemstad om openbare stukken en debatten."
+rubriek: Politiek en bestuur
 tags:
-  - Politiek en bestuur
   - Raadsnieuws
 afbeelding: beeld/hoekstra.jpg
 beschrijving: Bram Hoekstra in de raadszaal van Eemstad
@@ -108,7 +110,7 @@ fotograaf: Foto (naam fotograaf)
 | citaat | **Citaat** | een uitspraak die je wilt laten opvallen; selecteer eerst de tekst, dan komt die in het citaat |
 | kader | **Kader** | achtergrond of uitleg naast het verhaal, met een eigen titel |
 | tabel | **Tabel ▾** | cijfers of een overzicht; kies het aantal kolommen, gebruik Tab om naar de volgende cel te gaan |
-| diagram | **Diagram…** | een tijdlijn, staafdiagram, stroomschema en meer; kies een voorbeeld en pas de tekst aan |
+| diagram | **Diagram…** | een tijdlijn, staafdiagram, stroomschema en meer; onder **Technisch** ook soorten als klassen, architectuur en versiebeheer; kies een voorbeeld en pas de tekst aan |
 | formule | **Formule** | een formule in LaTeX-notatie, zoals `$\tfrac{4}{37}$` |
 
 Een foto of diagram **bewerk** je met het potlood of een dubbelklik, en **verwijder** je met het kruisje. Daarna kun je het verwijderen nog ongedaan maken.
@@ -135,7 +137,7 @@ Onderaan het artikel staan twee vaste blokken:
 1. **Bijsluiter** (verplicht): hoe je het onderwerp hebt onderzocht. Bijvoorbeeld met wie je hebt gesproken en welke stukken je hebt gelezen.
 2. **Bronnen** (aangeraden): de documenten, websites en gesprekken waarop het artikel steunt.
 
-In Markdown staan ze in de front matter, als `bijsluiter:` en `bronnen:`.
+In Markdown staan ze in de Frontmatter, als `bijsluiter:` en `bronnen:`.
 
 ### 7. Controleren met de checklist
 

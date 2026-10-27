@@ -1,0 +1,63 @@
+{
+ "voorbeeld_leespagina_telefoon": {
+  "scores": {
+   "performance": 99,
+   "accessibility": 98,
+   "best-practices": 96,
+   "seo": 100
+  },
+  "LCP": "1.8 s",
+  "CLS": "0.026",
+  "TBT": "0 ms",
+  "onder_90": [
+   "errors-in-console",
+   "heading-order",
+   "network-dependency-tree-insight"
+  ],
+  "lighthouse": "12.8.2"
+ },
+ "voorbeeld_leespagina_computer": {
+  "scores": {
+   "performance": 100,
+   "accessibility": 98,
+   "best-practices": 96,
+   "seo": 100
+  },
+  "LCP": "0.4 s",
+  "CLS": "0",
+  "TBT": "0 ms",
+  "onder_90": [
+   "errors-in-console",
+   "heading-order",
+   "network-dependency-tree-insight"
+  ],
+  "lighthouse": "12.8.2"
+ },
+ "huidige_hypha_startpagina_telefoon (lokale kopie, scores alleen)": {
+  "scores": {
+   "performance": 60,
+   "accessibility": 75,
+   "best-practices": 75,
+   "seo": 75
+  },
+  "LCP": "39.9 s",
+  "CLS": "0",
+  "TBT": "0 ms",
+  "onder_90": [
+   "is-on-https",
+   "first-contentful-paint",
+   "largest-contentful-paint",
+   "speed-index",
+   "errors-in-console",
+   "interactive",
+   "image-size-responsive",
+   "color-contrast",
+   "html-has-lang",
+   "image-alt",
+   "meta-description",
+   "robots-txt",
+   "network-dependency-tree-insight"
+  ],
+  "lighthouse": "12.8.2"
+ }
+}
