@@ -226,6 +226,38 @@
 		}
 
 		/**
+		 * Structured data of a published article for search engines (design section 12.10, point 2): schema.org
+		 * NewsArticle as JSON-LD in the head, with title, description, author, dates, section, tags, language, image
+		 * and address. Data only, not in an editor field, so BR-33 (no script in content) stays true.
+		 */
+		protected function mdStructuredData(): void {
+			global $hyphaUrl;
+			$fields = $this->mdFields();
+			$article = $this->xml->findOneXPath('article');
+			$time = fn ($attribute) => ($t = (int)ltrim($article->getAttribute($attribute), 't')) ? date('c', $t) : null;
+			$plain = fn ($markdown) => trim(preg_replace('/\s+/u', ' ', strip_tags($this->getExcerpt() ? $this->getExcerpt()->textContent : $markdown)));
+			$data = array_filter([
+				'@context' => 'https://schema.org',
+				'@type' => 'NewsArticle',
+				'headline' => $fields['title'],
+				'description' => mb_substr($plain($fields['excerpt']), 0, 300),
+				'author' => $fields['author'] !== '' ? ['@type' => 'Person', 'name' => $fields['author']] : null,
+				'datePublished' => $time(self::FIELD_NAME_PUBLISHED_AT),
+				'dateModified' => $time(self::FIELD_NAME_UPDATED_AT),
+				'articleSection' => $fields['section'] ?: null,
+				'keywords' => $fields['tags'] ? implode(', ', $fields['tags']) : null,
+				'inLanguage' => $this->language,
+				'image' => $fields['image'] !== '' ? $hyphaUrl . $fields['image'] : null,
+				'mainEntityOfPage' => $hyphaUrl . $this->language . '/' . $this->pagename,
+			], fn ($v) => $v !== null && $v !== '');
+			$head = $this->html->findOneXPath('head');
+			if (!$head || $head->findXPath('script[@type="application/ld+json"]')->length) return;
+			$script = $head->createChild('script');
+			$script->setAttribute('type', 'application/ld+json');
+			$script->appendChild($this->html->createTextNode(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG)));
+		}
+
+		/**
 		 * Who saved the article last and when, for the message about a conflict.
 		 */
 		protected function mdSavedBy(DOMElement $article): array {
@@ -388,6 +420,7 @@
 			}
 			$result = $this->defaultView($request);
 			hypha_mdeditorReader($this->language, $this->getExcerpt() ? $this->getExcerpt()->textContent : '');
+			if ($this->getStatus() === self::STATUS_PUBLISHED) $this->mdStructuredData();
 			if (!isUser()) return $result;
 			$status = $this->getStatus();
 			$role = $this->mdRole();

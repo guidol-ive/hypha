@@ -240,6 +240,16 @@ def published_article_shows_svg_with_viewbox_to_anonymous_readers(base):
 
 
 @test
+def published_article_has_structured_data_for_search_engines(base):
+    import json as _json
+    status, text, _ = Client(base).get(f"nl/{SLUG}")
+    m = re.search(r'<script type="application/ld\+json">(.*?)</script>', text, re.S)
+    assert m, "no JSON-LD"
+    data = _json.loads(m.group(1))
+    assert data["@type"] == "NewsArticle" and data["headline"] == TITLE and data["inLanguage"] == "nl" and data["datePublished"], data
+
+
+@test
 def colleague_cannot_withdraw_published_br97(base):
     command(STATE["ahmed"], f"nl/{SLUG}", "md_withdraw", {"md_reason": "x"})
     assert article_xml(SLUG).find("article").get("status") == "published"
