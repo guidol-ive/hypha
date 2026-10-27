@@ -210,6 +210,19 @@ Gebouwd volgens het ontwerp, per onderdeel van §18.2: 4 (server en filter), 5 (
 5. **Documentatie**: `docs/functional/` en `docs/technical/DATA_MODEL.md` beschrijven `format="markdown"` en het `source`-element nog niet (open regel in `ai/DOCUMENTATION_LOG.md`).
 6. **Bestaande problemen gevonden, niet opgelost** (buiten deze issue): `hypha.php` installeert niet zonder map `data/` en pakt het standaardthema niet in; een nieuw artikel via de oude popup zonder titel gaf een fatale fout (nu opgelost door de titel als tekst te schrijven); `strftime()` en enkele HTML-fouten in de sjablonen van Hypha (`bekende-meldingen.txt`); op PHP 8.5 meldt `mail()` een fout als de container geen sendmail heeft.
 
+### Gemelde fouten buiten deze issue
+
+Fouten in bestaande code die bij de bouw zijn gevonden, staan als issue met een pull request op PlanBCode/hypha (elk op een eigen branch vanaf `main`, nagebootst op `main` en verholpen met de wijziging, in de container op PHP 8.2):
+
+1. #525 / PR #531: de titel van een artikel komt als HTML in de kop van de pagina, en een nieuw artikel zonder titel geeft een fatale fout;
+2. #526 / PR #532: `hypha.php` pakt submappen, `system/assets`, `system/bowser`, `system/macros` en het standaardthema niet in, en installeert niet zonder `data/`;
+3. #527 / PR #533: ongeldige HTML in vier sjablonen geeft op bijna elke pagina een PHP-waarschuwing;
+4. #528 / PR #534: een vertaling in dezelfde seconde krijgt dezelfde `xml:id`;
+5. #529 / PR #535: elk lid kan een goedgekeurd artikel publiceren door de opdracht te posten;
+6. #530 / PR #536: een onbekend versienummer geeft een fatale fout.
+
+Al eerder gemeld en daarom niet opnieuw: CSRF-controle stopt datatype-opdrachten niet (#420), stored XSS (#419), `strftime()` (#408), impliciet nullable parameters (#409), `${var}` (#407), `//featured_image` (#406). De branch `issue520-bouw` zelf is niet gepusht.
+
 ### Wat alleen met de hand kan
 
 1. Een echte **iPhone en iPad**: autocorrectie, woordsuggesties, dicteren en de vergrootloep in CodeMirror 6 en ProseMirror (het grootste risico, §13.16), de leesweergave binnen 250 ms via wifi op een iPhone 16, en Safari in het algemeen (alle tests hier draaiden in Chrome).
