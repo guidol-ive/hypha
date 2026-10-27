@@ -214,8 +214,14 @@
 			$this->replacePageListNode(hypha_getPage($this->language, $this->pagename));
 			$ids = [];
 			$unknown = [];
-			foreach (array_unique($labels) as $label) {
+			//
+			// The same label typed composed (é) or decomposed (e + ´) is one tag; the browser sends NFC, and with intl
+			// the labels already in hypha.xml are compared in NFC too.
+			//
+			$nfc = fn (string $s) => class_exists('Normalizer') ? (Normalizer::normalize($s, Normalizer::FORM_C) ?: $s) : $s;
+			foreach (array_unique(array_map($nfc, $labels)) as $label) {
 				$node = $hyphaXml->findOneXPath('tagList/tag/language[@id=' . xpath_encode($this->language) . ' and @label=' . xpath_encode($label) . ']');
+				if (!$node && class_exists('Normalizer')) foreach ($hyphaXml->findXPath('tagList/tag/language[@id=' . xpath_encode($this->language) . ']') as $candidate) if ($nfc($candidate->getAttribute('label')) === $label) { $node = $candidate; break; }
 				if ($node) $ids[] = $node->parentNode->getId();
 				elseif (isAdmin()) {
 					$tagList = $hyphaXml->documentElement->getOrCreate('tagList');
@@ -643,7 +649,7 @@
 			}
 			$started = microtime(true);
 			$post = $request->getPostData();
-			$fields = json_decode((string)($post['md_fields'] ?? ''), true);
+			$fields = json_decode((string)($post['md_fields'] ?? ''), true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
 			$renders = json_decode((string)($post['md_renders'] ?? ''), true);
 			if (!is_array($fields)) $fields = [];
 			if (!is_array($renders)) $renders = [];

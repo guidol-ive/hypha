@@ -49,3 +49,4 @@ style-mod 4.1.4 MIT
 temml 0.14.0 MIT
 uc.micro 2.1.0 MIT
 w3c-keyname 2.2.8 MIT
+fork-awesome 1.2.0 OFL-1.1 AND MIT

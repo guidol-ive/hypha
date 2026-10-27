@@ -109,7 +109,11 @@
 
 		public function pageHref(string $page): string {
 			if ($this->options['pageHref']) return ($this->options['pageHref'])($page);
-			return $this->options['language'] . '/' . preg_replace('/\s+/', '_', trim($page));
+			//
+			// White space as JavaScript sees it (\s there includes the no-break space), so the preview links the same.
+			//
+			$space = '[\s\x{00A0}\x{1680}\x{2000}-\x{200A}\x{2028}\x{2029}\x{202F}\x{205F}\x{3000}\x{FEFF}]';
+			return $this->options['language'] . '/' . preg_replace("/$space+/u", '_', preg_replace("/^$space+|$space+\$/u", '', $page));
 		}
 
 		public function message(string $code, string $detail = ''): void {

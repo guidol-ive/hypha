@@ -26,6 +26,26 @@ export const load = name => lazy[name] ||= import(name).then(m => m.default || m
 //
 let CM = null;
 
+//
+// Page names are compared without regard to case only for A to Z, as hypha_getPage() on the server does (strtolower).
+//
+const asciiLower = s => String(s).replace(/[A-Z]+/g, c => c.toLowerCase());
+
+//
+// Characters as a reader sees them: an emoji of several code points or a letter with a separate accent counts once.
+//
+const graphemes = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
+const characters = s => graphemes ? [...graphemes.segment(String(s))].length : [...String(s)].length;
+
+//
+// Words for the word count and the reading time: accents (\p{M}) belong to their word, and in Chinese and Japanese,
+// which have no spaces, every character counts as a word.
+//
+const countWords = text => {
+	const cjk = (text.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu) || []).length;
+	return cjk + (text.replace(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu, ' ').match(/[\p{L}\p{N}\p{M}’'-]+/gu) || []).length;
+};
+
 export class Editor {
 	constructor(root, config) {
 		this.root = root;
@@ -45,7 +65,7 @@ export class Editor {
 		this.diagrams = new Map();
 		this.lastDiagram = new Map();
 		this.mathErrors = new Set();
-		this.pagesByName = new Map((config.pages || []).map(([name, priv]) => [name.toLowerCase(), priv]));
+		this.pagesByName = new Map((config.pages || []).map(([name, priv]) => [asciiLower(name), priv]));
 		this.markdown = createMarkdown(this.markdownOptions(false));
 		this.preview = createMarkdown(this.markdownOptions(true));
 		this.dialogs = new Dialogs(this);
@@ -63,7 +83,7 @@ export class Editor {
 			language: c.page.language, level: c.settings?.level ?? 2, frameHosts: c.settings?.frameHosts || FRAME_HOSTS, peertubeHosts: c.settings?.peertubeHosts || [],
 			texts: { footnotes: this.t('html-footnotes'), 'footnote-back': this.t('html-footnote-back'), toc: this.t('html-toc'), 'diagram-source': this.t('html-diagram-source') },
 			decorate: preview,
-			pageExists: page => this.pagesByName.has(page.toLowerCase()),
+			pageExists: page => this.pagesByName.has(asciiLower(page)),
 			diagram: preview ? (text, description) => this.diagramSvg(text, description) : null,
 			math: preview ? (tex, display) => this.mathml(tex, display) : null,
 			highlight: preview ? (code, language) => lazy.hljsLoaded ? lazy.hljsLoaded.highlight(code, { language, ignoreIllegals: true }).value : null : null,
@@ -107,6 +127,11 @@ export class Editor {
 		document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); this.save(); } });
 		this.fitToolbar();
 		new ResizeObserver(() => this.fitToolbar()).observe($('.toolbar', this.root));
+		//
+		// The bar 'Bewerken als' sticks right below the toolbar, whose height depends on the fonts of the theme.
+		//
+		const editbar = $('.editbar', this.root);
+		if (editbar) new ResizeObserver(() => this.root.style.setProperty('--sticky-top', editbar.offsetHeight + 8 + 'px')).observe(editbar);
 		this.followKeyboard();
 		this.ready = true;
 		this.root.dispatchEvent(new CustomEvent('mde-ready'));
@@ -424,8 +449,8 @@ export class Editor {
 			footnote_ref: node => { const s = document.createElement('sup'); s.className = 'footnote-ref'; s.textContent = node.attrs.label; return { dom: s }; },
 			wikilink: node => {
 				const a = document.createElement('a');
-				a.className = 'wikilink' + (this.pagesByName.has(node.attrs.page.toLowerCase()) ? '' : ' missing');
-				a.title = this.t(this.pagesByName.has(node.attrs.page.toLowerCase()) ? 'page-exists' : 'page-missing');
+				a.className = 'wikilink' + (this.pagesByName.has(asciiLower(node.attrs.page)) ? '' : ' missing');
+				a.title = this.t(this.pagesByName.has(asciiLower(node.attrs.page)) ? 'page-exists' : 'page-missing');
 				a.textContent = node.attrs.label || node.attrs.page;
 				return { dom: a };
 			},
@@ -731,7 +756,10 @@ export class Editor {
 	// Preview in the style of the article page (design step 7 and 9).
 	//
 	setViewMode(mode) {
-		if (mode === 'side' && window.innerWidth < 1024) mode = 'preview';
+		//
+		// Side by side needs room: a wide screen, and a page column of the theme that is wide enough.
+		//
+		if (mode === 'side' && (window.innerWidth < 1024 || this.root.clientWidth < 900)) mode = 'preview';
 		this.viewMode = mode;
 		const panes = $('#mdePanes', this.root);
 		panes.className = 'panes ' + { write: 'write-only', preview: 'preview-only', side: 'side' }[mode];
@@ -750,7 +778,7 @@ export class Editor {
 			this.followCaret();
 			return;
 		}
-		const words = (f.text.replace(/```[\s\S]*?```/g, '').replace(/%%[\s\S]*?%%/g, '').match(/[\p{L}\p{N}’'-]+/gu) || []).length;
+		const words = countWords(f.text.replace(/```[\s\S]*?```/g, '').replace(/%%[\s\S]*?%%/g, ''));
 		const minutes = Math.max(1, Math.round(words / 220));
 		const hero = f.image ? `<figure class="breed"><img src="${esc(this.markdownOptions(false).imageSrc(f.image))}" alt="${esc(f.imageAlt)}"><figcaption>${esc(f.imageCaption)} <i>${esc(f.imageCredit)}</i></figcaption></figure>` : '';
 		const status = this.cfg.page.status;
@@ -1244,6 +1272,12 @@ export class Editor {
 			//
 			const snapshot = JSON.stringify(this.fields);
 			const fields = this.article ? JSON.parse(snapshot) : { title: this.fields.title, text: this.fields.text, private: !!this.fields.private, language: this.fields.language };
+			//
+			// Names in NFC, so a label typed with a separate accent is the same tag (the texts stay as typed: the drawings
+			// of diagrams and formulas are matched on their exact source).
+			//
+			for (const k of ['title', 'section', 'author']) if (typeof fields[k] === 'string') fields[k] = fields[k].normalize('NFC');
+			if (Array.isArray(fields.tags)) fields.tags = fields.tags.map(tag => String(tag).normalize('NFC'));
 			const result = await this.post(`${this.cfg.page.language}/${this.cfg.page.name}/${view}`, { command: this.cfg.commands.save, md_fields: JSON.stringify(fields), md_renders: JSON.stringify(await this.renders()), ajax: '1' }, true);
 			window.mdeLastSave = { ms: performance.now() - started, server: result.ms };
 			if (!result.ok) { this.toast((result.errors || []).join(' ') || this.t('save-failed')); return; }
@@ -1302,7 +1336,7 @@ export class Editor {
 		add('red', 'check-interactive-alt', interactive.every(x => x.meta?.description));
 		if (lazy.peleLoaded) add('yellow', 'check-diagrams', diagrams.every(x => this.diagramSvg(x.content) !== null));
 		if (lazy.temmlLoaded) add('yellow', 'check-math', ![...this.mathErrors].length);
-		const missing = links.filter(x => !this.pagesByName.has(x.meta.page.toLowerCase()));
+		const missing = links.filter(x => !this.pagesByName.has(asciiLower(x.meta.page)));
 		add('yellow', 'check-links', !missing.length);
 		return list;
 	}
@@ -1311,7 +1345,7 @@ export class Editor {
 		const f = this.fields, list = [];
 		const tip = (key, ok, vars) => list.push({ lvl: ok ? 'ok' : 'yellow', t: this.t(key + (ok ? '-ok' : ''), vars) });
 		if (this.article) {
-			tip('tip-title-length', f.title.length <= 90, { n: f.title.length });
+			tip('tip-title-length', characters(f.title) <= 90, { n: characters(f.title) });
 			const words = (f.excerpt.match(/\S+/g) || []).length;
 			tip('tip-excerpt-length', words <= 60, { n: words });
 			const name = this.cfg.page.name;
@@ -1339,14 +1373,14 @@ export class Editor {
 		for (const b of this.root.querySelectorAll('[data-go]')) b.addEventListener('click', () => this.goToField(b.dataset.go));
 		for (const b of this.root.querySelectorAll('[data-tip]')) b.addEventListener('click', () => tips.find(x => x.fn)?.fn());
 		const f = this.fields;
-		const words = (f.text.replace(/```[\s\S]*?```/g, '').match(/[\p{L}\p{N}’'-]+/gu) || []).length;
+		const words = countWords(f.text.replace(/```[\s\S]*?```/g, ''));
 		const languages = this.cfg.languages || [];
 		$('#mdeFacts', this.root).innerHTML = `<li>${esc(this.t('fact-words', { n: words }))}</li><li>${esc(this.t('fact-reading', { n: Math.max(1, Math.round(words / 220)) }))}</li>`
 			+ (this.article ? `<li><label for="mdeArticleLanguage">${esc(this.t('field-language'))}</label> <select id="mdeArticleLanguage"${this.cfg.page.published || this.cfg.page.role !== 'author' ? ' disabled' : ''}>${languages.map(l => `<option value="${esc(l)}"${l === this.cfg.page.language ? ' selected' : ''}>${esc(this.t('language-' + l) === 'language-' + l ? l : this.t('language-' + l))}</option>`).join('')}</select></li>` : '');
 		$('#mdeArticleLanguage', this.root)?.addEventListener('change', e => this.changeLanguage(e.target.value));
 		if (this.article) {
 			const count = $('#mdeTitleCount', this.root);
-			if (count) count.textContent = this.t('count-chars', { n: f.title.length });
+			if (count) count.textContent = this.t('count-chars', { n: characters(f.title) });
 			const ex = $('#mdeExcerptCount', this.root);
 			if (ex) ex.textContent = this.t('count-words', { n: (f.excerpt.match(/\S+/g) || []).length });
 		}

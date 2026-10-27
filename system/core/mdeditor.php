@@ -77,6 +77,10 @@
 		$meta->setAttribute('content', 'noindex');
 		$viewport = $html->findOneXPath('head/meta[@name="viewport"]');
 		if ($viewport) $viewport->setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
+		//
+		// The icons of the toolbar: Fork Awesome comes with the editor, because not every theme loads it.
+		//
+		foreach (glob(__DIR__ . '/../mdeditor/vendor/fork-awesome-*.css') ?: [] as $path) $html->linkStyle('system/mdeditor/vendor/' . basename($path) . '?v=1');
 		$html->linkStyle('system/mdeditor/mdeditor.css?v=' . $version);
 		global $hyphaUrl;
 		//
@@ -386,7 +390,10 @@
 		if ($description !== '' && !$head->findXPath('meta[@name="description"]')->length) {
 			$meta = $head->createChild('meta');
 			$meta->setAttribute('name', 'description');
-			$meta->setAttribute('content', mb_substr($description, 0, 300));
+			//
+			// At most 300 characters as a reader sees them (grapheme clusters), so no emoji or accent is cut in half.
+			//
+			$meta->setAttribute('content', preg_match('/^\X{0,300}/u', $description, $m) ? $m[0] : mb_substr($description, 0, 300));
 		}
 		if ($reader) $hyphaHtml->linkStyle('system/mdeditor/lezer.css?v=' . hypha_mdeditorVersion());
 		//

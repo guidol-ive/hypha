@@ -247,7 +247,7 @@
 				return ['redirect', $this->constructFullPath($this->pagename)];
 			}
 			$post = $request->getPostData();
-			$fields = json_decode((string)($post['md_fields'] ?? ''), true);
+			$fields = json_decode((string)($post['md_fields'] ?? ''), true, 512, JSON_INVALID_UTF8_SUBSTITUTE);
 			$renders = json_decode((string)($post['md_renders'] ?? ''), true);
 			$result = $this->mdSavePage(is_array($fields) ? $fields : [], is_array($renders) ? $renders : [], $translate);
 			$errors = array_map(fn ($e) => empty($result['raw']) ? __($e) : $e, $result['errors']);

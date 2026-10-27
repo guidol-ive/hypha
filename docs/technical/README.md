@@ -28,3 +28,4 @@ the patch in
 - [DATA_MODEL.md](DATA_MODEL.md), what is in `data/`
 - [OPERATIONS.md](OPERATIONS.md), running a site
 - [TESTING.md](TESTING.md), checking a change
+- [UNICODE.md](UNICODE.md), accents, other scripts, emoji and control characters

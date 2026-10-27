@@ -73,7 +73,7 @@
 
 	/*
 		Function: hypha_markdownDecompose
-		Splits the accented Latin letters into a base letter and a combining mark, for PHP without the intl extension
+		Replaces the accented Latin letters by their base letter, for PHP without the intl extension
 		(the official containers have none). iconv with //TRANSLIT is not used: its result depends on the C library and
 		the locale (musl gives '?' for every accented letter), and the slug must be the same everywhere, also in the
 		browser, which uses String.prototype.normalize('NFD').
@@ -82,12 +82,25 @@
 		static $map = null;
 		if ($map === null) {
 			$map = [];
-			$bases = ['A' => 'ÀÁÂÃÄÅĀĂĄǍ', 'a' => 'àáâãäåāăąǎ', 'C' => 'ÇĆĈĊČ', 'c' => 'çćĉċč', 'D' => 'Ď', 'd' => 'ď', 'E' => 'ÈÉÊËĒĔĖĘĚ', 'e' => 'èéêëēĕėęě',
-				'G' => 'ĜĞĠĢ', 'g' => 'ĝğġģ', 'H' => 'Ĥ', 'h' => 'ĥ', 'I' => 'ÌÍÎÏĨĪĬĮİǏ', 'i' => 'ìíîïĩīĭįǐ', 'J' => 'Ĵ', 'j' => 'ĵ', 'K' => 'Ķ', 'k' => 'ķ',
-				'L' => 'ĹĻĽ', 'l' => 'ĺļľ', 'N' => 'ÑŃŅŇ', 'n' => 'ñńņň', 'O' => 'ÒÓÔÕÖŌŎŐǑ', 'o' => 'òóôõöōŏőǒ', 'R' => 'ŔŖŘ', 'r' => 'ŕŗř',
-				'S' => 'ŚŜŞŠȘ', 's' => 'śŝşšș', 'T' => 'ŢŤȚ', 't' => 'ţťț', 'U' => 'ÙÚÛÜŨŪŬŮŰŲǓ', 'u' => 'ùúûüũūŭůűųǔ', 'W' => 'Ŵ', 'w' => 'ŵ',
-				'Y' => 'ÝŶŸ', 'y' => 'ýÿŷ', 'Z' => 'ŹŻŽ', 'z' => 'źżž'];
-			foreach ($bases as $base => $letters) foreach (mb_str_split($letters) as $letter) $map[$letter] = $base . "\u{0301}";
+			//
+			// Every letter of Latin-1 Supplement, Latin Extended-A and -B and Latin Extended Additional (Vietnamese) that
+			// has a canonical decomposition, by its base without the combining marks (made with Python unicodedata).
+			//
+			$bases = [
+				'A' => 'ÀÁÂÃÄÅĀĂĄǍǞǠǺȀȂȦḀẠẢẤẦẨẪẬẮẰẲẴẶ', 'a' => 'àáâãäåāăąǎǟǡǻȁȃȧḁạảấầẩẫậắằẳẵặ', 'B' => 'ḂḄḆ', 'b' => 'ḃḅḇ',
+				'C' => 'ÇĆĈĊČḈ', 'c' => 'çćĉċčḉ', 'D' => 'ĎḊḌḎḐḒ', 'd' => 'ďḋḍḏḑḓ', 'E' => 'ÈÉÊËĒĔĖĘĚȄȆȨḔḖḘḚḜẸẺẼẾỀỂỄỆ',
+				'e' => 'èéêëēĕėęěȅȇȩḕḗḙḛḝẹẻẽếềểễệ', 'F' => 'Ḟ', 'f' => 'ḟ', 'G' => 'ĜĞĠĢǦǴḠ', 'g' => 'ĝğġģǧǵḡ',
+				'H' => 'ĤȞḢḤḦḨḪ', 'h' => 'ĥȟḣḥḧḩḫẖ', 'I' => 'ÌÍÎÏĨĪĬĮİǏȈȊḬḮỈỊ', 'i' => 'ìíîïĩīĭįǐȉȋḭḯỉị', 'J' => 'Ĵ',
+				'j' => 'ĵǰ', 'K' => 'ĶǨḰḲḴ', 'k' => 'ķǩḱḳḵ', 'L' => 'ĹĻĽḶḸḺḼ', 'l' => 'ĺļľḷḹḻḽ', 'M' => 'ḾṀṂ', 'm' => 'ḿṁṃ',
+				'N' => 'ÑŃŅŇǸṄṆṈṊ', 'n' => 'ñńņňǹṅṇṉṋ', 'O' => 'ÒÓÔÕÖŌŎŐƠǑǪǬȌȎȪȬȮȰṌṎṐṒỌỎỐỒỔỖỘỚỜỞỠỢ',
+				'o' => 'òóôõöōŏőơǒǫǭȍȏȫȭȯȱṍṏṑṓọỏốồổỗộớờởỡợ', 'P' => 'ṔṖ', 'p' => 'ṕṗ', 'R' => 'ŔŖŘȐȒṘṚṜṞ',
+				'r' => 'ŕŗřȑȓṙṛṝṟ', 'S' => 'ŚŜŞŠȘṠṢṤṦṨ', 's' => 'śŝşšșṡṣṥṧṩ', 'T' => 'ŢŤȚṪṬṮṰ', 't' => 'ţťțṫṭṯṱẗ',
+				'U' => 'ÙÚÛÜŨŪŬŮŰŲƯǓǕǗǙǛȔȖṲṴṶṸṺỤỦỨỪỬỮỰ', 'u' => 'ùúûüũūŭůűųưǔǖǘǚǜȕȗṳṵṷṹṻụủứừửữự', 'V' => 'ṼṾ', 'v' => 'ṽṿ',
+				'W' => 'ŴẀẂẄẆẈ', 'w' => 'ŵẁẃẅẇẉẘ', 'X' => 'ẊẌ', 'x' => 'ẋẍ', 'Y' => 'ÝŶŸȲẎỲỴỶỸ', 'y' => 'ýÿŷȳẏẙỳỵỷỹ',
+				'Z' => 'ŹŻŽẐẒẔ', 'z' => 'źżžẑẓẕ', 'Æ' => 'ǢǼ', 'æ' => 'ǣǽ', 'Ø' => 'Ǿ', 'ø' => 'ǿ', 'ſ' => 'ẛ', 'Ʒ' => 'Ǯ',
+				'ʒ' => 'ǯ'
+			];
+			foreach ($bases as $base => $letters) foreach (mb_str_split($letters) as $letter) $map[$letter] = $base;
 		}
 		return strtr($s, $map);
 	}

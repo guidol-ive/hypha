@@ -65,9 +65,10 @@ The life cycle has these additions:
   of the site. The author cannot approve the own article.
 - **Take back from review:** the author can move an article in *review* or *approved* back to
   *draft*; the approvals lapse and are kept as lapsed.
-- **Withdraw:** a published article can be withdrawn with a reason for readers. It stays readable
-  with a notice and the reason, is left out of page lists and gets `noindex`; it can be edited
-  again as a draft.
+- **Withdraw:** the author or an administrator can withdraw a published article with a reason for
+  readers. The text is no longer shown: the address shows the title with a notice and the reason,
+  the article is left out of page lists and gets `noindex`. The author can edit it again as a
+  draft.
 - **Language and page name:** the author can change the language; the author or an administrator
   can rename the page.
 - The checks gain *has title*, *has section* and *only known tags*.

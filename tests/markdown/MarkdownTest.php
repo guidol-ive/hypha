@@ -237,6 +237,21 @@
 		foreach ($cases as $title => $expected) same($expected, $validate($expected));
 	});
 
+	test('markdown: slug of Vietnamese and other Latin letters, the same with and without intl (Unicode check)', function () {
+		$cases = ['Ṭanṭā en Hạ Long' => 'tanta-en-ha-long', 'Nguyễn Thị Minh Khai' => 'nguyen-thi-minh-khai', 'Žižkov Ångström Øre' => 'zizkov-angstrom-ore', "Cafe\u{0301} in NFD" => 'cafe-in-nfd'];
+		foreach ($cases as $title => $expected) {
+			same($expected, hypha_markdownSlug($title), $title);
+			//
+			// The table alone, as on a server without intl (Ø is one of the letters the slug replaces before).
+			//
+			if (!str_contains($title, 'Ø')) same($expected, trim(preg_replace('/[^a-z0-9]+/', '-', mb_strtolower(preg_replace('/\p{Mn}+/u', '', hypha_markdownDecompose($title)))), '-'), 'table: ' . $title);
+		}
+	});
+
+	test('markdown: a [[link]] with a no-break space gets the address of the preview (Unicode check)', function () {
+		contains('href="nl/10_km"', md("Zie [[10\u{00A0}km]]."));
+	});
+
 	test('markdown: 18,000 words in well under a second', function () {
 		$long = str_repeat(file_get_contents('tests/markdown/data/start.md') . "\n\n" . file_get_contents('tests/markdown/data/plaktest.md') . "\n\n", 35);
 		$t = microtime(true);

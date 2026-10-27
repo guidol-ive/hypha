@@ -414,7 +414,7 @@
 		private function description(HyphaNoteBlock $note): void {
 			$next = $note->next();
 			if (!$next instanceof FencedCode) return;
-			if (preg_match('/^(?:beschrijving|description)\s*:\s*(.+)$/is', $note->text, $m)) $next->data->set('hypha/description', trim(preg_replace('/\s+/', ' ', $m[1])));
+			if (preg_match('/^(?:beschrijving|description)\s*:\s*(.+)$/is', $note->text, $m)) $next->data->set('hypha/description', trim(preg_replace('/[\s\x{00A0}\x{1680}\x{2000}-\x{200A}\x{2028}\x{2029}\x{202F}\x{205F}\x{3000}\x{FEFF}]+/u', ' ', $m[1])));
 		}
 
 		//

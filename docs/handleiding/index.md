@@ -1,6 +1,6 @@
 ---
 title: "Handleiding van Hypha"
-revision: 3
+revision: 4
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -30,7 +30,7 @@ flowchart LR
     gebruik --> g1[Wat is Hypha] --> g2[Inloggen en account] --> g3[Tekstpagina] --> g4[Artikel schrijven] --> g5[Beoordelen en publiceren]
     g5 --> g6[Beeld, links en tags] --> g7[Menu en navigatie] --> g8[Mailinglijst en festival] --> g9[Vragen]
     techniek --> t1[Architectuur] --> t2[Installatie] --> t3[Opslag] --> t4[Datatypes en macro's]
-    t4 --> t5[Thema's] --> t6[Beheer] --> t7[Beveiliging]
+    t4 --> t5[Thema's] --> t6[Beheer] --> t7[Beveiliging] --> t8[Tekens en talen]
 ```
 
 ## Gebruikshandleiding
@@ -54,6 +54,7 @@ flowchart LR
 5. [Thema's](techniek/05-themas.md)
 6. [Beheer: back-up, logboeken, e-mail en updates](techniek/06-beheer.md)
 7. [Beveiliging](techniek/07-beveiliging.md)
+8. [Tekens en talen (Unicode)](techniek/08-unicode.md)
 
 ## Openen en publiceren met Obsidian
 

@@ -110,3 +110,11 @@
 		contains('rel="noopener nofollow"', $out);
 		lacks('image-set', $out);
 	});
+
+	test('filter: dir, lang, bdi and bdo stay for text from right to left; bad values go (Unicode check)', function () {
+		$out = filterForTest()->filter('<p dir="rtl" lang="ar">مرحبا <bdi>שלום</bdi> <bdo dir="ltr">abc</bdo></p><p dir="sideways" lang="x y" onclick="x">t</p>');
+		contains('<p dir="rtl" lang="ar">', $out);
+		contains('<bdi>שלום</bdi>', $out);
+		contains('<bdo dir="ltr">abc</bdo>', $out);
+		check(!str_contains($out, 'sideways') && !str_contains($out, 'x y') && !str_contains($out, 'onclick'), $out);
+	});

@@ -32,10 +32,14 @@
 			'details' => ['open', 'class'], 'summary' => [],
 			'figure' => ['class', 'role', 'aria-label'], 'figcaption' => [],
 			'aside' => ['class', 'aria-label'], 'section' => ['class', 'aria-label'], 'nav' => ['class', 'aria-label'],
-			'span' => ['class', 'title'], 'div' => ['class', 'title'],
+			'span' => ['class', 'title'], 'div' => ['class', 'title'], 'bdi' => [], 'bdo' => [],
 			'input' => ['type', 'checked', 'disabled'],
 			'iframe' => ['src', 'title', 'width', 'height', 'class', 'allow', 'allowfullscreen'],
 		];
+		//
+		// Direction and language may be on every HTML element, so text in Arabic or Hebrew can be marked (WCAG 3.1.2).
+		//
+		const HTML_GLOBAL = ['dir', 'lang'];
 		const SVG = ['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'tspan', 'textPath', 'defs', 'marker', 'clipPath', 'linearGradient', 'radialGradient', 'stop', 'title', 'desc', 'use', 'pattern', 'mask', 'symbol', 'a'];
 		const SVG_ATTR = ['class', 'id', 'd', 'x', 'y', 'x1', 'x2', 'y1', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'fx', 'fy', 'width', 'height', 'points', 'viewBox', 'transform', 'fill', 'fill-opacity', 'fill-rule', 'clip-rule', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-opacity', 'opacity', 'font-size', 'font-weight', 'font-family', 'font-style', 'text-anchor', 'dominant-baseline', 'alignment-baseline', 'baseline-shift', 'letter-spacing', 'text-decoration', 'style', 'role', 'aria-roledescription', 'aria-label', 'aria-hidden', 'data-id', 'xml:space', 'markerWidth', 'markerHeight', 'markerUnits', 'refX', 'refY', 'orient', 'offset', 'stop-color', 'stop-opacity', 'clip-path', 'mask', 'marker-end', 'marker-start', 'marker-mid', 'dx', 'dy', 'rotate', 'textLength', 'lengthAdjust', 'preserveAspectRatio', 'href', 'xlink:href', 'gradientUnits', 'gradientTransform', 'patternUnits', 'patternTransform', 'vector-effect', 'pathLength', 'startOffset', 'xmlns'];
 		const MATH = ['math', 'mrow', 'mi', 'mn', 'mo', 'ms', 'mtext', 'mspace', 'msup', 'msub', 'msubsup', 'mfrac', 'msqrt', 'mroot', 'mstyle', 'mtable', 'mtr', 'mtd', 'mlabeledtr', 'mover', 'munder', 'munderover', 'mmultiscripts', 'mprescripts', 'none', 'mpadded', 'menclose', 'semantics', 'annotation', 'mphantom', 'merror'];
@@ -131,7 +135,9 @@
 				}
 				foreach (iterator_to_array($child->attributes) as $attribute) {
 					$attributeName = $attribute->nodeName;
-					$keep = in_array($attributeName, $allowed, true);
+					$keep = in_array($attributeName, $allowed, true) || ($inner === 'html' && in_array($attributeName, self::HTML_GLOBAL, true));
+					if ($keep && $inner === 'html' && $attributeName === 'dir') $keep = in_array(strtolower($attribute->value), ['ltr', 'rtl', 'auto'], true);
+					if ($keep && $inner === 'html' && $attributeName === 'lang') $keep = (bool)preg_match('/^[a-zA-Z]{2,8}(-[a-zA-Z0-9]{1,8})*$/', $attribute->value);
 					if ($keep && in_array($attributeName, ['href', 'src', 'xlink:href'], true))
 						$keep = $inner === 'html' ? $this->safeUrl($attribute->value, $name === 'iframe') : str_starts_with(trim($attribute->value), '#');
 					if ($keep && $attributeName === 'style')

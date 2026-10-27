@@ -14,7 +14,7 @@ const out = path.resolve(here, '../../system/mdeditor/vendor');
 const version = p => JSON.parse(fs.readFileSync(path.join(here, 'node_modules', p, 'package.json'), 'utf8')).version;
 fs.rmSync(path.join(out, 'LICENSES'), { recursive: true, force: true });
 fs.mkdirSync(path.join(out, 'LICENSES'), { recursive: true });
-for (const f of fs.readdirSync(out)) if (f.endsWith('.js')) fs.unlinkSync(path.join(out, f));
+for (const f of fs.readdirSync(out)) if (/\.(js|css|woff2)$/.test(f)) fs.unlinkSync(path.join(out, f));
 
 const used = new Set(['pele', 'temml']);
 const bundles = [
@@ -51,6 +51,17 @@ for (const dir of fs.readdirSync(path.join(here, 'node_modules')).flatMap(d => d
 	licences.push(`${dir} ${meta.version} ${meta.license}`);
 	if (text) fs.copyFileSync(path.join(here, 'node_modules', dir, text), path.join(out, 'LICENSES', dir.replace('/', '_') + '.txt'));
 }
+//
+// Fork Awesome, the icons of the toolbar, from the default theme of Hypha: a theme such as 'destadsbron' does not load
+// it. Only the WOFF2 font, which every supported browser reads.
+//
+const fork = path.resolve(here, '../../data/themes/default');
+const forkCss = fs.readFileSync(path.join(fork, 'css/fork-awesome.min.css'), 'utf8');
+const forkVersion = forkCss.match(/Fork Awesome (\d+\.\d+\.\d+)/)[1];
+fs.writeFileSync(path.join(out, `fork-awesome-${forkVersion}.css`), forkCss.replace(/src:url\([^;]*;src:[^;}]*/, `src:url(fork-awesome-${forkVersion}.woff2) format('woff2')`));
+fs.copyFileSync(path.join(fork, 'fonts/forkawesome-webfont.woff2'), path.join(out, `fork-awesome-${forkVersion}.woff2`));
+fs.writeFileSync(path.join(out, 'LICENSES/fork-awesome.txt'), 'Fork Awesome ' + forkVersion + ': font SIL OFL 1.1, CSS MIT. https://forkaweso.me/Fork-Awesome/license\n\n' + forkCss.match(/\/\*!([\s\S]*?)\*\//)[1].trim() + '\n');
+licences.push(`fork-awesome ${forkVersion} OFL-1.1 AND MIT`);
 fs.writeFileSync(path.join(out, 'LICENSES/README.txt'), 'Licences of the browser libraries in system/mdeditor/vendor/, used by the Markdown editor of Hypha.\nDOMPurify is dual licensed (MPL-2.0 or Apache-2.0); Hypha uses it under Apache-2.0.\n\n' + licences.join('\n') + '\n');
-const bad = licences.filter(l => !/ (MIT|BSD-[23]-Clause|ISC|Apache-2\.0|\(MPL-2\.0 OR Apache-2\.0\)|MPL-2\.0 OR Apache-2\.0)$/.test(l));
+const bad = licences.filter(l => !/ (OFL-1\.1 AND MIT|MIT|BSD-[23]-Clause|ISC|Apache-2\.0|\(MPL-2\.0 OR Apache-2\.0\)|MPL-2\.0 OR Apache-2\.0)$/.test(l));
 console.log(bad.length ? 'NOT PERMISSIVE: ' + bad.join(', ') : `${licences.length} packages, all permissive`);

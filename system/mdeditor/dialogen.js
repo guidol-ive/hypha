@@ -647,9 +647,12 @@ export class Dialogs {
 		this.popup = { open: true, kind, items, index: 0, from, to };
 		const box = $('#mdePopup', this.root);
 		box.innerHTML = items.map((x, i) => `<div role="option" id="mdeOpt${i}" class="opt${i === 0 ? ' active' : ''}" aria-selected="${i === 0}" data-i="${i}">${x.icon ? `<i class="fa fa-${x.icon}" aria-hidden="true"></i> ` : ''}${esc(x.label)}${x.md ? `<span class="md">${esc(x.md)}</span>` : ''}</div>`).join('');
-		const coords = this.ed.cm.coordsAtPos(to);
-		if (coords) { box.style.left = coords.left + 'px'; box.style.top = coords.bottom + 4 + 'px'; }
 		box.hidden = false;
+		this.placePopup();
+		//
+		// The list stands at the cursor in the window, so it moves along when the page scrolls (typing scrolls too).
+		//
+		if (!this.scrollBound) { this.scrollBound = true; window.addEventListener('scroll', () => { if (this.popup.open) this.placePopup(); }, { passive: true }); }
 		this.ed.cm.contentDOM.setAttribute('aria-activedescendant', 'mdeOpt0');
 		this.ed.cm.contentDOM.setAttribute('aria-controls', 'mdePopup');
 		box.onmousedown = e => { e.preventDefault(); const o = e.target.closest('[data-i]'); if (o) this.choose(+o.dataset.i); };
@@ -664,10 +667,22 @@ export class Dialogs {
 		}
 	}
 
+	//
+	// Below the cursor, or above it when there is no room below, as near the bottom of the window.
+	//
+	placePopup() {
+		const box = $('#mdePopup', this.root);
+		const coords = this.ed.cm.coordsAtPos(this.popup.to);
+		if (!coords) return;
+		box.style.left = coords.left + 'px';
+		const below = coords.bottom + 4, above = coords.top - 4 - box.offsetHeight;
+		box.style.top = (below + box.offsetHeight > window.innerHeight && above >= 0 ? above : below) + 'px';
+	}
+
 	move(dir) {
 		const p = this.popup;
 		p.index = (p.index + dir + p.items.length) % p.items.length;
-		for (const o of this.root.querySelectorAll('#mdePopup [data-i]')) { const on = +o.dataset.i === p.index; o.classList.toggle('active', on); o.setAttribute('aria-selected', String(on)); }
+		for (const o of this.root.querySelectorAll('#mdePopup [data-i]')) { const on = +o.dataset.i === p.index; o.classList.toggle('active', on); o.setAttribute('aria-selected', String(on)); if (on) o.scrollIntoView({ block: 'nearest' }); }
 		this.ed.cm.contentDOM.setAttribute('aria-activedescendant', 'mdeOpt' + p.index);
 	}
 

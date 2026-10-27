@@ -132,6 +132,17 @@ export default async function (t) {
 		await setMode('markdown');
 	});
 
+	t.test('the / menu stands at the cursor, also when the page is scrolled', async () => {
+		await setText(Array.from({ length: 40 }, (_, i) => `Alinea ${i + 1} met wat verzonnen tekst.`).join('\n\n') + '\n');
+		await page.evaluate(() => { const e = window.hyphaMdeditor.editor; const i = e.cm.state.doc.toString().indexOf('Alinea 30'); e.cm.dispatch({ changes: { from: i, insert: '\n' }, selection: { anchor: i } }); e.cm.focus(); });
+		await page.evaluate(() => { const e = window.hyphaMdeditor.editor; const c = e.cm.coordsAtPos(e.cm.state.selection.main.head); window.scrollBy(0, c.top - window.innerHeight / 2); });
+		await page.keyboard.type('/');
+		await page.waitForSelector('#mdePopup:not([hidden])');
+		const [cursor, popup] = await page.evaluate(() => { const e = window.hyphaMdeditor.editor; return [e.cm.coordsAtPos(e.cm.state.selection.main.head).bottom, document.getElementById('mdePopup').getBoundingClientRect().top]; });
+		assert(Math.abs(popup - cursor - 4) < 3, `popup at ${popup}, cursor at ${cursor}`);
+		await page.keyboard.press('Escape');
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();
