@@ -102,19 +102,19 @@
 
 	test('markdown: figure with caption and placement, image alone without caption', function () {
 		$out = md("![Bram Hoekstra](beeld/a.jpg){.klein-rechts}\n*Bijschrift met **vet**. Foto X*\n\n![Raadszaal](beeld/b.jpg)");
-		contains('<figure class="klein-rechts"><img src="beeld/a.jpg" alt="Bram Hoekstra"/>', $out);
+		contains('<figure class="klein-rechts"><img src="beeld/a.jpg" alt="Bram Hoekstra" loading="lazy"/>', $out);
 		contains('<figcaption>Bijschrift met <strong>vet</strong>. Foto X</figcaption>', $out);
-		contains('<figure class="breed"><img src="beeld/b.jpg" alt="Raadszaal"/></figure>', $out);
+		contains('<figure class="breed"><img src="beeld/b.jpg" alt="Raadszaal" loading="lazy"/></figure>', $out);
 	});
 
 	test('markdown: an image within a sentence is no figure', function () {
 		$out = md('Tekst ![icoon](i.png) tekst.');
 		lacks('<figure', $out);
-		contains('<img src="i.png" alt="icoon"/>', $out);
+		contains('<img src="i.png" alt="icoon" loading="lazy"/>', $out);
 	});
 
 	test('markdown: HedgeDoc image size =200x150', function () {
-		contains('<img src="foto.jpg" alt="x" width="200" height="150"/>', md('![x](foto.jpg =200x150)'));
+		contains('<img src="foto.jpg" alt="x" width="200" height="150" loading="lazy"/>', md('![x](foto.jpg =200x150)'));
 	});
 
 	test('markdown: diagram with SVG from the browser, description and placement', function () {
@@ -250,6 +250,26 @@
 
 	test('markdown: a [[link]] with a no-break space gets the address of the preview (Unicode check)', function () {
 		contains('href="nl/10_km"', md("Zie [[10\u{00A0}km]]."));
+	});
+
+	test('markdown: HedgeDoc code block with line numbers keeps its language (javascript=101)', function () {
+		contains('class="hljs language-javascript"', md("```javascript=101\nvar a = 1;\n```\n"));
+	});
+
+	test('markdown: an uploaded photo gets its size and loads lazily (design 12.16)', function () {
+		$dir = sys_get_temp_dir() . '/hypha-md-img-' . getmypid();
+		@mkdir($dir . '/data/images', 0777, true);
+		//
+		// A PNG of 3 by 2 pixels, made by hand: the PHP containers have no GD.
+		//
+		$chunk = fn ($type, $data) => pack('N', strlen($data)) . $type . $data . pack('N', crc32($type . $data));
+		$png = "\x89PNG\r\n\x1a\n" . $chunk('IHDR', pack('NNCCCCC', 3, 2, 8, 2, 0, 0, 0)) . $chunk('IDAT', gzcompress(str_repeat("\0" . str_repeat("\xff", 9), 2))) . $chunk('IEND', '');
+		file_put_contents($dir . '/data/images/proef.png', $png);
+		$back = getcwd();
+		chdir($dir);
+		try { $out = md("![Proef](images/proef.png)\n"); }
+		finally { chdir($back); }
+		contains('width="3" height="2" loading="lazy"', $out);
 	});
 
 	test('markdown: 18,000 words in well under a second', function () {

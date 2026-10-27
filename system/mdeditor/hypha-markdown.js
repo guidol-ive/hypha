@@ -523,7 +523,7 @@ export function createMarkdown(options = {}) {
 		let s = `<img src="${esc(o.imageSrc ? o.imageSrc(t.attrGet('src')) : t.attrGet('src'))}" alt="${esc(plainText(t.children))}"`;
 		if (t.attrGet('title')) s += ` title="${esc(t.attrGet('title'))}"`;
 		for (const k of ['width', 'height']) if (t.attrGet(k)) s += ` ${k}="${esc(t.attrGet(k))}"`;
-		return s + '>';
+		return s + ' loading="lazy">';
 	};
 	r.toc = (tokens, i, opts, env) => `<nav class="toc" aria-label="${esc(text('toc', 'Inhoud'))}"><ol>` + (env.headings || []).filter(h => h[0] >= 2 && h[0] <= 4).map(h => `<li class="toc-${h[0]}"><a href="#${esc(h[1])}">${esc(h[2])}</a></li>`).join('') + '</ol></nav>\n';
 	r.embed = (tokens, i) => {
@@ -533,7 +533,7 @@ export function createMarkdown(options = {}) {
 	r.fence = (tokens, i) => {
 		const t = tokens[i];
 		const info = t.info.trim();
-		const lang = (info.split(/[\s{]/)[0] || '').toLowerCase();
+		const lang = (info.split(/[\s{=!]/)[0] || '').toLowerCase();
 		const attributes = /\{([^}]*)\}\s*$/.exec(info) ? parseAttributes(/\{([^}]*)\}\s*$/.exec(info)[1]) : {};
 		const description = t.meta?.description || '';
 		if (lang === 'mermaid') {

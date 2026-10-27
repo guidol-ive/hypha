@@ -222,7 +222,10 @@
 		//
 		public function fencedCode(FencedCode $node): string {
 			$info = trim($node->getInfo() ?? '');
-			$language = strtolower(preg_split('/[\s{]/', $info)[0] ?? '');
+			//
+			// HedgeDoc writes line numbers behind the language: javascript=101, javascript=+, javascript!
+			//
+			$language = strtolower(preg_split('/[\s{=!]/', $info)[0] ?? '');
 			$attributes = preg_match('/\{([^}]*)\}\s*$/', $info, $m) ? self::parseAttributes($m[1]) : [];
 			$literal = $node->getLiteral();
 			$description = $node->data->get('hypha/description', '');

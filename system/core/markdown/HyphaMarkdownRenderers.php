@@ -61,6 +61,12 @@
 					$attributes = ['src' => $node->getUrl(), 'alt' => HyphaMarkdown::plainText($node)];
 					if ($node->getTitle()) $attributes['title'] = $node->getTitle();
 					foreach (['width', 'height'] as $key) if ($node->data->has('attributes/' . $key)) $attributes[$key] = $node->data->get('attributes/' . $key);
+					//
+					// Size of an uploaded photo, so the page does not shift while it loads, and loaded only when it comes
+					// into view (design section 12.16, point 3).
+					//
+					if (!isset($attributes['width']) && preg_match('~^images/[\w.-]+$~', $node->getUrl()) && is_file('data/' . $node->getUrl()) && ($size = @getimagesize('data/' . $node->getUrl()))) [$attributes['width'], $attributes['height']] = [(string)$size[0], (string)$size[1]];
+					$attributes['loading'] = 'lazy';
 					return new HtmlElement('img', $attributes, '', true);
 				case $node instanceof FootnoteContainer:
 					return '<section class="footnotes" aria-label="' . $esc($md->text('footnotes', 'Voetnoten')) . '"><ol>' . "\n" . $children() . "\n</ol></section>";
