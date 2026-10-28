@@ -173,3 +173,17 @@ Bugs in existing code found while building, testing and documenting the editor o
 
 Also from the concurrency test: three saves of a WYMeditor text page in the same second give a duplicate `xml:id` within one language, the same cause as #528 (comment added there; PR #534 fixes it).
 
+
+## Blockers of #520 listed on the issue, 2026-10-28
+
+A comment on #520 (issuecomment-6461914893) lists the open issues in existing code that keep the Markdown editor from meeting its specifications on `main`, grouped by specification:
+- review flow: #529, #569, #406, #525;
+- saving and versions: #560, #528, #530, #571, #400;
+- security of the commands the editor uses: #420, #421, #416, #423, #422, #419, #539;
+- Unicode: #541, #543;
+- PHP 8.2 up to 8.5: #407, #408, #409, #410, #514, #527;
+- performance and Lighthouse: #573, #437, #411, #432;
+- packaging and the "new page" window: #526, #575;
+- wish: #401.
+
+Of these, #571, #573, #575 and #577 are also included in `issue520-bouw`.
