@@ -52,7 +52,7 @@
 		$commands = $page->html->getElementById('pageCommands');
 		$cancel = $config['kind'] === 'article' ? __('art-cancel') : __('cancel');
 		$save = $config['kind'] === 'article' ? __('art-save') : __('save');
-		$commands->appendChild(makeButton($cancel, 'window.hyphaMdeditor ? hyphaMdeditor.cancel() : (window.location = ' . htmlspecialchars(json_encode($page->language . '/' . $page->pagename)) . ');', 'mdeCancel'));
+		$commands->appendChild(makeButton($cancel, 'window.hyphaMdeditor ? hyphaMdeditor.cancel() : (window.location = ' . json_encode($page->language . '/' . $page->pagename) . ');', 'mdeCancel'));
 		$commands->appendChild(makeButton($save, 'window.hyphaMdeditor && hyphaMdeditor.save();', 'mdeSave', 'editButton'));
 		static $registered = false;
 		if (!$registered) registerPostProcessingFunction('hypha_mdeditorPostProcess');
