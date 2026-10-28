@@ -281,6 +281,9 @@
 		$command = $request->getPostValue('command');
 		if (!$processed && $command) {
 			if (!$O_O->validCsrfToken()) {
+				// The Markdown editor posts with ajax=1 and reads JSON, also
+				// once #500 reloads the page here (issue #520).
+				if ($request->getPostValue('ajax') === '1') hypha_mdeditorJson(['ok' => false, 'errors' => [__('csrf-error')]]);
 				notify('error', __('csrf-error'));
 				$processed = true;
 				return;
