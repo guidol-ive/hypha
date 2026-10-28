@@ -53,4 +53,10 @@ table.hypha-fit th, table.hypha-fit td {
 }
 table.hypha-fit label {
     white-space: normal;
+    The teaser image has width and height for its place in the layout before it
+    loads (#672); its height follows the width the theme gives it.
+*/
+img.featured_image {
+    max-width: 100%;
+    height: auto;
 }

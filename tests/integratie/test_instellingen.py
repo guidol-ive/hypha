@@ -141,5 +141,22 @@ def an_image_of_the_site_at_another_address_is_served_by_the_site(base):
         write_same_length(path, original)
         os.remove(image)
 
+
+@test
+def a_link_to_the_site_itself_keeps_an_address(base):
+    # A link to / (the logo in the header) was stored as href="", which is no link for browsers and search engines (#669).
+    beheer = Client(base).login("beheer")
+    path = os.path.join(WORK, "data/hypha.xml")
+    original = open(path, "rb").read()
+    root = ET.parse(path).getroot()
+    try:
+        for href in ("/", base.rstrip("/") + "/"):
+            beheer.get("settings")
+            beheer.post("settings", "settingsSaveSiteElements", "", {"siteTitle": root.findtext("title"), "siteHeader": f'<a href="{href}"><span>Eemstad</span></a>', "siteFooter": "<p>Verzonnen voettekst</p>"})
+            stored = ET.tostring(ET.parse(path).getroot().find("header"), encoding="unicode")
+            assert 'href="./"' in stored, f"{href}: {stored}"
+    finally:
+        write_same_length(path, original)
+
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))

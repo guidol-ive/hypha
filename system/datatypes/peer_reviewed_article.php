@@ -212,7 +212,17 @@ class peer_reviewed_article extends HyphaDatatypePage {
 		if ($featuredImageSrc) {
 			$featured_image = $excerpt->createChild('img');
 			$featured_image->addClass('featured_image');
-			$featured_image->setAttribute('src', (new HyphaImage($featuredImageSrc))->getUrl());
+			// Scaled down, with its size, and loaded when it comes
+			// into view: the original can be several MB (#672).
+			$image = new HyphaImage($featuredImageSrc);
+			$featured_image->setAttribute('src', $image->getScaledUrl(800));
+			$size = $image->getScaledSize(800);
+			if ($size) {
+				$featured_image->setAttribute('width', $size[0]);
+				$featured_image->setAttribute('height', $size[1]);
+			}
+			$featured_image->setAttribute('loading', 'lazy');
+			$featured_image->setAttribute('decoding', 'async');
 			// The title says what the teaser is about; textContent,
 			// since the title of an older article can hold markup (#664).
 			$title = $this->xml->findOneXPath('//' . self::FIELD_NAME_TITLE);

@@ -894,7 +894,25 @@ export class Editor {
 	}
 
 	autosize() {
-		for (const id of ['mdeTitle', 'mdeExcerpt']) { const el = $('#' + id, this.root); if (el && el.tagName === 'TEXTAREA') { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }
+		//
+		// The height follows the text at the current width. Measured while the head was still narrow (building the
+		// editor, side by side, a folded head), the excerpt stayed 770 px high; so the fields are measured again when
+		// their width changes. The head can be drawn again, so the observer follows the fields of the moment.
+		//
+		this.measuredWidth ??= new WeakMap();
+		if (window.ResizeObserver && !this.headObserver) this.headObserver = new ResizeObserver(entries => {
+			if (entries.some(e => this.measuredWidth.get(e.target) !== e.target.offsetWidth)) this.autosize();
+		});
+		for (const id of ['mdeTitle', 'mdeExcerpt']) {
+			const el = $('#' + id, this.root);
+			if (!el || el.tagName !== 'TEXTAREA') continue;
+			this.headObserver?.observe(el);
+			// A field that is not shown has no width to measure against; it is measured when it shows.
+			if (!el.offsetWidth) continue;
+			el.style.height = 'auto';
+			el.style.height = el.scrollHeight + 'px';
+			this.measuredWidth.set(el, el.offsetWidth);
+		}
 	}
 
 	//
