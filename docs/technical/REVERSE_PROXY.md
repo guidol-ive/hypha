@@ -17,9 +17,9 @@ browser --HTTPS--> NGINX (TLS, one or more sites) --HTTP--> Apache + PHP + Hypha
 | Host | Links in recovery and invitation mails are built from the `Host` header (issue #418). | NGINX: `proxy_set_header Host $host;`. Apache: a fixed `ServerName` and `UseCanonicalName On`. |
 | Client address | The login throttle (PR #493), the honeypot (PR #480) and the audit trail (PR #476) work per client address. Without the real address every visitor seems to come from NGINX, so one visitor can lock out everyone and the honeypot would block the proxy. | NGINX: `proxy_set_header X-Real-IP $remote_addr;` and `X-Forwarded-For`. Apache: `mod_remoteip` with `RemoteIPHeader X-Real-IP` and `RemoteIPInternalProxy` set to the address of NGINX only. |
 | Upload size | NGINX refuses bodies larger than 1 MB by default (`client_max_body_size 1m`), while Hypha accepts images up to 16 MB (`docs/container/php.ini`). Larger uploads fail with HTTP 413 before they reach Hypha. | `client_max_body_size 20m;` (a little above PHP's `post_max_size`). |
-| Timeouts | Sending a mailing happens in the request of the member who presses "send" (KNOWN_ISSUES KI-015); a large list can take minutes. | `proxy_read_timeout 300s;` for the site, or longer for large lists. |
+| Timeouts | Sending a mailing happens in the request of the user who presses "send" (KNOWN_ISSUES KI-015); a large list can take minutes. | `proxy_read_timeout 300s;` for the site, or longer for large lists. |
 | Security headers | Strict-Transport-Security belongs where TLS ends. | `add_header Strict-Transport-Security "max-age=31536000" always;` at NGINX. The other headers come from Hypha (PR #489) or the container vhost. |
-| Caching | NGINX can cache responses. A page shown to a logged-in member must never be stored and served to others. | See [Caching](#caching). |
+| Caching | NGINX can cache responses. A page shown to a logged-in user must never be stored and served to others. | See [Caching](#caching). |
 | Test sites | A test copy should not be indexed by search engines (issue #404). | The `allowIndex` setting of PR #479, or `add_header X-Robots-Tag "noindex, nofollow" always;` at NGINX. |
 
 ## Example NGINX site
@@ -77,12 +77,12 @@ from NGINX (a container port bound to `127.0.0.1`, or a private network), that r
 
 ## Caching
 
-Hypha renders pages per visitor. A logged-in member sees member-only content, their name and edit buttons, and **every** page, also for anonymous visitors, contains a per-visitor CSRF token.
+Hypha renders pages per visitor. A logged-in user sees content for logged-in users only, their name and edit buttons, and **every** page, also for anonymous visitors, contains a per-visitor CSRF token.
 
-Hypha sends no `Cache-Control` for generated HTML (PlanBCode/hypha#470, checked 2026-10-26 with NGINX 1.27 in front of `dev`). Members are only protected by PHP's default `session.cache_limiter = nocache`, and anonymous pages carry no cache header at all. As a result:
+Hypha sends no `Cache-Control` for generated HTML (PlanBCode/hypha#470, checked 2026-10-26 with NGINX 1.27 in front of `dev`). Logged-in users are only protected by PHP's default `session.cache_limiter = nocache`, and anonymous pages carry no cache header at all. As a result:
 
-- A cache with `proxy_cache_valid 200 10m` stores an anonymous page together with one visitor's CSRF token. Logging in then fails for everyone until the entry expires, and members see the anonymous view.
-- With `proxy_ignore_headers Cache-Control Expires Set-Cookie`, or with `session.cache_limiter` changed, member-only and private pages were served to anonymous visitors.
+- A cache with `proxy_cache_valid 200 10m` stores an anonymous page together with one visitor's CSRF token. Logging in then fails for everyone until the entry expires, and logged-in users see the anonymous view.
+- With `proxy_ignore_headers Cache-Control Expires Set-Cookie`, or with `session.cache_limiter` changed, pages for logged-in users only and private pages were served to anonymous visitors.
 - Bypassing the cache on the session cookie alone is not enough: logins still break.
 
 Until #470 is fixed, cache only static paths and never the HTML:

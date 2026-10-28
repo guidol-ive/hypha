@@ -1,6 +1,6 @@
 ---
 title: "Mailinglijst en festival"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -23,8 +23,8 @@ flowchart TD
     a([Bezoeker vult e-mailadres in]) --> b[Status: in behandeling]
     b --> c[E-mail: bevestig uw aanmelding]
     c -->|klikt op de link| d[Status: bevestigd]
-    c -->|klikt niet| e[Lid kan herinneren of het adres verwijderen]
-    f([Lid schrijft een nieuwsbrief]) --> g[Status: in opmaak]
+    c -->|klikt niet| e[Geprivilegieerde gebruiker kan herinneren of het adres verwijderen]
+    f([Gebruiker schrijft een nieuwsbrief]) --> g[Status: in opmaak]
     g --> h[Test-verzending naar jezelf]
     h --> i[Versturen]
     i --> j[Status: verstuurd]
@@ -40,7 +40,7 @@ flowchart TD
 2. Kies **bewerken** en vul in:
    1. de **naam** en het **e-mail**adres van de afzender, bijvoorbeeld `Redactie Eemstad` en `redactie@eemstad.example`;
    2. een **omschrijving**: wat lezers kunnen verwachten;
-   3. eventueel **privepagina**, als alleen leden de pagina mogen zien.
+   3. eventueel **privepagina**, als alleen ingelogde gebruikers de pagina mogen zien.
 3. Kies **opslaan**.
 
 ### Aanmelden en afmelden
@@ -53,7 +53,7 @@ flowchart TD
 
 1. Kies op de pagina **bekijk adressen**. Je ziet elk adres met zijn status.
 2. Bij een adres dat nog **in behandeling** is, kun je **herinner** kiezen of het adres verwijderen. Een bevestigd adres kun je **afmelden**.
-3. Een **beheerder** kan met **toevoegen** meer adressen tegelijk op de lijst zetten: scheid ze met een komma of zet ze elk op een eigen regel. Deze adressen zijn meteen bevestigd.
+3. Een **geprivilegieerde gebruiker** kan met **toevoegen** meer adressen tegelijk op de lijst zetten: scheid ze met een komma of zet ze elk op een eigen regel. Deze adressen zijn meteen bevestigd.
 
 > [!warning] Alleen met toestemming
 > Voeg alleen adressen toe van mensen die de nieuwsbrief willen ontvangen en daar toestemming voor hebben gegeven. Adressen die je zelf toevoegt, krijgen geen e-mail om te bevestigen.
@@ -97,9 +97,9 @@ flowchart TD
 3. Is de inschrijving compleet, dan krijgt hij een e-mail met een link om **bij te dragen**. Daarmee geeft hij een of meer bijdragen op: titel, naam van de organisator, korte omschrijving, afbeelding, website, categorie en opmerkingen voor de organisatie.
 4. Met de link in de e-mail kan hij zijn bijdrage later nog **wijzigen**.
 
-### Wat een lid ziet
+### Wat een ingelogde gebruiker ziet
 
-Ingelogde leden hebben op de festivalpagina deze knoppen:
+Ingelogde gebruikers hebben op de festivalpagina deze knoppen:
 
 | Knop | Wat je ziet of doet |
 |---|---|
@@ -112,7 +112,7 @@ Ingelogde leden hebben op de festivalpagina deze knoppen:
 | blokkenschema | het programma per dag en per locatie, met begin- en eindtijden |
 
 > [!info] Betalen
-> Betalen gaat via Mollie, een betaaldienst. De site heeft daarvoor een sleutel van Mollie nodig. Die stel je niet in op de pagina zelf; vraag het een beheerder.
+> Betalen gaat via Mollie, een betaaldienst. De site heeft daarvoor een sleutel van Mollie nodig. Die stel je niet in op de pagina zelf; vraag het een geprivilegieerde gebruiker.
 
 ## Meer lezen
 

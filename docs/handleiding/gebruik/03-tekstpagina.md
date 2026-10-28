@@ -1,17 +1,17 @@
 ---
 title: "Een tekstpagina maken en bewerken"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
 
 # Een tekstpagina maken en bewerken
 
-Een *tekstpagina* is een gewone pagina met tekst, foto's en links, zoals *Over ons* of *Contact*. In Hypha heet dit type **webpagina**. Elk lid kan een tekstpagina maken en bewerken. Hypha bewaart elke versie, zodat je altijd terug kunt naar een eerdere tekst.
+Een *tekstpagina* is een gewone pagina met tekst, foto's en links, zoals *Over ons* of *Contact*. In Hypha heet dit type **webpagina**. Elke gebruiker kan een tekstpagina maken en bewerken. Hypha bewaart elke versie, zodat je altijd terug kunt naar een eerdere tekst.
 
 ## Wat je nodig hebt
 
-1. Een account als **lid** van de site.
+1. Een account als **gebruiker** van de site.
 2. Je bent **ingelogd**. Zie [Inloggen en je account](02-inloggen-en-account.md).
 
 ## Het proces in het kort
@@ -38,7 +38,7 @@ flowchart LR
 2. Kies als paginatype **webpagina**.
 3. Typ de **paginanaam**, bijvoorbeeld `Over ons`. De naam is ook de titel van de pagina.
 4. Kies de **taal** van de pagina.
-5. Vink **privepagina** aan als alleen leden de pagina mogen zien.
+5. Vink **privepagina** aan als alleen ingelogde gebruikers de pagina mogen zien.
 6. Kies **maken**. De pagina opent meteen om te bewerken.
 
 Het webadres volgt uit de paginanaam. Spaties worden liggende streepjes: *Over ons* krijgt het adres `/nl/Over_ons`. Leestekens als `?` en `!` kunnen niet in een paginanaam.
@@ -68,7 +68,7 @@ Hoe de editor verder werkt, met Opmaak en Markdown, het voorbeeld en plakken uit
 4. Kies **opslaan**. Hypha maakt een nieuwe versie.
 
 > [!warning] Twee mensen tegelijk
-> Bewerken twee leden dezelfde pagina tegelijk, dan wint wie het laatst opslaat. Het werk van de ander staat dan in een oudere versie. Spreek af wie wat doet, of zet een oude versie terug en voeg de wijzigingen samen.
+> Bewerken twee gebruikers dezelfde pagina tegelijk, dan wint wie het laatst opslaat. Het werk van de ander staat dan in een oudere versie. Spreek af wie wat doet, of zet een oude versie terug en voeg de wijzigingen samen.
 
 ## Versies en verschillen
 
@@ -76,12 +76,12 @@ Hypha bewaart elke versie van een tekstpagina, per taal.
 
 ![Een opgeslagen tekstpagina met rechtsonder de keuzelijst met versies](../afbeeldingen/tekstpagina.png)
 
-1. Onder de pagina staat een lijst **versie**, met de datum, de tijd en wie de versie heeft opgeslagen. Alleen leden zien die lijst.
+1. Onder de pagina staat een lijst **versie**, met de datum, de tijd en wie de versie heeft opgeslagen. Alleen ingelogde gebruikers zien die lijst.
 2. Kies een oudere versie. Hypha toont de pagina zoals ze toen was.
 3. Is dat de tekst die je wilt, kies dan **terugdraaien**. De oude tekst wordt de nieuwste versie. De versies daartussen blijven bewaard.
 4. Wil je toch niet terug, kies dan in de lijst weer de bovenste versie.
 
-De **verschillen** tussen versies zie je in de samenvatting die Hypha per e-mail naar de leden stuurt: nieuwe tekst en weggehaalde tekst zijn gemarkeerd, zoals bij *wijzigingen bijhouden* in Word.
+De **verschillen** tussen versies zie je in de samenvatting die Hypha per e-mail naar de gebruikers stuurt: nieuwe tekst en weggehaalde tekst zijn gemarkeerd, zoals bij *wijzigingen bijhouden* in Word.
 
 ## Vertalen
 
@@ -93,7 +93,7 @@ Bovenaan de pagina zie je nu beide talen. Elke taal heeft haar eigen versies.
 
 ## Verwijderen
 
-Alleen een **beheerder** kan een pagina verwijderen, met de knop **verwijderen**. Vraag het een beheerder als een pagina weg moet.
+Alleen een **geprivilegieerde gebruiker** kan een pagina verwijderen, met de knop **verwijderen**. Vraag het een geprivilegieerde gebruiker als een pagina weg moet.
 
 ## Oudere tekstpagina's
 
@@ -103,6 +103,6 @@ Tekstpagina's die bestonden vóór de nieuwe tekst-editor, zijn opgeslagen als H
 
 ## Veelgestelde vragen
 
-1. **Waar staat mijn pagina in het menu?** Nergens, tot een beheerder haar toevoegt. Zie [Menu en navigatie](07-menu-en-navigatie.md). Via de **index** vind je elke pagina.
+1. **Waar staat mijn pagina in het menu?** Nergens, tot een geprivilegieerde gebruiker haar toevoegt. Zie [Menu en navigatie](07-menu-en-navigatie.md). Via de **index** vind je elke pagina.
 2. **Kan ik een tekstpagina omzetten in een artikel?** Nee. Het type ligt vast. Maak een nieuw artikel en kopieer de tekst.
-3. **Zien bezoekers oude versies?** Nee. Alleen ingelogde leden zien de lijst met versies.
+3. **Zien bezoekers oude versies?** Nee. Alleen ingelogde gebruikers zien de lijst met versies.

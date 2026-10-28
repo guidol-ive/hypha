@@ -105,8 +105,8 @@ lines may appear.
 
 ### Logged in
 
-Anonymous requests do not reach the member views, which is where the 2026-10 regressions were
-(82 failing article pages). To test logged in, add a test administrator to the **copy** of
+Anonymous requests do not reach the views for logged-in users, which is where the 2026-10 regressions were
+(82 failing article pages). To test logged in, add a privileged test user to the **copy** of
 `hypha.xml` (a `user` element with `rights="admin"` and a `password` made with PHP's
 `password_hash`), log in with a POST of `command=login`, `loginUsername`, `loginPassword` and the
 `csrfToken` from the form of the home page, keep the session cookie, and request every page and

@@ -1,6 +1,6 @@
 ---
 title: "Beeld, links en tags"
-revision: 3
+revision: 4
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -106,11 +106,11 @@ Dit werkt voor elke pagina, ook voor tekstpagina's.
 
 Bij een artikel kies je de tags in de **artikelkop**, met **Tag toevoegen**. Je kiest alleen uit de **vaste lijst van de site**. Een artikel heeft minstens één tag nodig.
 
-Typ je in Markdown een tag die niet in de lijst staat, dan meldt de checklist: „Deze tags staan niet in de lijst van de site”. Je kunt de beoordeling dan nog niet starten. Kies een andere tag, of vraag een beheerder om de tag te maken.
+Typ je in Markdown een tag die niet in de lijst staat, dan meldt de checklist: „Deze tags staan niet in de lijst van de site”. Je kunt de beoordeling dan nog niet starten. Kies een andere tag, of vraag een geprivilegieerde gebruiker om de tag te maken.
 
 ### Een nieuwe tag maken
 
-Alleen een **beheerder** maakt een nieuwe tag:
+Alleen een **geprivilegieerde gebruiker** maakt een nieuwe tag:
 
 1. Kies onder een pagina in de lijst **toevoegen...** de keuze **nieuw...**.
 2. Typ de naam van de tag. Gebruik een kort woord.

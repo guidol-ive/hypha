@@ -1,6 +1,6 @@
 ---
 title: "Beheer: back-up, logboeken, e-mail en updates"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -38,11 +38,11 @@ Hypha verstuurt e-mail met de PHP-functie `mail()`. De server heeft dus `sendmai
 
 | E-mail | Wanneer |
 |---|---|
-| uitnodiging, herstel van het wachtwoord | meteen, als een lid uitnodigt of iemand **heraanmelden** kiest |
-| samenvatting voor de leden | tijdens het eerste paginabezoek nadat de ingestelde tijd voorbij is |
+| uitnodiging, herstel van het wachtwoord | meteen, als een gebruiker iemand uitnodigt of iemand **heraanmelden** kiest |
+| samenvatting voor de gebruikers | tijdens het eerste paginabezoek nadat de ingestelde tijd voorbij is |
 | artikel klaar voor beoordeling, nieuwe status, breekpunt | meteen, als iemand de actie uitvoert |
 | bevestiging van een reactie, nieuwsbrief of inschrijving | meteen |
-| nieuwsbrief van een mailinglijst | terwijl het lid dat **versturen** koos wacht, één e-mail per adres |
+| nieuwsbrief van een mailinglijst | terwijl de gebruiker die **versturen** koos wacht, één e-mail per adres |
 
 1. Er is geen wachtrij en geen tweede poging. Mislukt het versturen, dan ziet de gebruiker een melding.
 2. De afzender is het **systeememail** uit **projectinstellingen**.
@@ -50,7 +50,7 @@ Hypha verstuurt e-mail met de PHP-functie `mail()`. De server heeft dus `sendmai
 
 ## De samenvatting
 
-De samenvatting (*digest*) gaat naar alle leden en bevat de wijzigingen sinds de vorige, met de verschillen gemarkeerd.
+De samenvatting (*digest*) gaat naar alle gebruikers en bevat de wijzigingen sinds de vorige, met de verschillen gemarkeerd.
 
 1. Hypha heeft geen geplande taak (*cron*). De samenvatting gaat mee met een gewoon paginabezoek, als de ingestelde tijd voorbij is.
 2. Op een site met weinig bezoekers komt de samenvatting dus later. Is de mailserver traag, dan wacht die ene bezoeker.
@@ -85,7 +85,7 @@ timeline
 
 ## Instellingen van de tekst-editor
 
-Een beheerder past de instellingen van de tekst-editor aan via **Instellingen → Tekst-editor** (`/settings/editor`): de rubrieken, het redactiestatuut, vrijheidsniveau 2 per rol, en de diensten en scripts die zijn toegestaan. Eén per regel; een leeg vak geeft de standaardlijst. De instellingen staan in het element `mdeditor` in `data/hypha.xml`, zoals hieronder; zonder dat element gelden de standaardwaarden uit `hypha_mdeditorDefaults()` in `system/core/markdown.php`.
+Een geprivilegieerde gebruiker past de instellingen van de tekst-editor aan via **Instellingen → Tekst-editor** (`/settings/editor`): de rubrieken, het redactiestatuut, vrijheidsniveau 2 per rol, en de diensten en scripts die zijn toegestaan. Eén per regel; een leeg vak geeft de standaardlijst. De instellingen staan in het element `mdeditor` in `data/hypha.xml`, zoals hieronder; zonder dat element gelden de standaardwaarden uit `hypha_mdeditorDefaults()` in `system/core/markdown.php`.
 
 ![Het scherm projectinstellingen met de standaardtaal, de startpagina en het type van nieuwe pagina's](../afbeeldingen/instellingen-hypha.png)
 
@@ -103,8 +103,8 @@ Een beheerder past de instellingen van de tekst-editor aan via **Instellingen �
 2. `statute`: de punten van het redactiestatuut. Wie een artikel goedkeurt, vinkt ze allemaal aan.
 3. `frameHost` en `peertubeHost`: de diensten die je mag insluiten, zoals video en kaarten.
 4. `scriptHost`: de enige plekken waar een interactief blok scripts en stijlen vandaan mag halen.
-5. `level2="off"` zet ingesloten inhoud en interactieve blokken uit voor de hele site. Met `level2Off="user"` zet je ze alleen uit voor gewone leden, met `level2Off="user,admin"` voor iedereen.
-6. Het niveau hoort bij het artikel. Een lid voor wie niveau 2 uit staat, kan een artikel met een interactief blok of een ingesloten video gewoon bewerken; die onderdelen blijven werken. Ze wijzigen of toevoegen kan dat lid niet: de editor meldt dat bij opslaan.
+5. `level2="off"` zet ingesloten inhoud en interactieve blokken uit voor de hele site. Met `level2Off="user"` zet je ze alleen uit voor standaardgebruikers, met `level2Off="user,admin"` voor iedereen.
+6. Het niveau hoort bij het artikel. Een gebruiker voor wie niveau 2 uit staat, kan een artikel met een interactief blok of een ingesloten video gewoon bewerken; die onderdelen blijven werken. Ze wijzigen of toevoegen kan die gebruiker niet: de editor meldt dat bij opslaan.
 
 Een lijst die je invult, vervangt de standaardlijst helemaal. Pas je `hypha.xml` toch met de hand aan, doe dat dan als het rustig is op de site, en maak eerst een [back-up](#back-up).
 
@@ -114,7 +114,7 @@ Hypha draait op **PHP 8.2 tot en met 8.5**. Controleer de versie voor je van hos
 
 ## Specificaties en capaciteit
 
-Hypha leest bij elk verzoek het hele bestand `hypha.xml` in: de leden, de lijst met pagina's en de tags. Een pagina zelf staat in `data/pages/<id>`. Daarom bepalen het aantal pagina's en het aantal leden hoeveel geheugen en rekentijd elk verzoek kost.
+Hypha leest bij elk verzoek het hele bestand `hypha.xml` in: de gebruikers, de lijst met pagina's en de tags. Een pagina zelf staat in `data/pages/<id>`. Daarom bepalen het aantal pagina's en het aantal gebruikers hoeveel geheugen en rekentijd elk verzoek kost.
 
 De getallen hieronder zijn gemeten op 27 oktober 2026, met verzonnen proefsites (`tests/gouden/maak.php`), PHP 8.4.27 met OPcache, Apache 2.4 met mod_php (prefork) in de container van [Installatie](02-installatie.md). De machine was een Apple M1 (8 kernen) met OrbStack (8 CPU's, 7,8 GB). Tegelijk draaiden er andere tests, dus reken op een paar procent ruis. Een steekproef op PHP 8.2.35 gaf dezelfde getallen (binnen 10%). Wat *afgeleid* heet, is berekend uit de metingen en niet zelf gemeten.
 
@@ -129,7 +129,7 @@ De getallen hieronder zijn gemeten op 27 oktober 2026, met verzonnen proefsites 
 
 1. Afbeeldingen en bestanden in `data/images/` en `data/files/` tellen niet mee in deze tabel. Die zijn op een echte site vaak het grootste deel.
 2. Boven ongeveer **25.000 pagina's** duurt de index van alle pagina's langer dan 1 seconde. Boven ongeveer **50.000 pagina's** duurt ook het openen van de editor langer dan 1 seconde. Gewone pagina's blijven onder 0,3 seconde.
-3. **Leden** kosten ongeveer evenveel als pagina's: 1.000 leden voegen 185 kB toe aan `hypha.xml`, ongeveer zoveel als 1.200 pagina's. Gemeten is tot 10.000 leden. Tel voor een grotere site 1.000 leden als 1.200 pagina's (afgeleid).
+3. **Gebruikers** kosten ongeveer evenveel als pagina's: 1.000 gebruikers voegen 185 kB toe aan `hypha.xml`, ongeveer zoveel als 1.200 pagina's. Gemeten is tot 10.000 gebruikers. Tel voor een grotere site 1.000 gebruikers als 1.200 pagina's (afgeleid).
 
 ### Schijf
 
@@ -146,7 +146,7 @@ De getallen hieronder zijn gemeten op 27 oktober 2026, met verzonnen proefsites 
 | Markdown-tekstpagina met 3 versies | gemiddeld 16,5 kB |
 | oude HTML-pagina of -artikel | 1 tot 2 kB (de proefteksten zijn kort) |
 | regel in `hypha.xml` per pagina | ongeveer 150 bytes |
-| regel in `hypha.xml` per lid | ongeveer 185 bytes |
+| regel in `hypha.xml` per gebruiker | ongeveer 185 bytes |
 
 1. Een Markdown-pagina bewaart de tekst twee keer: als bron en als XHTML. Ze is daardoor ongeveer 1,5 keer zo groot als een HTML-pagina met dezelfde tekst (afgeleid).
 2. Een tekstpagina bewaart elke versie als verschil met de volgende. Een kleine wijziging kost ongeveer **0,2 kB** per versie, een helemaal nieuwe tekst van 4 kB ongeveer **2,4 kB** per versie.
@@ -163,8 +163,8 @@ Mediaan van de CPU-tijd in milliseconden. De wachttijd voor de bezoeker is ongev
 | tekstpagina bekijken, bezoeker | 3 | 9 | 52 | 256 |
 | startpagina, bezoeker | 3 | 8 | 51 | 258 |
 | pagina bestaat niet (404) | 2 | 7 | 53 | 262 |
-| artikel bekijken, lid | 4 | 10 | 57 | 290 |
-| startpagina, lid | 3 | 11 | 89 | 457 |
+| artikel bekijken, ingelogd | 4 | 10 | 57 | 290 |
+| startpagina, ingelogd | 3 | 11 | 89 | 457 |
 | inloggen | 2 | 4 | 19 | 88 |
 | editor openen (`/edit`) | 5 | 23 | 194 | 964 |
 | artikel opslaan | 6 | 15 | 113 | 508 |
@@ -175,9 +175,9 @@ Mediaan van de CPU-tijd in milliseconden. De wachttijd voor de bezoeker is ongev
 
 1. De rekentijd groeit ongeveer **lineair** met het aantal pagina's: per 1.000 pagina's ongeveer 2 ms voor een artikel, 5 ms voor een tekstpagina of de startpagina en 38 ms voor de index.
 2. Een pagina achteraan in de lijst is trager dan een pagina vooraan. Hypha zoekt een pagina op door de lijst van voor naar achter door te lopen. Bij 50.000 pagina's kost dat tot 150 ms extra.
-3. **Leden**: 10.000 leden maken elk verzoek op een site met 1.000 pagina's ongeveer 17 ms trager. Opslaan wordt 45 ms trager. Met 1.000 leden of minder is er geen merkbaar verschil.
+3. **Gebruikers**: 10.000 gebruikers maken elk verzoek op een site met 1.000 pagina's ongeveer 17 ms trager. Opslaan wordt 45 ms trager. Met 1.000 gebruikers of minder is er geen merkbaar verschil.
 
-| Leden (site met 1.000 pagina's) | `hypha.xml` | artikel, bezoeker | startpagina | inloggen | opslaan | werker |
+| Gebruikers (site met 1.000 pagina's) | `hypha.xml` | artikel, bezoeker | startpagina | inloggen | opslaan | werker |
 |---|---|---|---|---|---|---|
 | 5 | 154 kB | 6 ms | 8 ms | 4 ms | 15 ms | 28 tot 35 MB |
 | 100 | 173 kB | 5 ms | 7 ms | 5 ms | 15 ms | 28 tot 35 MB |
@@ -196,7 +196,7 @@ Elke werker van Apache met PHP houdt `hypha.xml` als boom (DOM) in het geheugen.
 | 50.000 | 133 MB | 400 tot 420 MB | 7,6 tot 19 MB |
 
 1. Een werker geeft geheugen niet terug. Na één keer de index of een tagpagina blijft hij groot, tot Apache hem vervangt (na 500 verzoeken, `MaxConnectionsPerChild`). Reken daarom met de kolom **na de index of een tagpagina**.
-2. Vuistregel (afgeleid): een werker heeft **30 MB plus 7,5 MB per 1.000 pagina's** nodig, en ongeveer 2 MB per 1.000 leden. Apache zelf heeft ongeveer 25 MB nodig.
+2. Vuistregel (afgeleid): een werker heeft **30 MB plus 7,5 MB per 1.000 pagina's** nodig, en ongeveer 2 MB per 1.000 gebruikers. Apache zelf heeft ongeveer 25 MB nodig.
 3. **`memory_limit` beschermt niet.** De boom van `hypha.xml` valt buiten de geheugenteller van PHP: PHP meldt hooguit 19 MB terwijl de werker 420 MB gebruikt. Alleen de grens van de container of de server stopt een werker. Die stopt hem dan hard: de bezoeker krijgt geen antwoord.
 4. Gemeten: bij 50.000 pagina's in een container van 256 MB stopte de tweede tagpagina de werker. Bij 10.000 pagina's met 8 werkers in 256 MB gebeurde hetzelfde onder drukte. Met 4 werkers in 512 MB of 8 in 1 GB ging het goed (300 en 600 MB in gebruik).
 
@@ -241,7 +241,7 @@ Controleer na elke wijziging aan NGINX:
 1. links beginnen met `https://`;
 2. het logboek toont de echte adressen van bezoekers;
 3. uploads tot 16 MB komen door;
-4. pagina's van ingelogde leden komen niet uit een cache.
+4. pagina's van ingelogde gebruikers komen niet uit een cache.
 
 Zie [`docs/technical/REVERSE_PROXY.md`](../../technical/REVERSE_PROXY.md).
 

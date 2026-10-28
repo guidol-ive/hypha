@@ -1,6 +1,6 @@
 ---
 title: "Installatie, ook met Docker"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -115,7 +115,7 @@ flowchart LR
 
 ### Achter NGINX
 
-Zet in `docs/container/hypha-vhost.conf` de regels `SetEnv HTTPS on`, `RemoteIPHeader` en `RemoteIPInternalProxy` aan. Stel NGINX in zoals in [`docs/technical/REVERSE_PROXY.md`](../../technical/REVERSE_PROXY.md): geef `Host` en `X-Real-IP` door, zet `client_max_body_size` op 20m en bewaar geen pagina's van ingelogde leden in de cache.
+Zet in `docs/container/hypha-vhost.conf` de regels `SetEnv HTTPS on`, `RemoteIPHeader` en `RemoteIPInternalProxy` aan. Stel NGINX in zoals in [`docs/technical/REVERSE_PROXY.md`](../../technical/REVERSE_PROXY.md): geef `Host` en `X-Real-IP` door, zet `client_max_body_size` op 20m en bewaar geen pagina's van ingelogde gebruikers in de cache.
 
 ### Bijwerken
 

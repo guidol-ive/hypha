@@ -10,7 +10,7 @@ A wiki page.
 
 | Address | What |
 |---|---|
-| `…/name` | Read the page; members see buttons for edit, translate, versions and delete |
+| `…/name` | Read the page; logged-in users see buttons for edit, translate, versions and delete |
 | `…/name/edit` | Edit with the text editor; choose page name and private/public |
 | `…/name/translate` | Make a version in another language |
 | versions | Choose two versions to see the differences; revert to an older version |
@@ -25,7 +25,7 @@ before; a translation is made in the same editor. See the handbook,
 
 ## Peer-reviewed article (`peer_reviewed_article`)
 
-Made for De Stadsbron: an article is published only after review by fellow members.
+Made for De Stadsbron: an article is published only after review by other users.
 
 **Fields:** title, author, excerpt, featured image, text, method ("how was this researched"),
 sources, context, tags, publication date.
@@ -39,18 +39,18 @@ newly created ──save──> draft ──"to review"──> review ──3 ap
 
 - In *draft* and later, Hypha shows **checks**: required (has text, method, sources, excerpt) and
   recommended (featured image, tags). A required check that fails blocks the next step.
-- In *review*, members open **review discussions** on the article. A remark can be marked
-  *blocking*; it must be resolved before publication. Three members must **approve**
+- In *review*, users open **review discussions** on the article. A remark can be marked
+  *blocking*; it must be resolved before publication. Three users must **approve**
   (`APPROVES_NEEDED = 3`).
 - After publication, visitors can join **public discussions**: they give a name and e-mail
   address and confirm the comment through a link in an e-mail. They can subscribe to replies and
   unsubscribe through a link.
-- Members **moderate** comments: hide (still visible to members, folded) or delete, and undo
+- Users **moderate** comments: hide (still visible to logged-in users, folded) or delete, and undo
   that; a reason can be given.
 
 | Address | What |
 |---|---|
-| `…/name` | Read; members see status, checks, approvals and actions |
+| `…/name` | Read; logged-in users see status, checks, approvals and actions |
 | `…/name/edit` | Edit the fields |
 | `…/name/discussions` | Start or reply to a review or public discussion, close a discussion |
 | `…/name/comments` | Moderation view |
@@ -61,15 +61,15 @@ newly created ──save──> draft ──"to review"──> review ──3 ap
 articles made before). The fields are the same, with a *section* (rubriek) from a list of the site.
 The life cycle has these additions:
 
-- **Approve with the statute:** a member who approves ticks every point of the editorial statute
+- **Approve with the statute:** a user who approves ticks every point of the editorial statute
   of the site. The author cannot approve the own article.
 - **Take back from review:** the author can move an article in *review* or *approved* back to
   *draft*; the approvals lapse and are kept as lapsed.
-- **Withdraw:** the author or an administrator can withdraw a published article with a reason for
+- **Withdraw:** the author or a privileged user can withdraw a published article with a reason for
   readers. The text is no longer shown: the address shows the title with a notice and the reason,
   the article is left out of page lists and gets `noindex`. The author can edit it again as a
   draft.
-- **Language and page name:** the author can change the language; the author or an administrator
+- **Language and page name:** the author can change the language; the author or a privileged user
   can rename the page.
 - The checks gain *has title*, *has section* and *only known tags*.
 
@@ -82,7 +82,7 @@ A newsletter with double opt-in.
 
 - **Visitors** subscribe with their e-mail address and confirm through a link; every mailing has an
   unsubscribe link.
-- **Members** edit the description and the welcome text, see the addresses, add addresses in bulk,
+- **Users** edit the description and the welcome text, see the addresses, add addresses in bulk,
   send a reminder to unconfirmed addresses, remove addresses.
 - **Mailings** are written in the editor, can be sent as a test to one address first, and are then
   sent to all confirmed addresses; progress is shown while sending. A list can be private.
@@ -107,8 +107,8 @@ published.
 | `…/name/signup` | Sign-up form for performers (name, e-mail, phone, title, description, website, image) |
 | `…/name/confirmation-needed`, `…/name/confirm` | E-mail confirmation of a sign-up |
 | `…/name/contribute`, `…/name/pay` | Contribution form and payment through Mollie |
-| `…/name/participants`, `…/name/contributions` | Lists for members |
-| `…/name/settings` | Festival settings (members), including the Mollie key used for payments |
+| `…/name/participants`, `…/name/contributions` | Lists for logged-in users |
+| `…/name/settings` | Festival settings (logged-in users), including the Mollie key used for payments |
 | `…/name/paymenthook` | Called by Mollie, not by people |
 
 ## System pages

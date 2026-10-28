@@ -1,16 +1,16 @@
 ---
 title: "Handleiding van Hypha"
-revision: 4
+revision: 5
 date_created: 2026-10-27
 date_last_review:
 ---
 
 # Handleiding van Hypha
 
-Hypha is een website die een groep samen bijhoudt. Elk lid kan pagina's maken en bewerken. Deze handleiding legt in gewoon Nederlands uit hoe dat gaat. Ze bestaat uit twee delen:
+Hypha is een website die een groep samen bijhoudt. Elke gebruiker kan pagina's maken en bewerken. Deze handleiding legt in gewoon Nederlands uit hoe dat gaat. Ze bestaat uit twee delen:
 
-1. de **gebruikshandleiding**, voor leden, auteurs, beoordelaars en de redactie;
-2. de **technische handleiding**, op hoofdlijnen, voor beheerders en ontwikkelaars.
+1. de **gebruikshandleiding**, voor gebruikers, auteurs, beoordelaars en de redactie;
+2. de **technische handleiding**, op hoofdlijnen, voor wie de server beheert en voor ontwikkelaars.
 
 De voorbeelden gaan over een verzonnen site in de stijl van De Stadsbron, met een verzonnen auteur (Sanne de Vries) en een verzonnen gemeente (Eemstad). Er staan geen gegevens van echte personen in.
 
@@ -35,7 +35,7 @@ flowchart LR
 
 ## Gebruikshandleiding
 
-1. [Wat is Hypha?](gebruik/01-wat-is-hypha.md): pagina's, talen, leden, menu, tags, openbaar en privé
+1. [Wat is Hypha?](gebruik/01-wat-is-hypha.md): pagina's, talen, gebruikers, menu, tags, openbaar en privé
 2. [Inloggen en je account](gebruik/02-inloggen-en-account.md)
 3. [Een tekstpagina maken en bewerken](gebruik/03-tekstpagina.md)
 4. [Een artikel schrijven](gebruik/04-artikel-schrijven.md)

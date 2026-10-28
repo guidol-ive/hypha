@@ -1,38 +1,38 @@
 ---
 title: "Wat is Hypha?"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
 
 # Wat is Hypha?
 
-Hypha is een website die een groep samen bijhoudt. Elk lid kan pagina's maken en bewerken, zonder dat er één webmaster nodig is. Deze pagina legt de belangrijkste begrippen uit: pagina's, talen, leden, het menu, tags, en het verschil tussen openbaar en privé.
+Hypha is een website die een groep samen bijhoudt. Elke gebruiker kan pagina's maken en bewerken, zonder dat er één webmaster nodig is. Deze pagina legt de belangrijkste begrippen uit: pagina's, talen, gebruikers, het menu, tags, en het verschil tussen openbaar en privé.
 
 ## Wie doet wat?
 
-Op een Hypha-site zijn er vier soorten mensen. Het diagram laat zien hoe iemand van bezoeker lid en beheerder wordt, en wat elke rol mag.
+Op een Hypha-site zijn er vier soorten mensen. Het diagram laat zien hoe iemand van bezoeker standaardgebruiker en geprivilegieerde gebruiker wordt, en wat elke rol mag.
 
 ```mermaid
 flowchart LR
     bezoeker([Bezoeker]) -->|krijgt een uitnodiging| genodigde([Genodigde])
-    genodigde -->|vult het aanmeldformulier in| lid([Lid])
-    lid -->|een beheerder geeft beheerrechten| beheerder([Beheerder])
-    lid -->|stopt, of wordt verwijderd| oudlid([Oud-lid])
-    oudlid -->|een beheerder maakt het account weer actief| lid
+    genodigde -->|vult het aanmeldformulier in| standaard([Standaardgebruiker])
+    standaard -->|een geprivilegieerde gebruiker kiest 'maak geprivilegieerd'| geprivilegieerd([Geprivilegieerde gebruiker])
+    standaard -->|stopt, of wordt verwijderd| geen([Geen gebruiker])
+    geen -->|een geprivilegieerde gebruiker kiest 'weer actief maken'| standaard
     bezoeker -.- b1[leest openbare pagina's, reageert op artikelen, meldt zich aan voor een mailinglijst]
-    lid -.- l1[maakt en bewerkt pagina's, beoordeelt artikelen, nodigt nieuwe leden uit]
-    beheerder -.- a1[stelt de site in: menu, thema, tags, leden]
+    standaard -.- l1[maakt en bewerkt pagina's, beoordeelt artikelen, nodigt nieuwe gebruikers uit]
+    geprivilegieerd -.- a1[stelt de site in: menu, thema, tags, gebruikers]
 ```
 
 | Rol | Wat je kunt |
 |---|---|
 | bezoeker | openbare pagina's lezen, reageren op gepubliceerde artikelen, je aanmelden voor een mailinglijst of festival |
-| lid | inloggen, pagina's maken en bewerken, privépagina's lezen, artikelen beoordelen, nieuwe leden uitnodigen |
-| beheerder | alles wat een lid kan, plus de site instellen, pagina's verwijderen, nieuwe tags maken en leden beheren |
-| oud-lid | niets meer; inloggen lukt niet tot een beheerder het account weer actief maakt |
+| standaardgebruiker | inloggen, pagina's maken en bewerken, privépagina's lezen, artikelen beoordelen, nieuwe gebruikers uitnodigen |
+| geprivilegieerde gebruiker | alles wat een standaardgebruiker kan, plus de site instellen, pagina's verwijderen, nieuwe tags maken en gebruikers beheren |
+| geen gebruiker | niets meer; inloggen lukt niet tot een geprivilegieerde gebruiker het account weer actief maakt |
 
-Zelf een account aanmaken kan niet. Je wordt lid via een uitnodiging van een ander lid. Zie [Inloggen en je account](02-inloggen-en-account.md).
+Zelf een account aanmaken kan niet. Je wordt gebruiker via een uitnodiging van een andere gebruiker. Zie [Inloggen en je account](02-inloggen-en-account.md) en [Gebruikersbeheer](10-gebruikersbeheer.md).
 
 ## Pagina's
 
@@ -66,16 +66,16 @@ Er zijn twee soorten taal:
 
 ## Het menu
 
-Bovenaan elke pagina staat het **menu** met links naar de belangrijkste pagina's. Een beheerder stelt het menu in. Rechtsboven staan de knoppen voor de index (alle pagina's), inloggen, nieuwe pagina en instellingen. Zie [Menu en navigatie](07-menu-en-navigatie.md).
+Bovenaan elke pagina staat het **menu** met links naar de belangrijkste pagina's. Een geprivilegieerde gebruiker stelt het menu in. Rechtsboven staan de knoppen voor de index (alle pagina's), inloggen, nieuwe pagina en instellingen. Zie [Menu en navigatie](07-menu-en-navigatie.md).
 
 ## Tags
 
-Een **tag** is een onderwerp, zoals *Raadsnieuws* of *Verkeer*. Onder een pagina staan haar tags. Klik op een tag en je ziet alle pagina's met die tag. Leden kiezen tags uit een vaste lijst; alleen een beheerder maakt een nieuwe tag. Zie [Beeld, links en tags](06-beeld-links-tags.md).
+Een **tag** is een onderwerp, zoals *Raadsnieuws* of *Verkeer*. Onder een pagina staan haar tags. Klik op een tag en je ziet alle pagina's met die tag. Gebruikers kiezen tags uit een vaste lijst; alleen een geprivilegieerde gebruiker maakt een nieuwe tag. Zie [Beeld, links en tags](06-beeld-links-tags.md).
 
 ## Openbaar en privé
 
 1. Een **openbare** pagina kan iedereen lezen, ook zonder in te loggen.
-2. Een **privépagina** zien alleen leden die zijn ingelogd. Bezoekers krijgen de melding dat ze moeten inloggen. Je herkent een privépagina aan het sterretje achter de naam.
+2. Een **privépagina** zien alleen gebruikers die zijn ingelogd. Bezoekers krijgen de melding dat ze moeten inloggen. Je herkent een privépagina aan het sterretje achter de naam.
 3. Een **artikel met review** is privé tot het is gepubliceerd. Dan wordt het openbaar.
 4. Een link naar een privépagina ziet een bezoeker als gewone tekst, zonder link.
 
@@ -84,7 +84,7 @@ Een **tag** is een onderwerp, zoals *Raadsnieuws* of *Verkeer*. Onder een pagina
 
 ## De samenvatting per e-mail
 
-Hypha stuurt de leden regelmatig een **samenvatting** (*digest*) van wat er is veranderd: nieuwe en gewijzigde pagina's, met de verschillen gemarkeerd, en nieuwe leden. Hoe vaak, stelt een beheerder in. Zo blijft iedereen op de hoogte zonder elke dag te kijken.
+Hypha stuurt de gebruikers regelmatig een **samenvatting** (*digest*) van wat er is veranderd: nieuwe en gewijzigde pagina's, met de verschillen gemarkeerd, en nieuwe gebruikers. Hoe vaak, stelt een geprivilegieerde gebruiker in. Zo blijft iedereen op de hoogte zonder elke dag te kijken.
 
 ## Nieuw met de tekst-editor
 

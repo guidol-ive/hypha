@@ -1,6 +1,6 @@
 ---
 title: "Tekens en talen (Unicode)"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -30,13 +30,13 @@ Elke proef gebruikte verzonnen tekst, onder andere:
 3. **De nieuwe tekst-editor** bewaart titel, auteur, tekst, uittreksel, bijsluiter en bronnen precies zoals ze zijn ingetypt. Hij haalt verticale tabs en andere verboden tekens weg voordat hij opslaat, en repareert kapotte UTF-8.
 4. **Webadres van een nieuw artikel.** Accenten verdwijnen netjes: `Café „De Kroon” in Eemstad` wordt `cafe-de-kroon-in-eemstad`, `Straße & Größe 50%` wordt `strasse-en-grosse-50-procent`. Dezelfde titel in NFC en NFD geeft hetzelfde adres; het tweede artikel krijgt `-2`.
 5. **Tags** met accenten, Grieks of Japans werken, ook de tagpagina `tag/nl/…`.
-6. **Volledige namen** van leden mogen accenten, andere schriften en emoji bevatten.
+6. **Volledige namen** van gebruikers mogen accenten, andere schriften en emoji bevatten.
 7. **E-mail.** Een onderwerp met letters buiten ASCII wordt gecodeerd (RFC 2047), zodat strenge mailservers het accepteren. De tekst van de mail is UTF-8.
 8. **Pagina's** worden met `charset=utf-8` naar de browser gestuurd.
 
 ## Wat niet goed werkt
 
-1. **Een verticale tab of kapotte UTF-8 kon de site breken.** Een reactie van een bezoeker met zo'n teken maakte het artikel onleesbaar (foutmelding 500 voor iedereen). Een lid kon met zo'n teken in zijn volledige naam de hele site onleesbaar maken. Gemeld als [#539](https://github.com/PlanBCode/hypha/issues/539), oplossing in [#540](https://github.com/PlanBCode/hypha/pull/540).
+1. **Een verticale tab of kapotte UTF-8 kon de site breken.** Een reactie van een bezoeker met zo'n teken maakte het artikel onleesbaar (foutmelding 500 voor iedereen). Een gebruiker kon met zo'n teken in zijn volledige naam de hele site onleesbaar maken. Gemeld als [#539](https://github.com/PlanBCode/hypha/issues/539), oplossing in [#540](https://github.com/PlanBCode/hypha/pull/540).
 2. **Paginanamen verliezen letters.** Bij een nieuwe pagina houdt Hypha alleen letters zonder accent over: `Café de Kroon` wordt `Caf_de_Kroon`, `Straße` wordt `Strae`, een Griekse naam wordt `_` en een Japanse naam wordt geweigerd. `Été` en `été` worden allebei `t`. Dat geldt ook voor de titel van een tekstpagina in de nieuwe tekst-editor. Gemeld als [#543](https://github.com/PlanBCode/hypha/issues/543).
 3. **Pagina's met een naam buiten ASCII geven 404.** Een link als `[[Café de Kroon]]` maakt wel een pagina `Café_de_Kroon` aan, maar wie op de link klikt, krijgt „niet gevonden”. Gemeld als [#541](https://github.com/PlanBCode/hypha/issues/541), oplossing in [#542](https://github.com/PlanBCode/hypha/pull/542).
 4. **De paginalijst (index) hangt** zodra er een pagina is waarvan de naam begint met een teken na de Z, zoals `É`, `Α` of `_`. Na 30 seconden volgt een foutmelding. Bekend als [#514](https://github.com/PlanBCode/hypha/issues/514), oplossing in [#516](https://github.com/PlanBCode/hypha/pull/516).
@@ -63,7 +63,7 @@ Deze punten kwamen uit dezelfde test en zijn in de nieuwe tekst-editor opgelost:
 3. Krijgt een pagina of de hele site een foutmelding 500 na een reactie of een nieuwe naam, zoek dan in `data/hypha.xml` of `data/pages/<id>` naar een teken onder de spatie (bijvoorbeeld met `grep -P '[\x00-\x08\x0B\x0C\x0E-\x1F]'`) en haal het weg. Maak eerst een back-up.
 4. Maak geen links naar pagina's met accenten in de naam zolang [#542](https://github.com/PlanBCode/hypha/pull/542) en [#516](https://github.com/PlanBCode/hypha/pull/516) niet zijn samengevoegd: zulke pagina's zijn onbereikbaar en laten de paginalijst hangen.
 5. Zet in een artikel in het Arabisch of Hebreeuws de alinea's in HTML met `dir="rtl"` en `lang`, bijvoorbeeld `<p dir="rtl" lang="ar">…</p>`.
-6. Laat als beheerder geen tags aanmaken die alleen in accent verschillen van een bestaande tag.
+6. Maak als geprivilegieerde gebruiker geen tags aan die alleen in accent verschillen van een bestaande tag.
 
 ## Wat de server nodig heeft
 

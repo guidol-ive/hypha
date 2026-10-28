@@ -1,6 +1,6 @@
 ---
 title: "Een artikel schrijven"
-revision: 7
+revision: 8
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -14,7 +14,7 @@ Een *artikel met review* is een lang stuk dat pas verschijnt als drie collega's 
 
 ## Wat je nodig hebt
 
-1. Een account als **lid** van de site. Je wordt lid via een uitnodiging van een ander lid.
+1. Een account als **gebruiker** van de site. Je wordt gebruiker via een uitnodiging van een andere gebruiker.
 2. Je bent **ingelogd**.
 3. De tekst van je artikel, of een idee om mee te beginnen.
 
@@ -43,7 +43,7 @@ flowchart LR
 2. Kies als type **artikel met review**.
 3. Typ de **titel** van het artikel. Het webadres volgt er vanzelf uit: de woorden in kleine letters, met streepjes ertussen en zonder accenten, bijvoorbeeld `/nl/vertrekkend-raadslid-bram-hoekstra-twintig-jaar-strijd-voor-open-bestuur`. Je ziet het adres meteen onder de titel. Bestaat het al, dan komt er `-2` achter.
 4. Een nieuw artikel opent **altijd in de nieuwe tekst-editor**.
-5. Kies **maak pagina**. Het artikel heeft nu de status *schets* en is alleen zichtbaar voor leden. Het webadres ligt nu vast; verander je de titel later flink, dan stelt de checklist voor het adres bij te werken, zolang het artikel nog niet gepubliceerd is.
+5. Kies **maak pagina**. Het artikel heeft nu de status *schets* en is alleen zichtbaar voor ingelogde gebruikers. Het webadres ligt nu vast; verander je de titel later flink, dan stelt de checklist voor het adres bij te werken, zolang het artikel nog niet gepubliceerd is.
 
 ### 2. Kiezen hoe je schrijft
 
@@ -77,7 +77,7 @@ Bovenaan staat de **artikelkop** met vaste velden. Ze horen bij elk artikel:
 | tags | één of meer onderwerpen uit de vaste lijst van de site | ja |
 | afbeelding | een foto bij het uittreksel, met beschrijving, bijschrift en fotograaf | aangeraden |
 
-1. De **rubriek** en de tags kies je uit een lijst. Een artikel heeft precies één rubriek en één of meer tags. Een nieuwe tag kan alleen een beheerder maken; vraag het de redactie als je er een mist.
+1. De **rubriek** en de tags kies je uit een lijst. Een artikel heeft precies één rubriek en één of meer tags. Een nieuwe tag kan alleen een geprivilegieerde gebruiker maken; vraag het de redactie als je er een mist.
 2. De **beschrijving** van een foto is voor wie de foto niet kan zien, bijvoorbeeld met voorleessoftware. Beschrijf wat er op de foto staat.
 
 In Markdown staan dezelfde velden als *Frontmatter* bovenaan de tekst, tussen twee regels `---`:
@@ -141,7 +141,7 @@ fotograaf: Foto (naam fotograaf)
 1. Links schrijf je HTML, CSS en JavaScript; rechts zie je meteen hoe het werkt voor de lezer.
 2. Een **beschrijving** is verplicht. Voorleessoftware leest die voor, en lezers zonder JavaScript en zoekmachines zien die tekst in plaats van het blok.
 3. Laat je de **hoogte** leeg, dan past het blok zich aan zijn inhoud aan. Een vaste hoogte vul je in pixels in.
-4. Het blok draait afgeschermd: het kan niet bij de pagina, cookies, formulieren of het internet. Scripts en stijlen van buiten mogen alleen van de diensten die de beheerder heeft ingesteld.
+4. Het blok draait afgeschermd: het kan niet bij de pagina, cookies, formulieren of het internet. Scripts en stijlen van buiten mogen alleen van de diensten die een geprivilegieerde gebruiker heeft ingesteld.
 5. Een interactief blok kan alleen wie vrijheidsniveau 2 heeft; zie [Beheer](../techniek/06-beheer.md#instellingen-van-de-tekst-editor).
 
 Een foto of diagram **bewerk** je met het potlood of een dubbelklik, en **verwijder** je met het kruisje. Daarna kun je het verwijderen nog ongedaan maken.
@@ -194,7 +194,7 @@ Zo lang een verplichte controle niet in orde is, kun je de beoordeling niet star
 ### 8. Opslaan en de beoordeling starten
 
 1. Kies **opslaan** (of ⌘/Ctrl+S). Tot je opslaat, bewaart de browser je werk, zodat je niets kwijtraakt als het venster sluit.
-2. Is alles in orde, kies dan **start beoordeling**. Het artikel gaat naar de status *in beoordeling* en de leden krijgen bericht.
+2. Is alles in orde, kies dan **start beoordeling**. Het artikel gaat naar de status *in beoordeling* en de gebruikers krijgen bericht.
 
 Verder lezen: [Een artikel beoordelen en publiceren](05-beoordelen-en-publiceren.md).
 
@@ -219,6 +219,6 @@ Artikelen die zijn gemaakt vóór de nieuwe tekst-editor, zijn opgeslagen als HT
 ## Veelgestelde vragen
 
 1. **Kan ik een artikel als `.md`-bestand opslaan?** Ja: met **Meer ▾ → download als .md**. Een `.md`-bestand kun je ook openen in de editor.
-2. **Wie ziet mijn artikel?** Zolang het niet is gepubliceerd, alleen de leden van de site.
+2. **Wie ziet mijn artikel?** Zolang het niet is gepubliceerd, alleen de ingelogde gebruikers van de site.
 3. **Moet ik Markdown kennen?** Nee. In **Opmaak** werkt alles met knoppen. Markdown leer je terloops, als je wilt.
 4. **„… heeft deze tekst opgeslagen nadat jij hem opende.”** Iemand anders heeft het artikel opgeslagen terwijl jij het open had. Je eigen wijzigingen zijn niet weg: ze staan nog in de editor. Kies **Toch opslaan** om de versie van de ander te vervangen, of open het artikel opnieuw in een tweede tabblad en neem over wat je nodig hebt.
