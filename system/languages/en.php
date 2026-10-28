@@ -47,7 +47,7 @@
 		"interface-language" => "Interface language",
 		"new" => "new",
 		"new-page" => "new page",
-		"new-page-icon" => "<i class=\"fa fa-file\" aria-hidden=\"true\"></i>",
+		"new-page-icon" => "<span class=\"hypha-icon hypha-icon-new-page\" aria-hidden=\"true\"></span>",
 		"llms-intro" => "This file lists the public pages of this site for language models and AI agents (llmstxt.org). All addresses are also in the sitemap: [[sitemap]]",
 		"llms-articles" => "Articles",
 		"llms-pages" => "Pages",

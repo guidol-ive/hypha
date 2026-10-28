@@ -47,7 +47,7 @@
 		"interface-language" => "Bedieningstaal",
 		"new" => "nieuw",
 		"new-page" => "nieuwe pagina",
-		"new-page-icon" => "<i class=\"fa fa-file\" aria-hidden=\"true\"></i>",
+		"new-page-icon" => "<span class=\"hypha-icon hypha-icon-new-page\" aria-hidden=\"true\"></span>",
 		"llms-intro" => "Dit bestand noemt de openbare pagina's van deze site voor taalmodellen en AI-agents (llmstxt.org). Alle adressen staan ook in de sitemap: [[sitemap]]",
 		"llms-articles" => "Artikelen",
 		"llms-pages" => "Pagina's",
