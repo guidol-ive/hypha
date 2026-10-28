@@ -18,7 +18,9 @@ export default async function (t) {
 			await page.fill('#searchLogin', 'onbekende-proefnaam');
 			await Promise.all([page.waitForNavigation(), page.click('#popup input[type=submit]')]);
 			assert(errors.length === 0, errors.join('; '));
-			assert((await page.textContent('body')).includes('geen gebruiker of e-mailadres gevonden'), 'no answer on the page');
+			// With the limits of #493 the answer is the same for a known and an unknown name.
+			const body = await page.textContent('body');
+			assert(body.includes('geen gebruiker of e-mailadres gevonden') || body.includes('herstelemail is verstuurd'), 'no answer on the page');
 		} finally {
 			await context.close();
 		}

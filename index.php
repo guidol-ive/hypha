@@ -143,6 +143,7 @@
 	if ($hyphaPage) processCommandResult($hyphaPage->process($O_O->getRequest()));
 
 	registerPostProcessingFunction('dewikify');
+	registerPostProcessingFunction('addHeaderHomeLink');
 	registerPostProcessingFunction('addPageTitle');
 	registerPostProcessingFunction('localizeImageUrls');
 	registerPostProcessingFunction('addImageAlts');
