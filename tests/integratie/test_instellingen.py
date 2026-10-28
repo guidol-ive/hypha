@@ -88,5 +88,30 @@ def an_article_keeps_its_level_when_a_member_without_level_2_saves_it(base):
     assert not result["ok"] and result["errors"], result
     save(beheer, {"mdLevel2": "on", "mdLevel2User": "on", "mdLevel2Admin": "on"})
 
+
+@test
+def a_footer_keeps_an_image_without_scheme(base):
+    # Sites installed in 2020 got the Creative Commons image as //i.creativecommons.org/...; saving the footer made
+    # that /i.creativecommons.org/..., a path on the site itself (#638).
+    beheer = Client(base).login("beheer")
+    path = os.path.join(WORK, "data/hypha.xml")
+    # Saving the site elements wraps the header in <p>, which ends up in the subject of the mails of later tests.
+    original = open(path, "rb").read()
+    root = ET.parse(path).getroot()
+
+    def inner(node):
+        return (node.text or "") + "".join(ET.tostring(child, encoding="unicode") for child in node)
+    title, header = root.findtext("title"), inner(root.find("header"))
+    footer = '<p>Verzonnen voettekst <img alt="CC" src="//i.creativecommons.org/l/by-sa/3.0/88x31.png" /> <a href="https://creativecommons.org/licenses/by-sa/3.0/">licentie</a></p>'
+    beheer.get("settings")
+    beheer.post("settings", "settingsSaveSiteElements", "", {"siteTitle": title, "siteHeader": header, "siteFooter": footer})
+    try:
+        stored = ET.tostring(ET.parse(path).getroot().find("footer"), encoding="unicode")
+        assert 'src="//i.creativecommons.org/l/by-sa/3.0/88x31.png"' in stored, stored
+        _, text, _ = beheer.get("nl/Start")
+        assert 'src="//i.creativecommons.org/l/by-sa/3.0/88x31.png"' in text
+    finally:
+        open(path, "wb").write(original)
+
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))
