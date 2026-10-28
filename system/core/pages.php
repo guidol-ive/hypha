@@ -270,7 +270,7 @@ EOF;
 				} else {
 					notify('error', __('no-page'));
 				}
-				if (isUser()) $hyphaHtml->writeToElement('main', '<span class="right""><input type="button" class="button" value="' . __('create') . '" onclick="newPage();"></span>');
+				if (isUser()) $hyphaHtml->writeToElement('main', '<span class="right"><input type="button" class="button" value="' . __('create') . '" onclick="newPage();"></span>');
 				$hyphaPage = false;
 			}
 
@@ -287,7 +287,7 @@ EOF;
 				serveFile('data/files/' . $args[0], 'data/files');
 				exit;
 			case HyphaRequest::HYPHA_SYSTEM_PAGE_IMAGES:
-				serveFile('data/images/' . $args[0], 'data/images');
+				serveFile('data/images/' . $args[0], 'data/images', /* cors_allow */ true);
 				exit;
 			case HyphaRequest::HYPHA_SYSTEM_PAGE_INDEX:
 				$hyphaPage = new indexpage($O_O);

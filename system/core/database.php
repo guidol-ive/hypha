@@ -796,7 +796,7 @@
 			resolving any .. and symbolic links. Can be
 			empty to omit checking.
 	*/
-	function serveFile($filename, $root) {
+	function serveFile($filename, $root, $cors_allow = false) {
 		while (ob_get_level() > 0) {
 			ob_end_clean();
 		}
@@ -831,6 +831,10 @@
 		if ($start !== 0 || $end !== $filesize) {
 			header('Content-Length: ' . (string)($bytesize));
 			header('Content-Range: bytes ' . $start . '-' . $end. '/' . $filesize);
+		}
+		if ($cors_allow) {
+			header("Access-Control-Allow-Origin: *");
+			header("Access-Control-Allowed-Methods: GET");
 		}
 
 		// Allow caching of the response (overriding default PHP
