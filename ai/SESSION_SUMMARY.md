@@ -59,6 +59,25 @@ date_last_review:
   `data/cache`). PR #519 for #406 (logged-in crawl 82 → 0 failures). New: KI-028 to KI-030.
 - Nothing of this session is committed.
 
+## 2026-10-28, trial site, fixes from use and SEO
+
+- The trial branch `issue520-compleet-proef` (bouw plus the needed PRs) runs at the trial site; `haal_hypha.ksh`
+  and a `docker-compose.yaml` (outside the repository) fetch and start it. The checklist on #520 lists every PR.
+- Issues and PRs against `main` from using the trial site: #636/#637 installation mode, #638/#639 `//host`
+  URLs, #640/#641 images of an older address, #643/#644 recover account, #645/#646 icons and login without
+  JavaScript, #647/#648 button order, #650/#651 names of the kinds of account, #652/#653 Pagina-index and
+  Aangemeld, #654/#655 new page popup, #656/#657 page name on the page index, #658/#659 user list, #660/#661
+  text areas, #664/#665 alt texts, #667/#668 buttons without JavaScript, #521 with #662 (`lang`), #663
+  (description, Open Graph) and #666 (site title as text). #642: plain-text password of the system user.
+- After the merges into `main` (41482e9): #649 for the two crashes of #406 that remain, #586 reopened
+  (`input[@name=csrfToken]` without quotes), known-bug register and `ai/` notes updated.
+- In bouw only (#520): jQuery is deferred only without a theme script in the body; a confirmation of a button
+  was escaped twice (trek terug, delete); photo fields only with a photo; sections sorted.
+- Tests that change a file the site reads use `write_same_length()`: Docker Desktop shows the container a
+  changed file a moment later with its old length.
+- Documentation: `docs/handleiding/gebruik/10-gebruikersbeheer.md` (kinds of users, setting a password by
+  hand in `hypha.xml`), and system user, privileged user, standard user and no user throughout `docs/`.
+
 ## 2026-10-26, audit for PHP 8.2
 
 - Created `ai/` in the layout of the Invantive repositories, `ai/CODING_STANDARDS.md` derived from the
