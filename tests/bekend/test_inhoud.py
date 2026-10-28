@@ -820,5 +820,31 @@ def invalid_utf8_in_a_full_name_keeps_the_site_readable(base):
         set_user_attribute("u4", "fullname", "Lotte Bakker")
 
 
+@known_bug(628)
+def the_heading_of_the_comments_comes_before_the_comments(base):
+    path = article(Client(base).login("beheer"))
+    status, text, _ = Client(base).get(path)
+    setup(status == 200, f"the article gave {status}")
+    block = re.search(r'<div class="public-comments-wrapper">(.*?)<form', text, re.S)
+    setup(block, "the article has no block of public comments")
+    assert block.group(1).lstrip().startswith("<h2>"), f"the comments block starts with {block.group(1).strip()[:60]!r}, not with its heading"
+
+
+@known_bug(629)
+def the_motivation_field_of_a_contribution_has_dutch_texts(base):
+    beheer = Client(base).login("beheer")
+    path = festival(beheer)
+    status, text, _ = beheer.get(path + "/contribute")
+    setup(status == 200, f"the contribution form gave {status}")
+    #
+    # A key that is missing in the dictionary is shown as the key itself (Language::translate()).
+    #
+    assert "festival-field-contribution-motivation" not in text, "the Dutch contribution form shows the key festival-field-contribution-motivation"
+    contribute(beheer, path)
+    status, text, _ = beheer.get(path + "/contributions")
+    setup(status == 200 and "Past bij het thema" in text, f"the list of contributions gave {status} without the motivation")
+    assert "motivation:" not in text, "the list of contributions shows the bare key 'motivation:'"
+
+
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))

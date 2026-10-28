@@ -1,6 +1,6 @@
 ---
 title: "GITHUB ISSUES FILED 2026W44: the issues filed from this review, with type, labels and impact"
-revision: 2
+revision: 3
 date_created: 2026-10-26
 date_last_review:
 ---
@@ -176,9 +176,28 @@ Also from the concurrency test: three saves of a WYMeditor text page in the same
 
 ## Blockers of #520 listed on the issue, 2026-10-28
 
-A comment on #520 (issuecomment-6461914893) lists the open issues in existing code that keep the Markdown editor from meeting its specifications on `main`. They are split into must, should and could have:
-- **Must** (review flow broken, data loss or a security hole): #529, #569, #420, #416, #423, #421, #539, #406, #525, #528, #571 and #526.
-- **Should** (specifications not fully met, but there is a workaround): #560, #530, the deprecations #407, #408, #409, #410 and #514, #527, #573, #437, #541, #422 and #419.
-- **Could** (improves on the specifications): #543, #411, #432, #400, #575 and #401.
+A comment on #520 (issuecomment-6470891147) lists the open issues in existing code that keep the Markdown editor from meeting its specifications on `main`. It replaces the first list (issuecomment-6461914893, deleted) after the merge of #501, #481, #531, #533, #562 and #566. #421, #525 and #527 are solved and retested on `main` (a019475). The rest is split into must, should and could have:
+- **Must** (review flow broken, data loss or a security hole): #529, #569, #420, #416, #423, #539, #406, #528, #571 and #526.
+- **Should** (specifications not fully met, but there is a workaround): #560, #530, the deprecations #407, #408, #409, #410 and #514, #573, #437, #604 with #375 (robots.txt keeps Lighthouse SEO below 95), #541, #422, #419, #619, #620 and #628.
+- **Could** (improves on the specifications): #543, #411, #432, #400, #575, #401, #521 with #605, #606 and #612, #607, #621, #622 and #616.
 
 Of these, #571, #573, #575 and #577 (the fix for part of #408) are also included in `issue520-bouw`.
+
+
+## Retest after merge, 2026-10-28
+
+The pull requests #501, #481, #531, #533, #562 and #566 were merged into `main` (a019475). Their issues #421, #440, #525, #527, #548 and #554 were closed by GitHub on merge. The 14 known-bug tests of these issues passed on PHP 8.2 and 8.5 and are now ordinary tests in `tests/bekend/`; each issue has a comment "Retest after merge: successful". Two tests filed under #423 pass since b8db4c9 (HyphaImage) and are ordinary tests too; the path test of #423 is still a known bug.
+
+
+## Filed on 2026-10-28
+
+| Issue | Pull request | Area | Title |
+|---|---|---|---|
+| #619 | #623 | tags | The tag selector has no id or name (Chrome Issues panel on every page of a member) |
+| #620 | #624 | forms | Labels of the editor fields and the festival forms point to a field that does not exist |
+| #621 | #625 | forms | Login, password, e-mail and name fields have no autocomplete attribute |
+| #622 | #626 | WYMeditor | Image upload dialog: unclosed `<select>` gives a console warning |
+| #628 | #630 | article | The heading of the comments comes after the comments and the form |
+| #629 | #631 | festival | The motivation field of a contribution has no Dutch text, and the list of contributions shows the key |
+
+#624 and #625 change the same lines of the festival forms; the one merged second needs a small rebase.
