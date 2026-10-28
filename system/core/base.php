@@ -723,11 +723,13 @@
 	function hypha_make_relative($url) {
 		global $O_O;
 
-		// Handle urls like https://mydomain.tld/path/en/pagename
+		// Handle urls like https://mydomain.tld/path/en/pagename. A
+		// link to the site itself becomes ./ instead of an empty
+		// href, which browsers and search engines see as no link (#669).
 		$remove = $O_O->getRequest()->getRootUrl();
 		$len = strlen($remove);
 		if (substr($url, 0, $len) == $remove)
-			return substr($url, $len);
+			return substr($url, $len) === '' ? './' : substr($url, $len);
 
 		// A protocol-relative url (//host/path) points to another
 		// site; for a site at / the code below would make it /host/path.
@@ -738,7 +740,7 @@
 		$remove = $O_O->getRequest()->getRootUrlPath();
 		$len = strlen($remove);
 		if (substr($url, 0, $len) == $remove)
-			return substr($url, $len);
+			return substr($url, $len) === '' ? './' : substr($url, $len);
 
 		return $url;
 	}
