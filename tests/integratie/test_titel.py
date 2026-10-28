@@ -2,7 +2,6 @@
 import os
 import re
 import sys
-import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hypha import Client, run, test  # noqa: E402
@@ -10,15 +9,19 @@ from hypha import Client, run, test  # noqa: E402
 WORK = os.environ.get("HYPHA_WORK", "")
 
 
-def put_back(base, path, original):
-    # In one step; Docker Desktop shows the container the new file a moment later, so wait until the site reads it.
-    with open(path + ".terug", "wb") as f:
-        f.write(original)
-    os.replace(path + ".terug", path)
-    for _ in range(30):
-        if Client(base).get("nl/Start")[0] == 200:
-            return
-        time.sleep(0.1)
+def write_same_length(path, data):
+    # Docker Desktop shows the container a changed file a moment later with its old length, which cuts a longer
+    # file short; so the new content gets exactly the length of the old, with spaces of the indentation taken away
+    # or added after the root element.
+    length = os.path.getsize(path)
+    while len(data) > length:
+        data = data.replace(b"\n  ", b"\n ", 1) if b"\n  " in data else data
+        if len(data) > length and b"\n  " not in data:
+            raise AssertionError("cannot shorten hypha.xml")
+    data += b" " * (length - len(data))
+    with open(path, "r+b") as f:
+        f.write(data)
+        f.truncate()
 
 
 def page_title(text):
@@ -32,12 +35,12 @@ def a_site_title_stored_with_markup_gives_its_text(base):
     original = open(path, "rb").read()
     text = original.decode("utf-8")
     title = re.search(r"<title>(.*?)</title>", text, re.S).group(1)
-    open(path, "w", encoding="utf-8").write(text.replace(f"<title>{title}</title>", f"<title><p>{title}</p></title>", 1))
     try:
+        write_same_length(path, text.replace(f"<title>{title}</title>", f"<title><p>{title}</p></title>", 1).encode("utf-8"))
         _, page, _ = Client(base).get("nl/Start")
         assert page_title(page) == title, page_title(page)
     finally:
-        put_back(base, path, original)
+        write_same_length(path, original)
 
 
 @test
@@ -53,7 +56,7 @@ def a_site_title_with_an_ampersand_is_saved_as_text(base):
         _, page, _ = Client(base).get("nl/Start")
         assert page_title(page) == "Raad &amp; Daad", page_title(page)
     finally:
-        put_back(base, path, original)
+        write_same_length(path, original)
 
 
 if __name__ == "__main__":
