@@ -5,6 +5,15 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hypha import Client, run, test  # noqa: E402
+import hypha  # noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bekend"))
+import test_paginas as pages  # noqa: E402
+
+#
+# Only the helpers of test_paginas.py, not its tests.
+#
+hypha.TESTS.clear()
 
 
 def html_lang(text):
@@ -54,6 +63,19 @@ def the_page_index_has_a_description(base):
 def an_edit_view_has_no_description(base):
     _, text, _ = Client(base).login("lotte").get("nl/Start/edit")
     assert not meta(text, "property", "og:title"), "the edit view has Open Graph tags"
+
+
+@test
+def a_page_with_several_images_takes_the_first_for_open_graph(base):
+    # The tag index of a real site shows many teasers with an image; one image per page was assumed, and every
+    # such page answered 500 (#521).
+    sanne = Client(base).login("sanne")
+    for n in (1, 2):
+        pages.article(sanne, f"Beeld {n} {pages.RUN}", "published", tag="tag4", featured=f"<featured_image>5f0c0ffee0b2{n}.png</featured_image>")
+    status, text, _ = Client(base).get("tag/nl/Cultuur")
+    assert status == 200, status
+    assert len(re.findall(r"<img[^>]*featured_image", text)) >= 2, "fewer than two images on the tag index"
+    assert meta(text, "property", "og:image"), "no og:image"
 
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))
