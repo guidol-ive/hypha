@@ -128,6 +128,7 @@
 
 	registerPostProcessingFunction('dewikify');
 	registerPostProcessingFunction('localizeImageUrls');
+	registerPostProcessingFunction('addSeoMeta');
 
 	// add hypha commands and navigation
 	$_cmds[] = makeUrlLink(__('index-icon'), 'index/'.$hyphaContentLanguage, 'index', __('index'));
