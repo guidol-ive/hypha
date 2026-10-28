@@ -63,6 +63,8 @@ Bij oudere pagina's en artikelen gebruik je de knop voor een afbeelding in de we
 
 ### In de nieuwe tekst-editor
 
+![Het linkvenster: zoek een pagina van de site of typ een webadres, met de tekst van de link](../afbeeldingen/dialoog-link.png)
+
 ![Na [[ stelt de editor bestaande pagina's voor](../afbeeldingen/suggesties-paginas.png)
 
 1. Selecteer de tekst die de link wordt, en kies **Link** in de werkbalk (of ⌘K, Ctrl+K). In Opmaak kun je ook gewoon `[[` typen.

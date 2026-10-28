@@ -99,6 +99,8 @@ fotograaf: Foto (naam fotograaf)
 
 ### 4. De tekst schrijven
 
+![Het menu Alle blokken in Opmaak](../afbeeldingen/menu-blokken.png)
+
 ![Het menu dat opent als je / typt aan het begin van een regel](../afbeeldingen/menu-slash.png)
 
 ![Het spiekbriefje met de Markdown-tekens](../afbeeldingen/spiekbriefje.png)

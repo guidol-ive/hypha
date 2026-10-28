@@ -681,3 +681,7 @@
 .mdeditor .statute-list { margin: 0; padding-left: 1.4em; font-size: 14px; line-height: 1.45; }
 .mdeditor .statute-list li { margin: 0 0 6px; }
 .mdeditor .statute-list li.ok::marker { color: var(--bluegreen); }
+/*
+// The controls of the editor in ordinary letters, also in a theme that writes buttons in capitals (destadsbron).
+*/
+.mdeditor .toolbar button, .mdeditor .menu button, .mdeditor .editmode button, .mdeditor .devicebar button, .mdeditor .templates button, .mdeditor .place label, .mdeditor .popup, .mdeditor .gobtn, .mdeditor .linkbtn { text-transform: none; letter-spacing: normal; }

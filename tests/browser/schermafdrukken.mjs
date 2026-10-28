@@ -240,9 +240,18 @@ let slug;
 	await page.waitForSelector('#mdeMathDlg[open]', { timeout: 3000 }).catch(() => {});
 	await shot(page, 'dialoog-formule');
 	await page.keyboard.press('Escape');
-	await editor(page, () => window.hyphaMdeditor.editor.undoVisual?.());
+	await editor(page, () => { const v = window.hyphaMdeditor.editor.pm; window.hyphaMdeditor.editor.lastPm = v; v.focus(); });
+	await page.keyboard.press('Meta+z');
 	await editor(page, () => window.hyphaMdeditor.editor.dialogs.toggleTableMenu(document.querySelector('[data-act="table"]')));
 	await shot(page, 'menu-tabel');
+	await page.keyboard.press('Escape');
+	await editor(page, () => window.hyphaMdeditor.editor.dialogs.openLink({ view: window.hyphaMdeditor.editor.pm, from: 1, to: 1, target: 'Raad', text: 'de reeks over de raad' }));
+	await page.waitForTimeout(300);
+	await page.dispatchEvent('#mdeLinkTarget', 'input');
+	await shot(page, 'dialoog-link');
+	await page.keyboard.press('Escape');
+	await page.click('.toolbar [data-act="slash"]').catch(() => {});
+	await shot(page, 'menu-blokken');
 	await page.keyboard.press('Escape');
 	//
 	// Remove what the formula button added, then save; the checklist shows what is missing before review.
