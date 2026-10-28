@@ -56,6 +56,7 @@ Numbers read on a day. Never corrected, only superseded by a newer reading.
 - [measurement/20261026_PHP_DEPRECATIONS.md](measurement/20261026_PHP_DEPRECATIONS.md), what PHP 8.1 up to 8.5 deprecate that Hypha still uses
 - [measurement/20261026_SCALABILITY_DOS.md](measurement/20261026_SCALABILITY_DOS.md), throughput on one CPU and how a few requests make the site unusable (cause superseded)
 - [measurement/20261026_SCALABILITY_ROOT_CAUSE.md](measurement/20261026_SCALABILITY_ROOT_CAUSE.md), the cause is worker memory, not the stats lock; throughput with the stats patch and with a worker cap
+- [measurement/20261029_SCALABILITY_CPUS.md](measurement/20261029_SCALABILITY_CPUS.md), throughput on 1, 2 and 8 CPUs in 256 MB; one to two workers per CPU; with and without the page cache
 
 ## Investigations
 
