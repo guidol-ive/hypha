@@ -492,7 +492,14 @@
 			$figure = $this->html->createElement('figure');
 			$figure->setAttribute('class', 'breed mde-lead');
 			$img = $figure->createChild('img');
-			$img->setAttribute('src', (new HyphaImage($file))->getUrl());
+			// Scaled down, as in a teaser (#672); the photo is the largest element of the page.
+			$scaled = new HyphaImage($file);
+			$img->setAttribute('src', $scaled->getScaledUrl(1200));
+			$size = $scaled->getScaledSize(1200);
+			if ($size) {
+				$img->setAttribute('width', $size[0]);
+				$img->setAttribute('height', $size[1]);
+			}
 			$img->setAttribute('alt', $image->getAttribute('alt'));
 			$caption = trim($image->getAttribute('caption'));
 			$credit = trim($image->getAttribute('credit'));
