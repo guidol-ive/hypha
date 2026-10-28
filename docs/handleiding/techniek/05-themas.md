@@ -1,13 +1,13 @@
 ---
 title: "Thema's"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
 
 # Thema's
 
-Een **thema** bepaalt hoe de site eruitziet: de indeling van de pagina, de lettertypes en de kleuren. Deze pagina legt uit waar een thema staat, hoe een beheerder het kiest en aanpast, welke CSS-variabelen er zijn, en hoe je de kleuren van diagrammen instelt.
+Een **thema** bepaalt hoe de site eruitziet: de indeling van de pagina, de lettertypes en de kleuren. Deze pagina legt uit waar een thema staat, hoe een geprivilegieerde gebruiker het kiest en aanpast, welke CSS-variabelen er zijn, en hoe je de kleuren van diagrammen instelt.
 
 ## Waar een thema staat
 
@@ -45,7 +45,7 @@ Daarnaast vult Hypha elk element met de klasse `hyphaCommands` met de knoppen re
 
 ## Een thema kiezen en aanpassen
 
-Alleen een **beheerder** kan dit. Het thema `default` kun je niet wijzigen; maak er eerst een kopie van.
+Alleen een **geprivilegieerde gebruiker** kan dit. Het thema `default` kun je niet wijzigen; maak er eerst een kopie van.
 
 ![Het scherm om een thema te kiezen](../afbeeldingen/instellingen-thema.png)
 

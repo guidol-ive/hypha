@@ -106,6 +106,24 @@ def the_editor_page_does_not_wait_for_the_old_scripts_of_hypha(base):
     assert re.search(r'<script[^>]*jquery-1.7.1.min.js[^>]*>', text) and "defer" not in re.search(r'<script[^>]*jquery-1.7.1.min.js[^>]*>', text).group(0), "other pages keep jQuery as it was"
 
 
+
+@test
+def a_script_of_the_theme_in_the_body_keeps_jquery_in_time(base):
+    #
+    # A theme with its own script at the end of the body (hypha.js with $(...)) ran before the deferred jQuery and
+    # failed with "$ is not defined" on the editor page.
+    #
+    path = os.path.join(WORK, "data/themes/default/hypha.html")
+    original = open(path, "rb").read()
+    text = original.decode("utf-8")
+    open(path, "w", encoding="utf-8").write(text.replace("</body>", '<script src="data/themes/default/proef.js"></script></body>', 1))
+    try:
+        _, page, _ = STATE["sanne"].get(f"nl/{SLUG}/edit")
+        tag = re.search(r'<script[^>]*jquery-1.7.1.min.js[^>]*>', page)
+        assert tag and "defer" not in tag.group(0), f"jQuery is deferred while the theme has a script in the body: {tag.group(0) if tag else 'missing'}"
+    finally:
+        open(path, "wb").write(original)
+
 @test
 def second_article_with_the_same_title_gets_suffix_2(base):
     sanne = STATE["sanne"]

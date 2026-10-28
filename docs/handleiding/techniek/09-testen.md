@@ -1,6 +1,6 @@
 ---
 title: "Testen als ontwikkelaar"
-revision: 1
+revision: 2
 date_created: 2026-10-28
 date_last_review:
 ---
@@ -40,7 +40,7 @@ sh tests/run.sh 8.2 browser
 ```
 
 1. **Zonder tweede woord** draaien alleen de **unit-tests**: `tests/HyphaRequestTest.php` en `tests/markdown/`. Ze nemen een paar seconden. Elke waarschuwing of melding over verouderde code (deprecation) laat de test falen die hem veroorzaakte.
-2. **Met `integratie`** start ook een container met Hypha en een verzonnen proefsite (vijf leden, zeven tags). De tests in `tests/integratie/` doen verzoeken over HTTP. Na afloop faalt de run op elke PHP-melding in de log van de container, behalve de meldingen die op `main` al voorkomen. Die staan in `tests/bekend/meldingen.ndjson`, elk met het issue dat de melding weghaalt.
+2. **Met `integratie`** start ook een container met Hypha en een verzonnen proefsite (vijf gebruikers, zeven tags). De tests in `tests/integratie/` doen verzoeken over HTTP. Na afloop faalt de run op elke PHP-melding in de log van de container, behalve de meldingen die op `main` al voorkomen. Die staan in `tests/bekend/meldingen.ndjson`, elk met het issue dat de melding weghaalt.
 3. **Met `browser`** komen daar de tests in Chrome bij: de unit-pagina's in `tests/browser/unit/` en de end-to-end tests in `tests/browser/e2e/`.
 4. Vervang `8.2` door `8.3`, `8.4` of `8.5`. Draai vóór een pull request **alle vier de versies**.
 
@@ -64,7 +64,7 @@ De gouden dataset bestaat uit 10.000 verzonnen artikelen en pagina's, met elke o
    HYPHA_GOUDEN=alle sh tests/run.sh 8.2
    ```
 
-2. De hele dataset als site, met elke pagina opgevraagd als bezoeker en als lid:
+2. De hele dataset als site, met elke pagina opgevraagd als bezoeker en als ingelogde gebruiker:
 
    ```bash
    sh tests/integratie/gouden.sh 8.2

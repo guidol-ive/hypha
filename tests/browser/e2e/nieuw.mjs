@@ -42,4 +42,22 @@ export default async function (t) {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();
 	});
+	//
+	// The standard way of a member: from the page index, a new article with a title, then the editor (#656).
+	//
+	t.test('an article made from the page index opens in the editor with its title', async () => {
+		const p = await login(browser, base, 'lotte');
+		await p.goto(base + 'index/nl');
+		await p.evaluate(() => newPage());
+		await p.selectOption('#newPageType', 'peer_reviewed_article');
+		assert(await p.inputValue('#newPagename') === '', 'the popup fills in a name on the page index');
+		const title = 'Nieuwe fietsbrug over de Eem ' + Date.now().toString(36);
+		await p.fill('#newPagename', title);
+		await Promise.all([p.waitForURL(/\/nl\/nieuwe-fietsbrug-over-de-eem-[a-z0-9]+(-\d+)?\/edit/), p.click('#newPageSubmit')]);
+		await p.waitForFunction(() => window.hyphaMdeditor?.editor?.ready);
+		const state = await p.evaluate(() => window.hyphaMdeditor.editor.fields.title);
+		assert(state === title, `title in the editor: ${state}`);
+		assert(!p.errors.length, p.errors.join('\n'));
+		await p.context().close();
+	});
 }

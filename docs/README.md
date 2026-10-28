@@ -7,14 +7,14 @@ Documentation for the people who use, run and change Hypha. It describes the `de
 This folder is not served by the web server (`.htaccess` refuses it) and is not part of the
 container image.
 
-## Functional, for members, editors and administrators
+## Functional, for users, editors and privileged users
 
-- [functional/README.md](functional/README.md), what Hypha is and its main concepts: members,
+- [functional/README.md](functional/README.md), what Hypha is and its main concepts: users,
   pages, languages, versions, privacy, tags, menu, digest
 - [functional/PAGE_TYPES.md](functional/PAGE_TYPES.md), the page types: text page, peer-reviewed
   article, mailing list, festival
 - [functional/ADMINISTRATION.md](functional/ADMINISTRATION.md), the settings pages: account,
-  members and invitations, site settings, theme, styles, menu, system tools
+  users and invitations, site settings, theme, styles, menu, system tools
 
 ## Technical, for operators and developers
 

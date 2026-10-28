@@ -106,7 +106,7 @@ def an_empty_maintenance_login_is_refused(base):
     #
     client = Client(base)
     status, text, _ = client.request("hypha.php?maintenance", {"command": "login", "username": "", "password": ""})
-    assert "hypha superuser login" in text.lower(), f"empty credentials opened the maintenance tools ({status})"
+    assert "hypha superuser login" in text.lower() or "hypha system user login" in text.lower(), f"empty credentials opened the maintenance tools ({status})"
 
 
 @known_bug(415)
@@ -197,15 +197,17 @@ def an_anonymous_visitor_cannot_create_a_tag(base):
 
 
 @known_bug(422)
-def a_page_with_an_unknown_type_does_not_break(base):
+def a_new_page_with_an_unknown_type_is_refused(base):
     #
-    # The type of a new page is stored and later instantiated as a class without validation, so a bogus type turns
-    # every visit of the page into a fatal error. Creating such a page must not lead to a server error.
+    # The type of a new page is stored without validation. Since PR #519 such a page no longer crashes (it gives 404),
+    # but it should not be created at all: only the installed datatypes are accepted.
     #
     sanne = Client(base).login("sanne")
     sanne.post("nl/Start", "newPage", "Onbekend type proef", {"newPageType": "DOMDocument", "newPageLanguage": "nl"})
     status, _, _ = Client(base).get("nl/Onbekend_type_proef")
     assert status != 500, "a page created with an unknown type crashes with HTTP 500"
+    with open(os.path.join(WORK, "data/hypha.xml"), encoding="utf-8") as f:
+        assert 'type="DOMDocument"' not in f.read(), "a page with the unknown type DOMDocument was stored"
 
 
 @known_bug(434)

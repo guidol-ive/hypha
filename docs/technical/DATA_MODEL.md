@@ -4,7 +4,7 @@ Everything a site holds is under `data/`. Copying this folder copies the site.
 
 | Path | Content |
 |---|---|
-| `data/hypha.xml` | Site settings, members, page list, tags, menu, header, footer, digest queue |
+| `data/hypha.xml` | Site settings, users, page list, tags, menu, header, footer, digest queue |
 | `data/pages/<id>` | One XML file per page: all languages and all versions, and for articles also discussions and approvals |
 | `data/images/` | Images uploaded through the editor or forms; `images/org/` keeps originals larger than 1120x800; thumbnails are made on demand |
 | `data/files/` | Other uploaded files |
@@ -53,7 +53,7 @@ A fresh installation, with personal values left out:
 | `tagList/tag` | Tags with a label per language; pages refer to tags by id |
 | `digest` | Pending digest entries |
 | `mdeditor` | Optional settings of the Markdown editor (see below); without it the defaults of `hypha_mdeditorDefaults()` apply |
-| `userList/user/@mdeditor` | Preferences of a member for the Markdown editor, as JSON: `mode` (`visual` or `markdown`), `remember`, `split` (20–80) |
+| `userList/user/@mdeditor` | Preferences of a user for the Markdown editor, as JSON: `mode` (`visual` or `markdown`), `remember`, `split` (20–80) |
 
 The settings of the Markdown editor (`system/core/markdown.php`, `hypha_mdeditorSettings()`). Every
 list replaces its default when it has at least one item:
@@ -69,7 +69,7 @@ list replaces its default when it has at least one item:
 ```
 
 `level2="off"` turns embedded content and interactive blocks off for the whole site; `level2Off`
-is a comma-separated list of roles (`user`, `admin`) for which they are off.
+is a comma-separated list of roles (`user` for standard users, `admin` for privileged users) for which they are off.
 
 ## A page file
 
@@ -192,7 +192,7 @@ Consequences for the Markdown editor:
 
 ## Personal data
 
-`hypha.xml` and the page files hold names, e-mail addresses and password hashes of members, and
+`hypha.xml` and the page files hold names, e-mail addresses and password hashes of users, and
 names and e-mail addresses of commenters, subscribers and festival participants. Treat a copy of
 `data/` as personal data: do not put it in a repository or a ticket, and anonymise it before using
 it as a public test set.

@@ -33,7 +33,7 @@ date_last_review:
   `->item(0)` of the result, to `count()` and `[0]`. With the fix, dev passes the same crawl on
   8.2, 8.4 and 8.5. Patch in
   [`design/concept/20261026_PHP82_DETACHED_NODES.md`](design/concept/20261026_PHP82_DETACHED_NODES.md),
-  reported with the patch as PlanBCode/hypha#405 (NS-GLE-2026W44-hypha-001). **GitHub:** #405 (OPEN, filed 2026-10-26 with the patch); PR #475 (MERGED into main 2026-10-26); the wider PHP-8 breakage is #399 (OPEN, last activity 2026-04-16).
+  reported with the patch as PlanBCode/hypha#405 (NS-GLE-2026W44-hypha-001). **GitHub:** #405 (CLOSED 2026-10-26, solved by PR #475 in `main`, filed 2026-10-26 with the patch); PR #475 (MERGED into main 2026-10-26); the wider PHP-8 breakage is #399 (OPEN, last activity 2026-04-16).
 - **KI-GLE-2026W44-hypha-006, master does not run on any PHP 8 (measured).**
   `system/php-dom-wrapper/Traits/ManipulationTrait.php:163` conflicts with `DOMElement::remove()`.
   Resolved on `dev` by removing the library; master stays broken until dev is merged. **GitHub:** #399 PHP compatibility (OPEN, last activity 2026-04-16).
@@ -50,13 +50,13 @@ date_last_review:
   members.** The check `has-featured-image` (`system/datatypes/peer_reviewed_article.php:458-463`)
   calls `findOneXPath('//featured_image')->getText()`: null on 42 older articles, an exception on
   28 articles whose file holds several versions. Scope the query to the current article node and
-  treat "none" as "no image". **GitHub:** #406 (OPEN, filed 2026-10-26 with the patch in [`design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md`](design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md)).
+  treat "none" as "no image". **GitHub:** #406 (CLOSED 2026-10-28, solved by PR #519 in `main`, filed 2026-10-26 with the patch in [`design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md`](design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md)).
 - **KI-GLE-2026W44-hypha-003, an article title with markup crashes `getTitle()`.**
   `peer_reviewed_article.php:2008-2012` calls `getText()`, which throws on non-text children
-  (10 articles). Use `textContent` or `extractText()`. **GitHub:** #406 (OPEN, filed 2026-10-26 with the patch in [`design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md`](design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md)).
+  (10 articles). Use `textContent` or `extractText()`. **GitHub:** #406 (CLOSED 2026-10-28, but this part is not solved in `main` 41482e9: #649 (OPEN, filed 2026-10-28), filed 2026-10-26 with the patch in [`design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md`](design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md)).
 - **KI-GLE-2026W44-hypha-004, a page of a removed datatype is a fatal error.**
   `createPageInstance()` (`system/core/pages.php:229`) instantiates `type` blindly; De Stadsbron
-  has one page of type `article`. Show a notice and a 404, or map legacy types. **GitHub:** #406 (OPEN, filed 2026-10-26 with the patch in [`design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md`](design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md)).
+  has one page of type `article`. Show a notice and a 404, or map legacy types. **GitHub:** #406 (CLOSED 2026-10-28, solved by PR #519 in `main`, filed 2026-10-26 with the patch in [`design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md`](design/concept/20261026_LOGGED_IN_ARTICLE_CRASHES.md)).
 - **KI-GLE-2026W44-hypha-009, mailing-list subscribe and batch add throw `TypeError` (analysis,
   from the security review).** `appendText($address)` at `mailinglist.php:359` and `:417` with a
   non-string. Not reached by the crawl, which does not post. **GitHub:** no GitHub issue as of 2026-10-26 (from the private security review; not filed publicly).
@@ -113,14 +113,14 @@ date_last_review:
   calls `$this->xml->document()`, a php-dom-wrapper method removed on dev, so opening
   `<language>/<article>/comments/<id>` is a fatal error on every PHP version; the not-found branch
   also unlocks without a lock and does not return. A verified patch (`getElementById`, return
-  `'404'`) was posted as a comment on #406. **GitHub:** #406 (OPEN).
+  `'404'`) was posted as a comment on #406. **GitHub:** #406 (CLOSED 2026-10-28, solved by PR #519 in `main`).
 - **KI-GLE-2026W44-hypha-024, BMP uploads always fail (analysis).** `HyphaImage::importUploadedImage`
   opens a BMP with `imagecreatefromwbmp` (WBMP, a different format), so an upload the UI lists as
   allowed (`jpg, png, gif, bmp`) fails. Use `imagecreatefrombmp`. **GitHub:** no issue as of 2026-10-26.
 - **KI-GLE-2026W44-hypha-025, the mailing view fails with "Wrong Document" (measured).** Opening a
   mailing of a mailing list throws a `DOMException` ("Wrong Document Error") at
   `system/datatypes/mailinglist.php:778`: a node of one DOM document is inserted into another
-  without `importNode()`. Found while testing the jQuery upgrade (PR #498). **GitHub:** #515 (OPEN,
+  without `importNode()`. Found while testing the jQuery upgrade (PR #498). **GitHub:** #515 (CLOSED 2026-10-26, solved by PR #517 in `main`,
   filed 2026-10-26), PR #517 (OPEN; `appendImportedChildren()`).
 - **KI-GLE-2026W44-hypha-026, PHP 8.5 deprecation in the index page (measured).** `$capital++` on a
   letter in `system/datatypes/index.php:58` and `:65` gives "Increment on non-numeric string is

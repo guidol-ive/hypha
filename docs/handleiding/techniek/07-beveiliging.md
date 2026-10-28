@@ -1,13 +1,13 @@
 ---
 title: "Beveiliging"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
 
 # Beveiliging
 
-Deze pagina beschrijft hoe Hypha een site beschermt: de rollen, inloggen en sessies, de bescherming van formulieren, de vrijheidsniveaus van de nieuwe tekst-editor, het HTML-filter, en wat een beheerder zelf moet regelen. De bekende zwakke plekken staan in [`ai/investigation/open/20261026_SECURITY_REVIEW.md`](../../../ai/investigation/open/20261026_SECURITY_REVIEW.md).
+Deze pagina beschrijft hoe Hypha een site beschermt: de rollen, inloggen en sessies, de bescherming van formulieren, de vrijheidsniveaus van de nieuwe tekst-editor, het HTML-filter, en wat wie de server beheert zelf moet regelen. De bekende zwakke plekken staan in [`ai/investigation/open/20261026_SECURITY_REVIEW.md`](../../../ai/investigation/open/20261026_SECURITY_REVIEW.md).
 
 ## Rollen
 
@@ -17,15 +17,17 @@ Elke gebruiker in `hypha.xml` heeft een rol in het attribuut `rights`.
 |---|---|---|
 | bezoeker | (geen account) | openbare pagina's lezen, reageren op gepubliceerde artikelen, aanmelden voor een mailinglijst of festival |
 | genodigde | `invitee` | nog niets; kan alleen het aanmeldformulier invullen met de link uit de uitnodiging |
-| lid | `user` | inloggen, pagina's maken en bewerken, privépagina's lezen, artikelen beoordelen, leden uitnodigen, bestaande tags geven |
-| beheerder | `admin` | alles van een lid, plus instellingen, thema, menu, kop en voet, pagina's verwijderen, nieuwe tags, leden beheren, adressen aan een mailinglijst toevoegen |
-| oud-lid | `exmember` | niets; inloggen wordt geweigerd |
+| standaardgebruiker | `user` | inloggen, pagina's maken en bewerken, privépagina's lezen, artikelen beoordelen, gebruikers uitnodigen, bestaande tags geven |
+| geprivilegieerde gebruiker | `admin` | alles van een standaardgebruiker, plus instellingen, thema, menu, kop en voet, pagina's verwijderen, nieuwe tags, gebruikers beheren, adressen aan een mailinglijst toevoegen |
+| geen gebruiker | `exmember` | niets; inloggen wordt geweigerd |
+
+De systeemgebruiker van `hypha.php` is een apart account: hij staat niet in `hypha.xml` en kan niet op de site inloggen (zie [Gebruikersbeheer](../gebruik/10-gebruikersbeheer.md)).
 
 Bij een artikel met review gelden extra regels, die de server controleert:
 
 1. de auteur kan zijn eigen artikel niet goedkeuren;
 2. alleen de auteur kan een artikel in beoordeling terugtrekken en de taal wijzigen;
-3. alleen de auteur of een beheerder kan publiceren, een gepubliceerd artikel terugtrekken en het webadres bijwerken;
+3. alleen de auteur of een geprivilegieerde gebruiker kan publiceren, een gepubliceerd artikel terugtrekken en het webadres bijwerken;
 4. goedkeuren kan pas als elk punt van het redactiestatuut is aangevinkt.
 
 ## Inloggen en sessies
@@ -47,7 +49,7 @@ Elk formulier van Hypha bevat een **token** dat ook in een cookie staat (*double
 
 ## De vrijheidsniveaus van de editor
 
-De nieuwe tekst-editor kent twee niveaus van vrijheid voor auteurs. **Niveau 2 staat aan**; een beheerder kan het voor de hele site of per rol uitzetten in `hypha.xml` (zie [Datatypes en macro's](04-datatypes-en-macros.md#instellingen-van-de-editor)).
+De nieuwe tekst-editor kent twee niveaus van vrijheid voor auteurs. **Niveau 2 staat aan**; een geprivilegieerde gebruiker kan het voor de hele site of per rol uitzetten in `hypha.xml` (zie [Datatypes en macro's](04-datatypes-en-macros.md#instellingen-van-de-editor)).
 
 | Niveau | Wat een auteur mag |
 |---|---|
@@ -95,23 +97,23 @@ De regels van het filter:
 De uitkomst is XHTML, die Hypha in het XML-bestand van de pagina bewaart. Het filter is getest met tientallen aanvallen; zie [`docs/technical/TESTING.md`](../../technical/TESTING.md).
 
 > [!warning] De oude opmaakeditor
-> Pagina's en artikelen in de oude opmaakeditor (WYMeditor) gaan **niet** door dit filter. Hypha weigert daar alleen `<script>`. Een lid kan in de oude editor dus meer HTML kwijt dan in de nieuwe. Geef alleen mensen die je vertrouwt een account.
+> Pagina's en artikelen in de oude opmaakeditor (WYMeditor) gaan **niet** door dit filter. Hypha weigert daar alleen `<script>`. Een gebruiker kan in de oude editor dus meer HTML kwijt dan in de nieuwe. Geef alleen mensen die je vertrouwt een account.
 
-## Aanbevelingen voor de beheerder
+## Aanbevelingen voor wie de server beheert
 
 Tot de bevindingen van de beveiligingsreview zijn opgelost:
 
-1. Haal `hypha.php` weg uit de map van de site na de installatie, of zet er een lange, unieke gebruikersnaam en wachtwoord voor onderhoud in. Laat ze nooit leeg.
+1. Haal `hypha.php` weg uit de map van de site na de installatie, of geef de systeemgebruiker daarin een lange, unieke gebruikersnaam en wachtwoord. Laat ze nooit leeg.
 2. Weiger `data/`, behalve `data/themes/`, ook in de configuratie van Apache, met `LocationMatch` zoals in [`docs/technical/INSTALLATION.md`](../../technical/INSTALLATION.md#apache-configuration).
 3. Zet `ServerName` en `UseCanonicalName On`, zodat links in e-mails niet via een vervalste `Host` naar een andere site kunnen wijzen.
 4. Gebruik alleen HTTPS, en zet `Strict-Transport-Security` in NGINX.
 5. Geef de gebruiker van de webserver alleen schrijfrechten op `data/`.
 6. Zet nooit een bestand `DEBUG` op de echte site.
 7. Begrens het aantal `POST`-verzoeken in NGINX als er spam of gegok naar wachtwoorden komt.
-8. Ontneem oud-leden hun account: verwijder ze in de ledenlijst, dan worden ze oud-lid en kunnen ze niet meer inloggen.
+8. Laat een geprivilegieerde gebruiker het account weghalen van wie niet meer meedoet: met **verwijderen** in de projectledenlijst wordt die persoon *geen gebruiker* en kan niet meer inloggen.
 
-> [!tip] Wie mag beheerder zijn?
-> Geef beheerrechten aan zo weinig mensen als nodig, maar altijd aan minstens twee, zodat de site niet afhangt van één persoon.
+> [!tip] Wie mag geprivilegieerde gebruiker zijn?
+> Maak zo weinig mensen geprivilegieerd als nodig, maar altijd aan minstens twee, zodat de site niet afhangt van één persoon.
 
 ## Meer lezen
 

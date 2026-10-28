@@ -3,7 +3,7 @@
 Result of a test on 2026-10-27 with a fictional site in the container of `docs/container` (PHP 8.2), on
 `main` (d97ab7b) and on the branch with the Markdown editor (#520). The Dutch handbook page
 [`../handleiding/techniek/08-unicode.md`](../handleiding/techniek/08-unicode.md) has the same content
-for site administrators.
+for the people who run a site.
 
 ## Summary
 

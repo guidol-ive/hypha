@@ -1,19 +1,19 @@
 ---
 title: "Opslag: hypha.xml en de map data"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
 
 # Opslag: hypha.xml en de map data
 
-Hypha heeft geen database. Alles wat een site bevat, staat als bestanden in de map `data/`: de instellingen, de leden, de pagina's, de foto's en het thema. Wie de map `data/` kopieert, kopieert de site. Deze pagina beschrijft wat waar staat. De Engelstalige details staan in [`docs/technical/DATA_MODEL.md`](../../technical/DATA_MODEL.md).
+Hypha heeft geen database. Alles wat een site bevat, staat als bestanden in de map `data/`: de instellingen, de gebruikers, de pagina's, de foto's en het thema. Wie de map `data/` kopieert, kopieert de site. Deze pagina beschrijft wat waar staat. De Engelstalige details staan in [`docs/technical/DATA_MODEL.md`](../../technical/DATA_MODEL.md).
 
 ## De map data
 
 | Pad | Inhoud |
 |---|---|
-| `data/hypha.xml` | instellingen van de site, leden, de lijst van pagina's, tags, menu, kop en voet, de wachtrij van de samenvatting |
+| `data/hypha.xml` | instellingen van de site, gebruikers, de lijst van pagina's, tags, menu, kop en voet, de wachtrij van de samenvatting |
 | `data/pages/‹id›` | één XML-bestand per pagina: alle talen en alle versies; bij een artikel ook de discussies en goedkeuringen |
 | `data/images/` | geüploade foto's; `images/org/` bewaart de originelen die groter waren dan 1120 bij 800 |
 | `data/files/` | andere geüploade bestanden |
@@ -21,11 +21,11 @@ Hypha heeft geen database. Alles wat een site bevat, staat als bestanden in de m
 | `data/digest` | wijzigingen voor de volgende samenvatting |
 | `data/hypha.stats` | tellers van paginabezoeken |
 
-Pagina's, leden en tags hebben een **id** van 13 tekens (letters en cijfers), bijvoorbeeld `69dfec633ce2a`. Een pagina verwijst naar een andere pagina met `hypha:‹id›`, niet met haar naam. Daardoor blijven links werken als een pagina een andere naam krijgt.
+Pagina's, gebruikers en tags hebben een **id** van 13 tekens (letters en cijfers), bijvoorbeeld `69dfec633ce2a`. Een pagina verwijst naar een andere pagina met `hypha:‹id›`, niet met haar naam. Daardoor blijven links werken als een pagina een andere naam krijgt.
 
 ## Hoe de gegevens samenhangen
 
-Het diagram laat zien hoe de site, de pagina's, de vertalingen, de versies, de artikelen, de tags en de leden met elkaar samenhangen.
+Het diagram laat zien hoe de site, de pagina's, de vertalingen, de versies, de artikelen, de tags en de gebruikers met elkaar samenhangen.
 
 ```mermaid
 erDiagram
@@ -108,7 +108,7 @@ erDiagram
 | `@digestInterval`, `@lastDigestTime` | seconden tussen twee samenvattingen; tijdstip van de laatste |
 | `@theme` | de map van het thema onder `data/themes/` |
 | `title`, `header`, `footer`, `menu` | onderdelen van de site; links naar pagina's als `hypha:‹id›` |
-| `userList/user` | leden: `rights` is `admin`, `user`, `invitee` (genodigde) of `exmember` (oud-lid); `password` is een bcrypt-hash; `key` staat er zolang een uitnodiging of herstel loopt |
+| `userList/user` | gebruikers van de site: `rights` is `admin` (geprivilegieerde gebruiker), `user` (standaardgebruiker), `invitee` (genodigde) of `exmember` (geen gebruiker); `password` is een bcrypt-hash; `key` staat er zolang een uitnodiging of herstel loopt |
 | `pageList/page` | elke pagina met haar `type` (de PHP-klasse), `private` (`on` of `off`) en per taal een `language` met de paginanaam |
 | `tagList/tag` | de tags, met per taal een label en een omschrijving |
 | `mdeditor` | instellingen van de nieuwe tekst-editor (zie [Datatypes en macro's](04-datatypes-en-macros.md)) |
@@ -174,7 +174,7 @@ Lezers, zoekmachines, de samenvatting en de lijst met versies gebruiken de XHTML
 
 1. Elke wijziging gaat via de klasse `Xml`: eerst een slot op het bestand (`flock`), dan het bestand opnieuw lezen, wijzigen, het geheel naar een tijdelijk bestand schrijven en dat in één keer op zijn plek zetten.
 2. Wie tegelijk leest, ziet de oude of de nieuwe versie, nooit een half bestand.
-3. `hypha.xml` heeft één slot voor de hele site. Elke wijziging van een instelling, lid, tag of paginanaam schrijft het hele bestand opnieuw.
+3. `hypha.xml` heeft één slot voor de hele site. Elke wijziging van een instelling, gebruiker, tag of paginanaam schrijft het hele bestand opnieuw.
 4. Een wijziging die twee bestanden raakt (een nieuwe pagina en haar regel in `hypha.xml`), is niet in één keer: een kopie op dat moment kan half zijn. Zie [Beheer](06-beheer.md#back-up).
 
 ### Wat Hypha wel en niet garandeert (ACID)
@@ -200,7 +200,7 @@ Wat dat in de praktijk betekent:
 8. **Eén verboden teken kan een bestand onleesbaar maken.** De nieuwe tekst-editor haalt zulke tekens weg; oude formulieren nog niet (gemeld als [#539](https://github.com/PlanBCode/hypha/issues/539)). Zie [Tekens en talen](08-unicode.md).
 
 > [!warning] Persoonsgegevens
-> `hypha.xml` en de paginabestanden bevatten namen, e-mailadressen en wachtwoord-hashes van leden, en namen en e-mailadressen van mensen die reageren, zich aanmelden voor een nieuwsbrief of voor een festival. Behandel een kopie van `data/` als persoonsgegevens: niet in een repository of een ticket zetten.
+> `hypha.xml` en de paginabestanden bevatten namen, e-mailadressen en wachtwoord-hashes van gebruikers, en namen en e-mailadressen van mensen die reageren, zich aanmelden voor een nieuwsbrief of voor een festival. Behandel een kopie van `data/` als persoonsgegevens: niet in een repository of een ticket zetten.
 
 ## Meer lezen
 

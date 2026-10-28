@@ -80,7 +80,11 @@
 		// commands, help) and bowser, which only warns old browsers that cannot run the editor anyway. Deferred, they no
 		// longer block the first paint on a phone; jQuery alone held it up 1.4 s on slow 4G in Lighthouse.
 		//
-		foreach ($html->findXPath('//head/script[@src]') as $script) {
+		// A script of the theme in the body, such as hypha.js with $(…), runs as soon as it is read, so before a
+		// deferred jQuery: then nothing is deferred.
+		//
+		$themeScripts = $html->findXPath('//body//script[@src and not(starts-with(@src, "system/")) and not(@type="module") and not(@defer) and not(@async)]')->length;
+		if (!$themeScripts) foreach ($html->findXPath('//head/script[@src]') as $script) {
 			if (preg_match('#system/(assets/(jquery-[0-9.]+\.min|help|hypha-preview-image-file-field)|bowser/bowser\.min)\.js$#', $script->getAttribute('src'))) $script->setAttribute('defer', 'defer');
 		}
 		$viewport = $html->findOneXPath('head/meta[@name="viewport"]');

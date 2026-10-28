@@ -1,6 +1,6 @@
 ---
 title: "Architectuur: van verzoek tot pagina"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -43,7 +43,7 @@ flowchart TB
 
 ## Van verzoek tot pagina
 
-Een adres als `/nl/afscheid-van-bram-hoekstra/edit` bestaat uit drie delen: de taal (`nl`), de paginanaam (`afscheid-van-bram-hoekstra`) en de weergave (`edit`). Bij een nieuw artikel volgt de paginanaam uit de titel: kleine letters, met streepjes tussen de woorden. Het diagram laat zien wat er gebeurt als een lid die pagina opent.
+Een adres als `/nl/afscheid-van-bram-hoekstra/edit` bestaat uit drie delen: de taal (`nl`), de paginanaam (`afscheid-van-bram-hoekstra`) en de weergave (`edit`). Bij een nieuw artikel volgt de paginanaam uit de titel: kleine letters, met streepjes tussen de woorden. Het diagram laat zien wat er gebeurt als een ingelogde gebruiker die pagina opent.
 
 ```mermaid
 sequenceDiagram
@@ -134,7 +134,7 @@ flowchart LR
 
 ## De tekst-editor van binnen
 
-Dit deel is voor ontwikkelaars en beheerders. Het eerste diagram laat zien waar elk onderdeel van de nieuwe tekst-editor draait: het bewerken en het tekenen van diagrammen en formules gebeurt in de browser, het omzetten, filteren en bewaren op de server.
+Dit deel is voor ontwikkelaars en voor wie de server beheert. Het eerste diagram laat zien waar elk onderdeel van de nieuwe tekst-editor draait: het bewerken en het tekenen van diagrammen en formules gebeurt in de browser, het omzetten, filteren en bewaren op de server.
 
 ```mermaid
 flowchart TB
@@ -227,8 +227,8 @@ flowchart TD
 
 ## Gebruikers en beveiliging
 
-1. Leden komen erbij via een **uitnodiging**; zelf een account aanmaken kan niet.
-2. Rollen: bezoeker, lid, beheerder, genodigde en oud-lid.
+1. Gebruikers komen erbij via een **uitnodiging**; zelf een account aanmaken kan niet.
+2. Rollen: bezoeker, standaardgebruiker, geprivilegieerde gebruiker, genodigde en geen gebruiker. De systeemgebruiker van `hypha.php` staat daar los van en kan niet op de site inloggen (zie [Gebruikersbeheer](../gebruik/10-gebruikersbeheer.md)).
 3. Wachtwoorden worden versleuteld bewaard (bcrypt). Bij inloggen krijgt de sessie een nieuwe id.
 4. Elk formulier draagt een token tegen CSRF.
 5. De mappen `data/` en `system/` zijn alleen via `index.php` bereikbaar; die levert alleen thema- en scriptbestanden uit en controleert of een pagina privé is.
@@ -236,7 +236,7 @@ flowchart TD
 ## E-mail en periodiek werk
 
 1. Hypha verstuurt e-mail met de PHP-functie `mail()`, zonder wachtrij.
-2. De **samenvatting** (*digest*) voor leden gaat mee met een gewoon paginabezoek: als de ingestelde tijd voorbij is, verstuurt Hypha haar tijdens dat bezoek.
+2. De **samenvatting** (*digest*) voor gebruikers gaat mee met een gewoon paginabezoek: als de ingestelde tijd voorbij is, verstuurt Hypha haar tijdens dat bezoek.
 
 ## Installeren en draaien
 

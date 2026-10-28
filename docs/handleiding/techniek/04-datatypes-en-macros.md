@@ -1,6 +1,6 @@
 ---
 title: "Datatypes en macro's"
-revision: 1
+revision: 2
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -100,7 +100,7 @@ Verschillen tussen een tekstpagina en een artikel in de nieuwe editor:
 
 ### Instellingen van de editor
 
-De instellingen van de nieuwe editor staan in `hypha.xml`, in een element `mdeditor`. Er is nog geen scherm om ze te wijzigen; een beheerder past het bestand aan. Zonder dit element gelden standaardwaarden.
+De instellingen van de nieuwe editor staan in `hypha.xml`, in een element `mdeditor`. Er is nog geen scherm om ze te wijzigen; wie de server beheert, past het bestand aan. Zonder dit element gelden standaardwaarden.
 
 ```xml
 <mdeditor level2="on" level2Off="user">
@@ -119,7 +119,7 @@ De instellingen van de nieuwe editor staan in `hypha.xml`, in een element `mdedi
 | `frameHost`, `peertubeHost` | diensten waarvan een video, kaart of grafiek in een artikel mag (niveau 2) |
 | `scriptHost` | websites waarvan een interactief blok scripts mag laden (niveau 2) |
 | `@level2` | `off` zet niveau 2 voor de hele site uit |
-| `@level2Off` | rollen zonder niveau 2, gescheiden door komma's, bijvoorbeeld `user` |
+| `@level2Off` | rollen zonder niveau 2, gescheiden door komma's: `user` voor standaardgebruikers, `admin` voor geprivilegieerde gebruikers |
 
 Wat niveau 1 en 2 zijn, staat in [Beveiliging](07-beveiliging.md#de-vrijheidsniveaus-van-de-editor).
 
@@ -156,7 +156,7 @@ Een lijst van de tien nieuwste artikelen over raadsnieuws:
 
 1. Macro's werken in de HTML van de site: het sjabloon van het thema, de kop, de voet, en pagina's in de oude opmaakeditor.
 2. In de **nieuwe tekst-editor** werken macro's niet. Het filter haalt een `<macro>` uit de HTML; in de Markdown-bron blijft hij staan. Dat is een bewuste keuze in het ontwerp.
-3. Een macro die faalt, wordt „Macro failed”. Een ingelogd lid ziet ook de reden; de fout staat in het PHP-logboek.
+3. Een macro die faalt, wordt „Macro failed”. Een ingelogde gebruiker ziet ook de reden; de fout staat in het PHP-logboek.
 4. Een nieuwe macro is een PHP-bestand in `system/macros/` met een klasse die van `HyphaMacro` erft en de naam van de klasse teruggeeft.
 
 ## Meer lezen

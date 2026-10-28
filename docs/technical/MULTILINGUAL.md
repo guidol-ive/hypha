@@ -62,8 +62,8 @@ Every section separates two things:
 
 ## 3. How the interface language is chosen
 
-1. **Intended.** The member's own choice ("bedieningstaal" in the account), else the browser, else
-   the site default. The handbook (`07-menu-en-navigatie.md`) says an administrator sets the default
+1. **Intended.** The user's own choice ("bedieningstaal" in the account), else the browser, else
+   the site default. The handbook (`07-menu-en-navigatie.md`) says a privileged user sets the default
    interface language "for visitors".
 2. **Actual** order in `RequestContext::getInterfaceLanguage()`: the `language` attribute of the
    logged-in user; the first two letters of `Accept-Language`; the content language; the default
@@ -105,7 +105,7 @@ Every section separates two things:
 2. **Multilingual and single-language page types.** The `Xml` constructor takes
    `Xml::multiLingualOn|Off`:
    1. `textpage`: multilingual, with a *translate* view (`<page>/translate`) that adds a language
-      with its own name and content. This is the only page type a member can translate.
+      with its own name and content. This is the only page type a user can translate.
    2. `mailinglist` and `festivalpage`: their file is marked multilingual, but they have no translate
       view; in practice one language.
    3. `peer_reviewed_article`: single-language (`multiLingualOff`); the author can change the
@@ -121,11 +121,11 @@ Every section separates two things:
    any posted language code, also one no URL can reach (#612, fix #613; #129 covers the dropdown);
    a translation saved in the same second as another version gets a duplicate id (#528, fix #534).
 
-## 6. What a visitor, a member and a search engine get
+## 6. What a visitor, a logged-in user and a search engine get
 
 1. **Anonymous visitor.** Content in the language of the URL (default language on `/`); interface
    as in section 3; public pages only. A private page gives 404 with "log in to view".
-2. **Member.** The same content; interface in the language of the account. Members also see private
+2. **Logged-in user.** The same content; interface in the language of the account. Logged-in users also see private
    pages, the translate button, the version list and the *new page* dialog, which proposes the
    current content language.
 3. **Search engine.** Exactly what an anonymous visitor without `Accept-Language` gets. **Actual**:
@@ -138,7 +138,7 @@ Every section separates two things:
 ## 7. A page without a version in the requested language
 
 1. **Intended and actual for a URL.** `/<language>/<name>` that does not exist in that language is
-   404 with "This page doesn't exist" (members get a *create* button). There is no redirect to
+   404 with "This page doesn't exist" (logged-in users get a *create* button). There is no redirect to
    another translation, also not when the same page exists in that language under another name
    (`/en/Start` while the English name is `Home`).
 2. **Intended for links.** A link in content to a page without the current language goes to another
@@ -189,10 +189,10 @@ Every section separates two things:
 
 ## 11. Mail and digest
 
-1. **Intended.** Mails to a member in that member's interface language (#181 asks for it).
+1. **Intended.** Mails to a user in that user's interface language (#181 asks for it).
 2. **Actual.** Every mail is built with `__()` in the interface language of the request that sends
-   it: the member who acts, or, for the digest, whoever happens to trigger the "poor man's cron" in
-   `index.php` (possibly an anonymous visitor with `Accept-Language`). All members get the same
+   it: the user who acts, or, for the digest, whoever happens to trigger the "poor man's cron" in
+   `index.php` (possibly an anonymous visitor with `Accept-Language`). All users get the same
    text (#181).
 3. The digest section of a text page had English texts and listed every translation under the name
    in the current content language (#607, fix #611).

@@ -28,7 +28,7 @@ a container ([CONTAINER.md](CONTAINER.md)) now and then.
 
 Hypha sends with PHP `mail()`. The host needs sendmail or a relay. Mail goes out in the web
 request: the digest during the first page view after the interval has passed, mailings while the
-member who pressed "send" waits. A test site should not send mail; point `sendmail_path` to
+user who pressed "send" waits. A test site should not send mail; point `sendmail_path` to
 `/bin/true` or a catch-all there.
 
 ## Digest
@@ -77,7 +77,7 @@ Median CPU time per request (ms; wall time is about 1 ms more):
 | article, anonymous | 3 | 6 | 23 | 104 |
 | text page / home page, anonymous | 3 | 8-9 | 51-52 | 256-258 |
 | 404 | 2 | 7 | 53 | 262 |
-| article, member | 4 | 10 | 57 | 290 |
+| article, logged in | 4 | 10 | 57 | 290 |
 | login (POST) | 2 | 4 | 19 | 88 |
 | editor (`/edit`) | 5 | 23 | 194 | 964 |
 | save article (POST) | 6 | 15 | 113 | 508 |
@@ -120,15 +120,15 @@ concurrent clients: 1,000 pages on 1 CPU 123/132/133/132; 10,000 pages on 1 CPU 
 ## Behind NGINX
 
 Check after every change of the proxy: links use `https://`, the access log shows real client
-addresses, uploads up to 16 MB pass, and pages of logged-in members are not cached. See
+addresses, uploads up to 16 MB pass, and pages of logged-in users are not cached. See
 [REVERSE_PROXY.md](REVERSE_PROXY.md).
 
 ## Hardening
 
 Until the findings of the security review are fixed (NS-GLE-2026W44-hypha-002 to -008):
 
-- Remove `hypha.php` from the web root after installation, or at least set long, unique
-  maintenance credentials in it. Never leave them empty.
+- Remove `hypha.php` from the web root after installation, or at least give the system user in it
+  a long, unique user name and password. Never leave them empty.
 - Deny `data/` except `data/themes/` in the Apache configuration as well as in `.htaccess` (see
   [INSTALLATION.md](INSTALLATION.md#apache-configuration); a plain `<Directory>` deny breaks
   the theme).

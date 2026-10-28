@@ -342,7 +342,7 @@ def the_new_page_popup_names_the_mailing_list_type_in_dutch(base):
 #
 # Articles (#270, #406, #525, #529)
 #
-@known_bug(406)
+@test
 def an_article_saved_once_opens_for_members(base):
     sanne = Client(base).login("sanne")
     slug = new_page(sanne, f"Opgeslagen artikel {RUN}", kind="peer_reviewed_article", private=True)
@@ -356,7 +356,7 @@ def an_article_saved_once_opens_for_members(base):
     assert status == 200, f"a member opening the article after one save gets {status}"
 
 
-@known_bug(406)
+@test
 def an_older_article_without_featured_image_opens_for_members(base):
     sanne = Client(base).login("sanne")
     slug = article(sanne, f"Zonder afbeelding {RUN}", "draft", private=True, featured="")
@@ -364,7 +364,7 @@ def an_older_article_without_featured_image_opens_for_members(base):
     assert status == 200, f"a member opening an article without featured_image gets {status}"
 
 
-@known_bug(406)
+@known_bug(649)
 def an_older_article_with_markup_in_its_title_opens_for_members(base):
     sanne = Client(base).login("sanne")
     slug = article(sanne, f"Titel met opmaak {RUN}", "draft", private=True, title_xml=f"<title><p>Titel met opmaak {RUN}</p></title>")
@@ -372,7 +372,7 @@ def an_older_article_with_markup_in_its_title_opens_for_members(base):
     assert status == 200, f"a member opening an article whose title holds a <p> gets {status}"
 
 
-@known_bug(406)
+@known_bug(649)
 def an_older_article_without_public_discussions_opens_for_members(base):
     sanne = Client(base).login("sanne")
     slug = article(sanne, f"Zonder discussies {RUN}", "draft", private=True, discussions="<discussions/>")
@@ -398,7 +398,7 @@ def remove_unknown_type_page(page):
     os.remove(os.path.join(WORK, "data/pages", page))
 
 
-@known_bug(406)
+@test
 def a_page_of_an_unknown_type_gives_404_and_not_a_server_error(base):
     name = f"Oud_type_{RUN}"
     page = unknown_type_page(name, "tag5")
@@ -415,7 +415,7 @@ def a_page_of_an_unknown_type_gives_404_and_not_a_server_error(base):
         remove_unknown_type_page(page)
 
 
-@known_bug(406)
+@test
 def the_tag_index_still_shows_when_a_page_has_an_unknown_type(base):
     beheer = Client(base).login("beheer")
     slug = text_page(beheer, f"Natuur in Eemstad {RUN}", ["<p>Over het Eemstadse bos.</p>"])
@@ -431,7 +431,7 @@ def the_tag_index_still_shows_when_a_page_has_an_unknown_type(base):
         remove_unknown_type_page(page)
 
 
-@known_bug(406)
+@test
 def a_member_opens_the_moderation_view_of_a_comment(base):
     sanne = Client(base).login("sanne")
     suffix = f"m{RUN}"
@@ -441,7 +441,7 @@ def a_member_opens_the_moderation_view_of_a_comment(base):
     assert 'name="reason"' in text, "no field for the reason of moderation"
 
 
-@known_bug(406)
+@test
 def the_moderation_view_of_an_unknown_comment_gives_404(base):
     sanne = Client(base).login("sanne")
     suffix = f"u{RUN}"

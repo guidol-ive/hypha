@@ -46,7 +46,7 @@ The volume replaces `data/` of the image, so put the default theme in it first:
 mkdir -p hypha-data/themes && cp -R data/themes/default hypha-data/themes/
 ```
 
-Before building, set maintenance credentials in `hypha.php` (see
+Before building, set the user name and password of the system user in `hypha.php` (see
 [INSTALLATION.md](INSTALLATION.md)); then:
 
 ```bash
@@ -86,7 +86,7 @@ To see errors in the browser, create a file `DEBUG` in the web root of the conta
 This is the usual set-up. Uncomment `SetEnv HTTPS on`, `RemoteIPHeader` and
 `RemoteIPInternalProxy` in `hypha-vhost.conf` (the image enables `mod_remoteip`), and configure
 NGINX as in [REVERSE_PROXY.md](REVERSE_PROXY.md): pass `Host` and `X-Real-IP`, raise
-`client_max_body_size` to 20m, and do not cache responses for logged-in members.
+`client_max_body_size` to 20m, and do not cache responses for logged-in users.
 
 ## Compared with earlier set-ups
 
