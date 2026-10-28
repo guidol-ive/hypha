@@ -20,3 +20,4 @@ mail(): Sendmail exited with non-zero exit code 127
 Call to a member function getElementsByTagName() on null in /var/www/html/system/core/base.php:392
 Failed to open stream: No such file or directory in /var/www/html/system/core/database.php
 open failed: fopen(data/
+Increment on non-numeric string is deprecated, use str_increment() instead in /var/www/html/system/datatypes/index.php

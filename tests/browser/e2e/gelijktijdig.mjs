@@ -12,7 +12,7 @@ export default async function (t) {
 	const typeInto = (page, text) => editor(page, text => { const e = window.hyphaMdeditor.editor; e.fields.text = text; e.loadVisual(); e.changed(); }, text);
 	const save = page => editor(page, () => window.hyphaMdeditor.editor.save());
 	const toast = page => page.textContent('#mdeToast');
-	const open = async (page, path) => { await page.goto(base + path); await page.waitForFunction(() => window.hyphaMdeditor?.editor?.ready, null, { timeout: 15000 }); };
+	const open = async (page, path) => { await page.goto(base + path + (path.endsWith('/edit') ? '?mode=visual' : '')); await page.waitForFunction(() => window.hyphaMdeditor?.editor?.ready, null, { timeout: 15000 }); };
 
 	t.test('two tabs: the second save on an older version is refused with who saved, and can be forced', async () => {
 		a = await login(browser, base, 'sanne');

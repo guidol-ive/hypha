@@ -270,15 +270,15 @@ Alle tests zijn opnieuw gedraaid op PHP 8.2.35, 8.3.36, 8.4.27 en 8.5.12 (`sh te
 | Onderdeel | 8.2 | 8.3 | 8.4 | 8.5 |
 |---|---|---|---|---|
 | `HyphaRequestTest.php` (bestaand) | 84 | 84 | 84 | 84 |
-| unit (`tests/markdown/`): filter, Markdown, niveau 2, 500 gouden items | 103 van 103 | 103 van 103 | 103 van 103 | 103 van 103 |
+| unit (`tests/markdown/`): filter, Markdown, niveau 2, 500 gouden items | 105 van 105 | 105 van 105 | 105 van 105 | 105 van 105 |
 | gouden manifest, alle 10.000 items | 10.000 | 10.000 | 10.000 | 10.000 |
-| integratie over HTTP: proefsite, artikel en reviewstroom, tekstpagina, gelijktijdig werken | 45 van 45 | 45 van 45 | 45 van 45 | 45 van 45 |
-| browser: unit-pagina's en end-to-end (zie hieronder) | 163 van 163 | 163 van 163 | 163 van 163 | 163 van 163 |
+| integratie over HTTP: proefsite, artikel en reviewstroom, tekstpagina, gelijktijdig werken, instellingen | 51 van 51 | 51 van 51 | 51 van 51 | 51 van 51 |
+| browser: unit-pagina's en end-to-end (zie hieronder) | 181 van 181 | 181 van 181 | 181 van 181 | 181 van 181 |
 | packaging: `hypha.php` bouwen en installeren | 11 van 11 | 11 van 11 | 11 van 11 | 11 van 11 |
 | gouden dataset als site, 10.000 pagina's | 0 fouten | 0 fouten | 0 fouten | 0 fouten |
 | nieuwe PHP-meldingen in het logboek | geen | geen | geen | geen (na `mail()`, zie hieronder) |
 
-De browsertests: bibliotheken 7, pariteit met league/commonmark 19, Opmaak heen en terug 42, plaktest 28, editor 14, aanvullingen 14, gelijktijdig 5, plakken in de editor 9, nieuwe pagina 4, toegankelijkheid 14 (axe 0 overtredingen in 10 toestanden, aanraakvlakken ≥ 44 pt, werkbalk boven het toetsenbord), prestaties 6; samen 163 (inclusief de runner-proef). Laatste ronde op alle vier versies na de avondwijzigingen (zie „Verder gebouwd”).
+De browsertests: bibliotheken 7, pariteit met league/commonmark 19, Opmaak heen en terug 42, plaktest 28, editor 14, aanvullingen 14, gelijktijdig 5, ontwerp 18, plakken in de editor 9, nieuwe pagina 4, toegankelijkheid 14 (axe 0 overtredingen in 10 toestanden, aanraakvlakken ≥ 44 pt, werkbalk boven het toetsenbord), prestaties 6; samen 181 (inclusief de runner-proef). Laatste ronde op alle vier versies na de avondwijzigingen (zie „Verder gebouwd”).
 
 Gebouwd volgens het ontwerp, per onderdeel van §18.2: 4 (server en filter), 5 (Markdown-weergave op CodeMirror 6), 6 (Opmaak op ProseMirror met eigen schema en serializer, verliesvrij wisselen), 7, 7a, 7b, 7c (artikelscherm, vaste velden, cursor bij wisselen, tabellen), 8 (beelddialoog met upload, `[[`-suggesties), 9 (diagrammen met 36 sjablonen), 9a–9e (niveau 1 en 2, HedgeDoc, interactief blok in de server, reviewstroom met redactiestatuut, terugtrekken), 10 (import en export van `.md`), 11 (regressie met oude artikelen en tekstpagina's), 12 (WCAG met axe, HIG-aanraakvlakken, teksten in nl en en), 13 en 19 (`hypha.php`, Docker), 14 en 15 (codemarkering en wiskunde), 16 (handleiding, 17 pagina's), 17 en 18 (gouden dataset, unit- en integratietests), 20 (plakken), 21 (prestaties en Lighthouse), 22 (tekstpagina's met versies, vertalen en terugzetten).
 
