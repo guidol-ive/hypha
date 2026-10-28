@@ -629,16 +629,36 @@
 		global $hyphaXml;
 		// One XPath query for all page names instead of one
 		// DOMXPath object per page; rebuilt after a reload.
+		// A page added or renamed in the same request is not in the
+		// map: a miss or a hit that no longer matches builds it again.
 		static $map = null, $doc = null;
-		if ($map === null || $doc !== $hyphaXml->documentElement) {
-			$map = [];
-			$doc = $hyphaXml->documentElement;
-			foreach ($hyphaXml->findXPath('pageList/page/language') as $lang) {
-				$key = $lang->getAttribute('id') . '/' . strtolower($lang->getAttribute('name'));
-				if (!isset($map[$key])) $map[$key] = $lang->parentNode;
-			}
+		$key = $language . '/' . strtolower($name);
+		$built = false;
+		if ($map === null || $doc !== $hyphaXml->documentElement) $built = hypha_buildPageMap($map, $doc);
+		$page = $map[$key] ?? false;
+		if (!$built && !hypha_pageMapHit($page, $language, $name)) {
+			hypha_buildPageMap($map, $doc);
+			$page = $map[$key] ?? false;
 		}
-		return $map[$language . '/' . strtolower($name)] ?? false;
+		return $page;
+	}
+
+	function hypha_buildPageMap(&$map, &$doc) {
+		global $hyphaXml;
+		$map = [];
+		$doc = $hyphaXml->documentElement;
+		foreach ($hyphaXml->findXPath('pageList/page/language') as $lang) {
+			$key = $lang->getAttribute('id') . '/' . strtolower($lang->getAttribute('name'));
+			if (!isset($map[$key])) $map[$key] = $lang->parentNode;
+		}
+		return true;
+	}
+
+	function hypha_pageMapHit($page, $language, $name) {
+		if (!$page || !$page->parentNode) return false;
+		foreach ($page->childNodes as $lang)
+			if ($lang instanceof DOMElement && $lang->tagName == 'language' && $lang->getAttribute('id') == $language && strtolower($lang->getAttribute('name')) == strtolower($name)) return true;
+		return false;
 	}
 
 	function hypha_getPageById($id) {
