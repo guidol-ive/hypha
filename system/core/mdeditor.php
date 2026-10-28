@@ -52,7 +52,7 @@
 		$commands = $page->html->getElementById('pageCommands');
 		$cancel = $config['kind'] === 'article' ? __('art-cancel') : __('cancel');
 		$save = $config['kind'] === 'article' ? __('art-save') : __('save');
-		$commands->appendChild(makeButton($cancel, 'window.hyphaMdeditor ? hyphaMdeditor.cancel() : (window.location = ' . htmlspecialchars(json_encode($page->language . '/' . $page->pagename)) . ');', 'mdeCancel'));
+		$commands->appendChild(makeButton($cancel, 'window.hyphaMdeditor ? hyphaMdeditor.cancel() : (window.location = ' . json_encode($page->language . '/' . $page->pagename) . ');', 'mdeCancel'));
 		$commands->appendChild(makeButton($save, 'window.hyphaMdeditor && hyphaMdeditor.save();', 'mdeSave', 'editButton'));
 		static $registered = false;
 		if (!$registered) registerPostProcessingFunction('hypha_mdeditorPostProcess');
@@ -246,12 +246,12 @@
 		if (!isAdmin()) return;
 		$settings = hypha_mdeditorSettings();
 		$html->writeToElement('pagename', __('mde-settings'));
-		$area = fn ($name, $list, $help) => '<tr><th><label for="' . $name . '">' . htmlspecialchars(__('mde-settings-' . $name)) . '</label></th><td><textarea name="' . $name . '" id="' . $name . '" rows="' . max(4, min(14, count($list) + 1)) . '" cols="60" aria-describedby="' . $name . 'Help">' . htmlspecialchars(implode("\n", $list)) . '</textarea><div class="help" id="' . $name . 'Help">' . htmlspecialchars(__($help)) . '</div></td></tr>';
+		$area = fn ($name, $list, $help) => '<tr><th><label for="' . $name . '">' . htmlspecialchars(__('mde-settings-' . $name)) . '</label></th><td><textarea class="hypha-code" name="' . $name . '" id="' . $name . '" rows="' . max(4, min(14, count($list) + 1)) . '" cols="60" aria-describedby="' . $name . 'Help">' . htmlspecialchars(implode("\n", $list)) . '</textarea><div class="help" id="' . $name . 'Help">' . htmlspecialchars(__($help)) . '</div></td></tr>';
 		$check = fn ($name, $on) => '<input type="checkbox" name="' . $name . '" id="' . $name . '" value="on"' . ($on ? ' checked="checked"' : '') . '/>';
 		$level = '<tr><th>' . htmlspecialchars(__('mde-settings-level')) . '</th><td><label>' . $check('mdLevel2', $settings['level2']) . ' ' . htmlspecialchars(__('mde-settings-level2')) . '</label><br/>'
 			. '<label>' . $check('mdLevel2User', !in_array('user', $settings['level2Off'], true)) . ' ' . htmlspecialchars(__('mde-settings-level2-user')) . '</label><br/>'
 			. '<label>' . $check('mdLevel2Admin', !in_array('admin', $settings['level2Off'], true)) . ' ' . htmlspecialchars(__('mde-settings-level2-admin')) . '</label></td></tr>';
-		$form = $html->createForm('<table class="section">'
+		$form = $html->createForm('<table class="section hypha-fit"><colgroup><col style="width:30%"/><col/></colgroup>'
 			. $area('mdSections', $settings['sections'], 'mde-settings-one-per-line')
 			. $area('mdStatute', $settings['statute'], 'mde-settings-one-per-line')
 			. $level

@@ -876,9 +876,17 @@ export class Editor {
 		$('#mdeHeroLabel', this.root).textContent = this.t(f.image ? 'field-image-other' : 'field-image-add');
 		$('#mdeHeroBtn', this.root).title = this.t(f.image ? 'field-image-choose' : 'field-image-add-help');
 		$('#mdeHeroDel', this.root).hidden = !f.image;
-		const sections = this.cfg.settings.sections || [];
+		//
+		// Without an image there is nothing to describe, caption or credit: only the button to choose one.
+		//
+		$('.wh-imgfields', this.root).hidden = !f.image;
+		//
+		// Sections and tags in alphabetical order, as in the rest of Hypha, whatever the order of the settings.
+		//
+		const byName = (a, b) => a.localeCompare(b, this.cfg.page.language, { sensitivity: 'base', numeric: true });
+		const sections = [...(this.cfg.settings.sections || [])].sort(byName);
 		$('#mdeSection', this.root).innerHTML = `<option value="">${esc(this.t('field-section-choose'))}</option>` + sections.map(s => `<option${s === f.section ? ' selected' : ''}>${esc(s)}</option>`).join('') + (f.section && !sections.includes(f.section) ? `<option selected>${esc(f.section)}</option>` : '');
-		const known = new Set(this.cfg.tags || []);
+		const known = new Set([...(this.cfg.tags || [])].sort(byName));
 		$('#mdeTagList', this.root).innerHTML = f.tags.map((tag, i) => `<span class="tag${known.has(tag) ? '' : ' unknown'}" title="${esc(this.t(known.has(tag) ? 'tag' : 'tag-unknown'))}">${esc(tag)} <button type="button" data-tag="${i}" aria-label="${esc(this.t('tag-remove', { tag }))}" title="${esc(this.t('tag-remove', { tag }))}">✕</button></span>`).join('');
 		for (const b of this.root.querySelectorAll('#mdeTagList [data-tag]')) b.addEventListener('click', () => { f.tags.splice(+b.dataset.tag, 1); this.renderHead(); this.changed(); this.loadMarkdownLater(); });
 		$('#mdeTagAdd', this.root).innerHTML = `<option value="">${esc(this.t('tag-add'))}</option>` + [...known].filter(x => !f.tags.includes(x)).map(x => `<option>${esc(x)}</option>`).join('') + (this.cfg.user.admin ? `<option value="__new__">${esc(this.t('tag-new'))}</option>` : '');

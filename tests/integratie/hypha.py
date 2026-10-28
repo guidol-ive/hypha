@@ -5,6 +5,7 @@ Only the Python standard library is used, like docs/container/smoke_test.py.
 """
 import http.cookiejar
 import json
+import os
 import re
 import sys
 import time
@@ -88,6 +89,25 @@ class Client:
         if "logout" not in self.last:
             raise RuntimeError(f"login of {username} failed ({status})")
         return self
+
+
+
+def write_same_length(path, data):
+    """Write a file of the work folder that the running site reads.
+
+    Docker Desktop shows the container a changed file a moment later with its old length, which cuts a longer file
+    short; so the new content gets exactly the length of the old, with spaces of the indentation taken away or spaces
+    added at the end.
+    """
+    length = os.path.getsize(path)
+    while len(data) > length:
+        if b"\n  " not in data:
+            raise RuntimeError(f"cannot shorten {path}")
+        data = data.replace(b"\n  ", b"\n ", 1)
+    data += b" " * (length - len(data))
+    with open(path, "r+b") as f:
+        f.write(data)
+        f.truncate()
 
 
 TESTS = []

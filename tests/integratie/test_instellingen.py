@@ -5,7 +5,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from hypha import Client, run, test  # noqa: E402
+from hypha import Client, run, test, write_same_length  # noqa: E402
 from test_artikel import article_xml, fields, new_article  # noqa: E402
 import hypha  # noqa: E402
 
@@ -111,7 +111,7 @@ def a_footer_keeps_an_image_without_scheme(base):
         _, text, _ = beheer.get("nl/Start")
         assert 'src="//i.creativecommons.org/l/by-sa/3.0/88x31.png"' in text
     finally:
-        open(path, "wb").write(original)
+        write_same_length(path, original)
 
 
 @test
@@ -138,7 +138,7 @@ def an_image_of_the_site_at_another_address_is_served_by_the_site(base):
         assert 'src="images/5f0c0ffee0b1a.png?w=10"' in text, "the image of the site keeps the old address"
         assert 'src="https://oud.example.org/images/5f0c0ffee0b1b.png"' in text, "an image the site lacks changed"
     finally:
-        open(path, "wb").write(original)
+        write_same_length(path, original)
         os.remove(image)
 
 if __name__ == "__main__":

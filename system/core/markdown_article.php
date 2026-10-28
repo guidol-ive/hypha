@@ -420,7 +420,7 @@
 				if (isUser()) {
 					$commands = $this->html->getElementById('pageCommands');
 					if ($this->mdRole() === 'author') $commands->appendChild($this->makeActionButton(__('mde-reedit'), null, self::MD_CMD_REEDIT));
-					if (isAdmin()) $commands->appendChild(makeButton(__('delete'), 'if(confirm(' . htmlspecialchars(json_encode(__('sure-to-delete'))) . '))' . makeAction($this->language . '/' . $this->pagename, self::CMD_DELETE, '')));
+					if (isAdmin()) $commands->appendChild(makeButton(__('delete'), 'if(confirm(' . json_encode(__('sure-to-delete')) . '))' . makeAction($this->language . '/' . $this->pagename, self::CMD_DELETE, '')));
 				}
 				return null;
 			}
@@ -446,7 +446,7 @@
 				$this->html->getElementById('main')->appendChild($this->mdApproveDialog());
 			}
 			if (in_array($status, [self::STATUS_REVIEW, self::STATUS_APPROVED], true) && $role === 'author')
-				$commands->appendChild(makeButton(__('mde-retract'), 'if(confirm(' . htmlspecialchars(json_encode(__('mde-retract-confirm'))) . '))' . makeAction($this->language . '/' . $this->pagename, self::MD_CMD_RETRACT, '')));
+				$commands->appendChild(makeButton(__('mde-retract'), 'if(confirm(' . json_encode(__('mde-retract-confirm')) . '))' . makeAction($this->language . '/' . $this->pagename, self::MD_CMD_RETRACT, '')));
 			if ($status === self::STATUS_PUBLISHED && in_array($role, ['author', 'admin'], true)) {
 				$commands->appendChild(makeButton(__('mde-withdraw-dialog'), "document.getElementById('mdeWithdraw').hidden=false;document.getElementById('mdeWithdraw').querySelector('textarea').focus();"));
 				$this->html->getElementById('main')->appendChild($this->mdWithdrawDialog());

@@ -223,7 +223,7 @@
 					$commands->appendChild($this->makeActionButton(__('translate'), self::PATH_TRANSLATE));
 					if (isAdmin()) {
 						$path = $this->language . '/' . $this->pagename;
-						$commands->appendChild(makeButton(__('delete'), 'if(confirm(' . htmlspecialchars(json_encode(__('sure-to-delete'))) . '))' . makeAction($path, self::CMD_DELETE, '')));
+						$commands->appendChild(makeButton(__('delete'), 'if(confirm(' . json_encode(__('sure-to-delete')) . '))' . makeAction($path, self::CMD_DELETE, '')));
 					}
 				}
 			}
