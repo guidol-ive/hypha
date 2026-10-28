@@ -225,9 +225,25 @@ Bezoekers die tegelijk een artikel opvragen, aantal verzoeken per seconde. Gemet
 3. Afgeleid: een bezoeker vraagt tijdens het lezen ongeveer elke 10 seconden een pagina. Eén kern bedient dan bij 10.000 pagina's ongeveer **200 bezoekers tegelijk**, bij 1.000 pagina's ruim 1.000.
 4. Een redacteur kost meer: openen van de editor en opslaan samen ongeveer 0,3 seconde CPU bij 10.000 pagina's. Tien redacteuren die elke minuut opslaan, gebruiken samen ongeveer 5% van één kern.
 
+### Schalen over CPU's
+
+Gemeten op 28 oktober 2026 met een verzonnen site van 1.000 tekstpagina's en 300 artikelen (`hypha.xml` 188 kB), PHP 8.5, een container van 256 MB, de startpagina voor een bezoeker, met `ab` binnen het netwerk van Docker. Het hele verslag staat in [`ai/measurement/20261029_SCALABILITY_CPUS.md`](../../../ai/measurement/20261029_SCALABILITY_CPUS.md).
+
+| CPU's (werkers) | vóór de optimalisaties | erna (#675, #677) | met de paginacache van PR #518 |
+|---|---|---|---|
+| 1 (2) | 115 per seconde, soms een fout 500 | 211 per seconde | 2.179 per seconde |
+| 2 (4) | 215 per seconde, soms een fout 500 | 345 per seconde | 4.129 per seconde |
+| 8 (8) | 514 per seconde, soms een fout 500 | 733 per seconde | 6.192 per seconde |
+
+1. Meer CPU's helpen alleen als het aantal werkers past: **één tot twee werkers per CPU**. Op 1 CPU gaf dezelfde code 211 verzoeken per seconde met 2 werkers, en 56 tot 59 met 4 of 16 werkers. Met een CPU-grens op de container is de rekentijd dan al vroeg in elke periode op en wachten de werkers op elkaar.
+2. Het geheugen was niet de grens: 8 tot 16 werkers gebruikten 54 tot 161 MB van de 256 MB. Met 32 werkers zat de index tegen de grens aan en kwamen er minder verzoeken door dan met 16.
+3. Meet vanuit het netwerk van Docker of vanaf een andere machine. Via de poortdoorgifte van Docker Desktop leek dezelfde container te stoppen bij ongeveer 2.300 verzoeken per seconde.
+4. De index van alle pagina's wordt bij elk verzoek opgebouwd (240 tot 250 per seconde op 8 CPU's). De paginacache helpt daar niet.
+5. 1.000 startpagina's per seconde zonder CDN vragen zonder paginacache 4 tot 8 CPU's, met de paginacache 1 CPU (afgeleid uit de tabel).
+
 ### Instellen
 
-1. Zet het aantal werkers (`MaxRequestWorkers` of `pm.max_children`) op het geheugen voor de webserver gedeeld door het geheugen van een werker uit de tabel hierboven. Meer dan twee werkers per kern helpt niet (advies, afgeleid uit de tabel bij Drukte).
+1. Zet het aantal werkers (`MaxRequestWorkers` of `pm.max_children`) op het geheugen voor de webserver gedeeld door het geheugen van een werker uit de tabel hierboven. Meer dan twee werkers per kern helpt niet, en met een CPU-grens op de container werkt het zelfs averechts (zie [Schalen over CPU's](#schalen-over-cpus)).
 2. Te veel werkers laten de server swappen of de container stopt werkers. Dan reageert de site voor niemand meer. Met een grens wachten extra verzoeken even in de rij.
 3. `memory_limit` mag op 128 MB blijven staan: PHP zelf gebruikte nooit meer dan 19 MB. Het echte geheugen bewaak je met de grens van de container of de server.
 4. Houd de groei bij: kijk elke maand naar de grootte van `hypha.xml` en `data/`. Groeit `hypha.xml` boven 4 MB (ongeveer 25.000 pagina's), plan dan meer geheugen.
