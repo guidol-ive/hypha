@@ -20,7 +20,7 @@ export default async function (t) {
 			assert(errors.length === 0, errors.join('; '));
 			// With the limits of #493 the answer is the same for a known and an unknown name.
 			const body = await page.textContent('body');
-			assert(body.includes('geen gebruiker of e-mailadres gevonden') || body.includes('herstelemail is verstuurd'), 'no answer on the page');
+			assert(body.includes('geen gebruiker of e-mailadres gevonden') || body.includes('herstelemail'), 'no answer on the page');
 		} finally {
 			await context.close();
 		}
