@@ -223,6 +223,17 @@ export default async function (t) {
 		await command(page, 'nl/Start', 'mdPreferences', JSON.stringify({ mode: 'visual' }));
 	});
 
+	t.test('without a photo the header offers to choose one and nothing to remove', async () => {
+		const state = () => editor(() => { const q = id => document.getElementById(id); const shown = e => getComputedStyle(e).display !== 'none'; return [q('mdeHeroLabel').textContent, shown(q('mdeHeroDel')), shown(q('mdeHeroThumb'))]; });
+		await editor(() => { const e = window.hyphaMdeditor.editor; e.fields.image = ''; e.renderHead(); });
+		const [label, remove, thumb] = await state();
+		assert(label === 'foto kiezen' && !remove && !thumb, `without a photo: label "${label}", remove ${remove}, thumbnail ${thumb}`);
+		await editor(() => { const e = window.hyphaMdeditor.editor; e.fields.image = 'beeld/proef.png'; e.renderHead(); });
+		const [label2, remove2] = await state();
+		assert(label2 === 'andere foto' && remove2, `with a photo: label "${label2}", remove ${remove2}`);
+		await editor(() => { const e = window.hyphaMdeditor.editor; e.fields.image = ''; e.renderHead(); });
+	});
+
 	t.test('no errors in the console', async () => {
 		assert(!page.errors.length, page.errors.join('\n'));
 		await page.context().close();

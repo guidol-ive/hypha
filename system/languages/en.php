@@ -683,6 +683,8 @@
 		"mde-field-excerpt" => "excerpt",
 		"mde-field-excerpt-help" => "The intro of 2 or 3 sentences, also in overviews (in Markdown: line 3)",
 		"mde-field-image" => "Image with the excerpt",
+		"mde-field-image-add" => "choose photo",
+		"mde-field-image-add-help" => "Choose a photo for the image with the excerpt",
 		"mde-field-image-alt" => "description",
 		"mde-field-image-alt-help" => "What does it show? (for screen readers)",
 		"mde-field-image-caption" => "caption",

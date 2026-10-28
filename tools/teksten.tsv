@@ -150,6 +150,8 @@ mde-field-by	door	by
 mde-field-excerpt	uittreksel (ankeiler)	excerpt
 mde-field-excerpt-help	De intro van 2 à 3 zinnen, ook in overzichten (in Markdown: regel 3)	The intro of 2 or 3 sentences, also in overviews (in Markdown: line 3)
 mde-field-image	Afbeelding bij uittreksel	Image with the excerpt
+mde-field-image-add	foto kiezen	choose photo
+mde-field-image-add-help	Een foto kiezen voor de afbeelding bij het uittreksel	Choose a photo for the image with the excerpt
 mde-field-image-alt	beschrijving	description
 mde-field-image-alt-help	Wat staat erop? (voor voorleessoftware)	What does it show? (for screen readers)
 mde-field-image-caption	bijschrift	caption

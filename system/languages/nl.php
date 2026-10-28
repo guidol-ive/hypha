@@ -678,6 +678,8 @@
 		"mde-field-excerpt" => "uittreksel (ankeiler)",
 		"mde-field-excerpt-help" => "De intro van 2 à 3 zinnen, ook in overzichten (in Markdown: regel 3)",
 		"mde-field-image" => "Afbeelding bij uittreksel",
+		"mde-field-image-add" => "foto kiezen",
+		"mde-field-image-add-help" => "Een foto kiezen voor de afbeelding bij het uittreksel",
 		"mde-field-image-alt" => "beschrijving",
 		"mde-field-image-alt-help" => "Wat staat erop? (voor voorleessoftware)",
 		"mde-field-image-caption" => "bijschrift",

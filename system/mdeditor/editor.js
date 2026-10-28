@@ -275,7 +275,7 @@ export class Editor {
 				<div class="wh-row"><label class="wh-key" for="mdeAuthor">${t('field-by')}</label><input type="text" id="mdeAuthor" autocomplete="off" placeholder="${t('field-author')}" title="${t('field-author-help')}"></div>
 				<div class="wh-media">
 					<div class="wh-img" role="group" aria-label="${t('field-image')}">
-						<button type="button" class="wh-thumb" id="mdeHeroBtn" title="${t('field-image-choose')}"><img id="mdeHeroThumb" alt=""><span><i class="fa fa-upload" aria-hidden="true"></i> ${t('field-image-other')}</span></button>
+						<button type="button" class="wh-thumb" id="mdeHeroBtn" title="${t('field-image-choose')}"><img id="mdeHeroThumb" alt=""><span><i class="fa fa-upload" aria-hidden="true"></i> <span id="mdeHeroLabel">${t('field-image-other')}</span></span></button>
 						<div class="wh-imgfields">
 							<div class="wh-row"><span class="small" id="mdeHeroName"></span><button type="button" class="linkbtn" id="mdeHeroDel" title="${t('field-image-remove-help')}" style="margin-left:auto">${t('field-image-remove')}</button></div>
 							<label class="wh-key" for="mdeHeroAlt">${t('field-image-alt')}</label><input type="text" id="mdeHeroAlt" placeholder="${t('field-image-alt-help')}" title="${t('field-image-alt-help')}">
@@ -857,6 +857,12 @@ export class Editor {
 		thumb.hidden = !f.image;
 		if (f.image) thumb.src = this.markdownOptions(false).imageSrc(f.image);
 		$('#mdeHeroName', this.root).textContent = f.image ? f.image.split('/').pop() : this.t('field-image-none');
+		//
+		// Without an image the button chooses one rather than another one, and there is nothing to remove.
+		//
+		$('#mdeHeroLabel', this.root).textContent = this.t(f.image ? 'field-image-other' : 'field-image-add');
+		$('#mdeHeroBtn', this.root).title = this.t(f.image ? 'field-image-choose' : 'field-image-add-help');
+		$('#mdeHeroDel', this.root).hidden = !f.image;
 		const sections = this.cfg.settings.sections || [];
 		$('#mdeSection', this.root).innerHTML = `<option value="">${esc(this.t('field-section-choose'))}</option>` + sections.map(s => `<option${s === f.section ? ' selected' : ''}>${esc(s)}</option>`).join('') + (f.section && !sections.includes(f.section) ? `<option selected>${esc(f.section)}</option>` : '');
 		const known = new Set(this.cfg.tags || []);

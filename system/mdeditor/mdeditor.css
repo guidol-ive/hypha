@@ -179,6 +179,7 @@
 .mdeditor .wh-thumb { flex: none; border: 1px solid var(--line); background: #fff; border-radius: 3px; padding: 3px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--action); }
 .mdeditor .wh-thumb img { width: 230px; height: 128px; object-fit: cover; background: #CFD8DA; border-radius: 2px; display: block; }
 .mdeditor .wh-thumb:hover { border-color: var(--action); }
+.mdeditor .wh-thumb img[hidden], .mdeditor .wh-row .linkbtn[hidden] { display: none; }
 .mdeditor .wh-imgfields { display: flex; flex-direction: column; gap: 2px; }
 .mdeditor .wh-imgfields .wh-key, .mdeditor .wh-ex .wh-key { display: block; margin-top: 2px; }
 .mdeditor .wh-imgfields input { font-size: 13px; }
