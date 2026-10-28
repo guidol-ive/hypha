@@ -4,24 +4,9 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from hypha import Client, run, test  # noqa: E402
+from hypha import Client, run, test, write_same_length  # noqa: E402
 
 WORK = os.environ.get("HYPHA_WORK", "")
-
-
-def write_same_length(path, data):
-    # Docker Desktop shows the container a changed file a moment later with its old length, which cuts a longer
-    # file short; so the new content gets exactly the length of the old, with spaces of the indentation taken away
-    # or added after the root element.
-    length = os.path.getsize(path)
-    while len(data) > length:
-        data = data.replace(b"\n  ", b"\n ", 1) if b"\n  " in data else data
-        if len(data) > length and b"\n  " not in data:
-            raise AssertionError("cannot shorten hypha.xml")
-    data += b" " * (length - len(data))
-    with open(path, "r+b") as f:
-        f.write(data)
-        f.truncate()
 
 
 def page_title(text):

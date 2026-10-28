@@ -9,7 +9,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from hypha import Client, run, test  # noqa: E402
+from hypha import Client, run, test, write_same_length  # noqa: E402
 
 WORK = os.environ.get("HYPHA_WORK", "")
 FIXTURES = json.load(open(os.path.join(os.path.dirname(__file__), "../fixtures/tekeningen.json"), encoding="utf-8"))
@@ -116,13 +116,13 @@ def a_script_of_the_theme_in_the_body_keeps_jquery_in_time(base):
     path = os.path.join(WORK, "data/themes/default/hypha.html")
     original = open(path, "rb").read()
     text = original.decode("utf-8")
-    open(path, "w", encoding="utf-8").write(text.replace("</body>", '<script src="data/themes/default/proef.js"></script></body>', 1))
+    write_same_length(path, text.replace("</body>", '<script src="data/themes/default/proef.js"></script></body>', 1).encode("utf-8"))
     try:
         _, page, _ = STATE["sanne"].get(f"nl/{SLUG}/edit")
         tag = re.search(r'<script[^>]*jquery-1.7.1.min.js[^>]*>', page)
         assert tag and "defer" not in tag.group(0), f"jQuery is deferred while the theme has a script in the body: {tag.group(0) if tag else 'missing'}"
     finally:
-        open(path, "wb").write(original)
+        write_same_length(path, original)
 
 @test
 def second_article_with_the_same_title_gets_suffix_2(base):
