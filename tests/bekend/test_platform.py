@@ -20,7 +20,7 @@ import xml.etree.ElementTree as ET
 import zlib
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "integratie"))
-from hypha import Client, known_bug, run  # noqa: E402
+from hypha import Client, known_bug, run, test  # noqa: E402
 
 ENGINE = os.environ.get("ENGINE", "docker")
 WORK = os.environ.get("HYPHA_WORK", "")
@@ -303,7 +303,8 @@ def loadhtml(messages, text):
     return [m for m in messages if "DOMDocument::loadHTML()" in m and text in m]
 
 
-@known_bug(527)
+# Was a known bug of #527; fixed in main by #533, retested on 2026-10-28.
+@test
 def a_page_with_a_tag_has_valid_tag_html(base):
     sanne = Client(base).login("sanne")
     sanne.get("nl/Start")
@@ -312,7 +313,8 @@ def a_page_with_a_tag_has_valid_tag_html(base):
     assert not found, f"{len(found)} messages: {short(found)}"
 
 
-@known_bug(527)
+# Was a known bug of #527; fixed in main by #533, retested on 2026-10-28.
+@test
 def a_private_page_has_a_valid_asterisk(base):
     sanne = Client(base).login("sanne")
     path = "nl/" + text_page(sanne, "Besloten platform", "<p>Alleen voor leden.</p>", private=True)
@@ -320,14 +322,16 @@ def a_private_page_has_a_valid_asterisk(base):
     assert not found, f"{len(found)} messages: {short(found)}"
 
 
-@known_bug(527)
+# Was a known bug of #527; fixed in main by #533, retested on 2026-10-28.
+@test
 def an_article_has_valid_share_links(base):
     path = published_article(base)
     found = loadhtml(php_messages(base, lambda: Client(base).get(path)), "expecting ';'")
     assert not found, f"{len(found)} messages: {short(found)}"
 
 
-@known_bug(527)
+# Was a known bug of #527; fixed in main by #533, retested on 2026-10-28.
+@test
 def the_no_page_notice_for_members_is_valid_html(base):
     sanne = Client(base).login("sanne")
     found = loadhtml(php_messages(base, lambda: sanne.get("nl/Bestaat_niet_platform")), "error parsing attribute name")

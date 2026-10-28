@@ -16,7 +16,7 @@ import time
 import zlib
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "integratie"))
-from hypha import Client, known_bug, run  # noqa: E402
+from hypha import Client, known_bug, run, test  # noqa: E402
 
 WORK = os.environ.get("HYPHA_WORK", "")
 DATA = os.path.join(WORK, "data")
@@ -262,7 +262,8 @@ def festival(client):
 def contribute(client, path, title="Lezing over de Eem", website="", image="", files=None):
     client.get(path + "/contribute")
     fields = {"name": "Lotte Bakker", "title": title, "description": "Over de rivier.", "website": website,
-              "category": "lecture", "notes": "", "image": image, "file_shadow_image": image}
+              "category": "lecture", "notes": "", "image": image, "file_shadow_image": image,
+              "motivation": "Past bij het thema van het festival."}
     if files:
         fields.update({"command": "save", "argument": "", "csrfToken": client.csrf})
         status, _text, location = client.request(path + "/contribute", fields, files)
@@ -358,7 +359,8 @@ def an_image_name_with_a_path_stays_inside_data_images(base):
     assert "images/../" not in text, "the lineup links to an image outside data/images"
 
 
-@known_bug(423)
+# Was filed as a known bug of #423; fixed in main by b8db4c9 (HyphaImage), retested on 2026-10-28.
+@test
 def a_gif_image_gets_a_thumbnail_in_the_lineup(base):
     lotte = login(base, "lotte")
     path = festival(lotte)
@@ -368,7 +370,8 @@ def a_gif_image_gets_a_thumbnail_in_the_lineup(base):
     assert status == 200, f"the lineup with a GIF image gave {status}"
 
 
-@known_bug(423)
+# Was filed as a known bug of #423; fixed in main by b8db4c9 (HyphaImage), retested on 2026-10-28.
+@test
 def an_unreadable_image_does_not_break_the_lineup(base):
     name = uniq("kapot") + ".jpg"
     write(os.path.join(DATA, "images", name), "geen afbeelding\n")
@@ -591,7 +594,8 @@ def the_progress_of_a_mailing_needs_a_login(base):
 # ---------------------------------------------------------------------------------------------------------------
 # #554 user names are not unique.
 # ---------------------------------------------------------------------------------------------------------------
-@known_bug(554)
+# Was a known bug of #554; fixed in main by #566, retested on 2026-10-28.
+@test
 def a_member_cannot_rename_to_the_user_name_of_another_member(base):
     lotte = login(base, "lotte")
     try:
@@ -605,7 +609,8 @@ def a_member_cannot_rename_to_the_user_name_of_another_member(base):
         set_user_attribute("u4", "username", "lotte")
 
 
-@known_bug(554)
+# Was a known bug of #554; fixed in main by #566, retested on 2026-10-28.
+@test
 def an_invitee_cannot_register_with_the_user_name_of_a_member(base):
     address = uniq("nieuw") + "@eemstad.example"
     beheer = login(base, "beheer")

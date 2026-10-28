@@ -19,7 +19,7 @@ import time
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "integratie"))
-from hypha import Client, known_bug, run  # noqa: E402
+from hypha import Client, known_bug, run, test  # noqa: E402
 
 WORK = os.environ.get("HYPHA_WORK", "")
 XMLID = "{http://www.w3.org/XML/1998/namespace}id"
@@ -484,7 +484,8 @@ def a_visitor_cannot_comment_in_the_review_discussion_of_a_published_article(bas
     assert comments == ["Graag nog een bron."], f"the review discussion now holds {comments}"
 
 
-@known_bug(525)
+# Was a known bug of #525; fixed in main by #531, retested on 2026-10-28.
+@test
 def the_title_of_an_article_is_shown_as_text_in_the_heading(base):
     sanne = Client(base).login("sanne")
     slug = article(sanne, f"Titel als tekst {RUN}", "published")
@@ -499,7 +500,8 @@ def the_title_of_an_article_is_shown_as_text_in_the_heading(base):
     assert "<img" not in h1, f"the title became markup in the heading: {h1.strip()[:80]}"
 
 
-@known_bug(525)
+# Was a known bug of #525; fixed in main by #531, retested on 2026-10-28.
+@test
 def a_new_public_article_opens_without_a_server_error(base):
     sanne = Client(base).login("sanne")
     status, _, location = sanne.post("nl/Start", "newPage", f"Nieuw openbaar {RUN}", {"newPageType": "peer_reviewed_article", "newPageLanguage": "nl"})

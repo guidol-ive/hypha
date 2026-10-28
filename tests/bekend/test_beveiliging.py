@@ -12,7 +12,7 @@ import urllib.parse
 import urllib.request
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "integratie"))
-from hypha import Client, known_bug, run  # noqa: E402
+from hypha import Client, known_bug, run, test  # noqa: E402
 
 WORK = os.environ.get("HYPHA_WORK", "")
 MAILLOG = os.path.join(WORK, "data", "mail.log")
@@ -171,7 +171,8 @@ def an_invalid_csrf_token_stops_a_datatype_save(base):
     assert "GEWIJZIGD" not in text, "a page save with an invalid CSRF token still changed the page"
 
 
-@known_bug(421)
+# Was a known bug of #421; fixed in main by #501, retested on 2026-10-28.
+@test
 def an_anonymous_visitor_cannot_tag_a_page(base):
     #
     # tagSelect adds a tag to a page but does not check login, so an anonymous visitor can change the tagging of any
@@ -183,7 +184,8 @@ def an_anonymous_visitor_cannot_tag_a_page(base):
     assert status == 403, f"anonymous tagSelect gave {status}, not 403"
 
 
-@known_bug(421)
+# Was a known bug of #421; fixed in main by #501, retested on 2026-10-28.
+@test
 def an_anonymous_visitor_cannot_create_a_tag(base):
     #
     # tagNew creates a site-wide tag but does not check login. It must be refused with 403.

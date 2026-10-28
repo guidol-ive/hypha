@@ -14,7 +14,7 @@ import time
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "integratie"))
-from hypha import Client, known_bug, run  # noqa: E402
+from hypha import Client, known_bug, run, test  # noqa: E402
 
 WORK = os.environ.get("HYPHA_WORK", "")
 DATA = os.path.join(WORK, "data")
@@ -305,7 +305,8 @@ def an_edit_at_the_same_time_as_send_does_not_change_the_mailing_being_sent(base
 #
 # #440: subscribing ends in a TypeError.
 #
-@known_bug(440)
+# Was a known bug of #440; fixed in main by #481, retested on 2026-10-28.
+@test
 def a_visitor_subscribes_and_gets_a_confirmation_mail(base):
     mailing_list("Lijst440a")
     visitor = Client(base)
@@ -317,7 +318,8 @@ def a_visitor_subscribes_and_gets_a_confirmation_mail(base):
     assert "anna440@eemstad.example" in mail_log(), "no confirmation mail sent"
 
 
-@known_bug(440)
+# Was a known bug of #440; fixed in main by #481, retested on 2026-10-28.
+@test
 def an_administrator_adds_addresses_in_bulk(base):
     beheer = mailing_list("Lijst440b")
     beheer.get("nl/Lijst440b/add")
@@ -353,7 +355,8 @@ def festival_settings_label_the_description_in_words(base):
 #
 # #548: the default sign-up form uses an undefined constant; a single 'attending' value breaks implode().
 #
-@known_bug(548)
+# Was a known bug of #548; fixed in main by #562, retested on 2026-10-28.
+@test
 def the_default_signup_form_of_a_new_festival_opens(base):
     festival("Feest548a")
     status, text, _ = Client(base).get("nl/Feest548a/signup")
@@ -361,7 +364,8 @@ def the_default_signup_form_of_a_new_festival_opens(base):
     assert 'name="email"' in text, "no sign-up form"
 
 
-@known_bug(548)
+# Was a known bug of #548; fixed in main by #562, retested on 2026-10-28.
+@test
 def a_signup_with_a_single_attending_value_is_stored(base):
     festival("Feest548b", SIGNUP_FORM)
     visitor = Client(base)

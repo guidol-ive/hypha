@@ -8,14 +8,12 @@
 {"message": "makeAction(): Implicitly marking parameter", "issue": 409}
 {"message": "mailinglist::makeActionButton(): Implicitly marking parameter", "issue": 409}
 {"message": "festivalpage::makeActionButton(): Implicitly marking parameter", "issue": 409}
-{"message": "DOMDocument::loadHTML(): Attribute class redefined in Entity", "issue": 527}
-{"message": "DOMDocument::loadHTML(): htmlParseCharRef: missing semicolon in Entity", "issue": 527}
-{"message": "DOMDocument::loadHTML(): htmlParseEntityRef: expecting ';' in Entity", "issue": 527}
+{"message": "DOMDocument::loadHTML(): htmlParseEntityRef: expecting ';' in Entity", "issue": null, "reason": "still seen after the fix of #527 (PR #533) on 2026-10-28; not in its scope, not yet traced to an issue"}
 {"message": "Function strftime() is deprecated", "issue": 408}
-{"message": "DOMDocument::loadHTML(): Tag editor invalid in Entity", "issue": 527}
+{"message": "DOMDocument::loadHTML(): Tag editor invalid in Entity", "issue": null, "reason": "still seen after the fix of #527 (PR #533) on 2026-10-28; not in its scope, not yet traced to an issue"}
 {"message": "Passing null to parameter #2 ($value) of type string is deprecated in /var/www/html/system/core/document.php on line 566", "issue": 408}
 {"message": "Passing null to parameter #1 ($data) of type string is deprecated in /var/www/html/system/core/database.php on line 488", "issue": null, "reason": "not yet traced to an issue"}
-{"message": "DOMDocument::loadHTML(): error parsing attribute name in Entity", "issue": 527}
+{"message": "DOMDocument::loadHTML(): error parsing attribute name in Entity", "issue": null, "reason": "still seen after the fix of #527 (PR #533) on 2026-10-28; not in its scope, not yet traced to an issue"}
 {"message": "mail(): Sendmail exited with non-zero exit code 127", "issue": null, "reason": "test setup: the container has no sendmail"}
 {"message": "Call to a member function getElementsByTagName() on null in /var/www/html/system/core/base.php:392", "issue": null, "reason": "not yet traced to an issue"}
 {"message": "Failed to open stream: No such file or directory in /var/www/html/system/core/database.php", "issue": null, "reason": "test setup: macOS bind mount, rename() briefly shows no file (docs/technical/TESTING.md)"}
