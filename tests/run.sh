@@ -18,7 +18,7 @@ status=0
 echo "== PHP $V: tests/HyphaRequestTest.php"
 $ENGINE run --rm -v "$PWD":/src:ro -w /src php:$V-cli php -d error_reporting=-1 tests/HyphaRequestTest.php | tail -1 || status=1
 echo "== PHP $V: tests/markdown"
-$ENGINE run --rm -v "$PWD":/src:ro -w /src php:$V-cli php -d memory_limit=1G tests/markdown/run.php || status=1
+$ENGINE run --rm -e HYPHA_GOUDEN -v "$PWD":/src:ro -w /src php:$V-cli php -d memory_limit=1G tests/markdown/run.php || status=1
 if [ "$WHAT" = integratie ] || [ "$WHAT" = browser ] || [ "$WHAT" = alles ]; then
 	echo "== PHP $V: tests/integratie"
 	sh tests/integratie/run.sh "$V" || status=1

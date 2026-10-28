@@ -29,3 +29,10 @@
 		printf("      %d items checked against the manifest\n", $checked);
 		same(0, $differ, "items with other XHTML, first: $first");
 	});
+
+	test('golden dataset: the quick selection holds every construct of the editor, HedgeDoc included', function () {
+		$fixtures = goudenFixtures();
+		$seen = [];
+		for ($n = 20; $n <= 10000; $n += 20) foreach (goudenItem($n, $fixtures)['constructs'] as $construct) $seen[$construct] = true;
+		same([], array_values(array_diff(array_merge(GOUDEN_INLINE, GOUDEN_BLOCKS), array_keys($seen))), 'constructs missing from the golden dataset');
+	});

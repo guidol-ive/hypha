@@ -565,6 +565,8 @@
 		"mde-html-callout-tip" => "Tip",
 		"mde-html-callout-warning" => "Let op",
 		"mde-html-callout-note" => "Opmerking",
+		"mde-html-callout-important" => "Belangrijk",
+		"mde-html-callout-caution" => "Pas op",
 		"art-check-has-title-passed" => "Heeft een titel",
 		"art-check-has-title-failed" => "Een titel is verplicht",
 		"art-check-has-title-recommended" => "Een titel wordt aangeraden",

@@ -570,6 +570,8 @@
 		"mde-html-callout-tip" => "Tip",
 		"mde-html-callout-warning" => "Note",
 		"mde-html-callout-note" => "Remark",
+		"mde-html-callout-important" => "Important",
+		"mde-html-callout-caution" => "Caution",
 		"art-check-has-title-passed" => "Has a title",
 		"art-check-has-title-failed" => "A title is required",
 		"art-check-has-title-recommended" => "A title is recommended",

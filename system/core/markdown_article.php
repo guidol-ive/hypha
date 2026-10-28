@@ -362,7 +362,7 @@
 		 */
 		protected function mdHtmlTexts(): array {
 			$texts = [];
-			foreach (['footnotes', 'footnote-back', 'toc', 'diagram-source', 'diagram', 'callout-info', 'callout-tip', 'callout-warning', 'callout-note'] as $key) $texts[$key] = __('mde-html-' . $key);
+			foreach (['footnotes', 'footnote-back', 'toc', 'diagram-source', 'diagram', 'callout-info', 'callout-tip', 'callout-warning', 'callout-note', 'callout-important', 'callout-caution'] as $key) $texts[$key] = __('mde-html-' . $key);
 			return $texts;
 		}
 

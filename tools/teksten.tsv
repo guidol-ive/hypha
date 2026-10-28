@@ -36,6 +36,8 @@ mde-html-callout-info	Kader	Box
 mde-html-callout-tip	Tip	Tip
 mde-html-callout-warning	Let op	Note
 mde-html-callout-note	Opmerking	Remark
+mde-html-callout-important	Belangrijk	Important
+mde-html-callout-caution	Pas op	Caution
 art-check-has-title-passed	Heeft een titel	Has a title
 art-check-has-title-failed	Een titel is verplicht	A title is required
 art-check-has-title-recommended	Een titel wordt aangeraden	A title is recommended
