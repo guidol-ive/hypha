@@ -241,7 +241,9 @@
 			// Anonymous pages carry no token, so they are the same
 			// for every visitor and can be cached; hypha() fetches
 			// the token from /csrf-token (a POST) before submitting.
-			if (!$this->isUser() && !$this->getRequest()->isPost())
+			// The login form of ?login posts without JavaScript, so it
+			// gets its token; a page with a query is not cached anyway.
+			if (!$this->isUser() && !$this->getRequest()->isPost() && !isset($_GET['login']))
 				return '';
 			if (!$this->csrfToken)
 				$this->regenerateCsrfToken();
