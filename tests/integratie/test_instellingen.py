@@ -113,5 +113,33 @@ def a_footer_keeps_an_image_without_scheme(base):
     finally:
         open(path, "wb").write(original)
 
+
+@test
+def an_image_of_the_site_at_another_address_is_served_by_the_site(base):
+    # The image upload answers with an absolute url and text pages and articles store it, so an image keeps
+    # pointing to the address the site had when it was uploaded (#640).
+    beheer = Client(base).login("beheer")
+    path = os.path.join(WORK, "data/hypha.xml")
+    image = os.path.join(WORK, "data/images/5f0c0ffee0b1a.png")
+    os.makedirs(os.path.dirname(image), exist_ok=True)
+    open(image, "wb").write(b"\x89PNG\r\n\x1a\n")
+    original = open(path, "rb").read()
+    root = ET.parse(path).getroot()
+
+    def inner(node):
+        return (node.text or "") + "".join(ET.tostring(child, encoding="unicode") for child in node)
+    title, header = root.findtext("title"), inner(root.find("header"))
+    footer = ('<p>Verzonnen voettekst <img alt="eigen" src="https://oud.example.org/images/5f0c0ffee0b1a.png?w=10" />'
+              ' <img alt="vreemd" src="https://oud.example.org/images/5f0c0ffee0b1b.png" /></p>')
+    beheer.get("settings")
+    beheer.post("settings", "settingsSaveSiteElements", "", {"siteTitle": title, "siteHeader": header, "siteFooter": footer})
+    try:
+        _, text, _ = Client(base).get("nl/Start")
+        assert 'src="images/5f0c0ffee0b1a.png?w=10"' in text, "the image of the site keeps the old address"
+        assert 'src="https://oud.example.org/images/5f0c0ffee0b1b.png"' in text, "an image the site lacks changed"
+    finally:
+        open(path, "wb").write(original)
+        os.remove(image)
+
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))
