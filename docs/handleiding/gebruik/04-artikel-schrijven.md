@@ -1,6 +1,6 @@
 ---
 title: "Een artikel schrijven"
-revision: 6
+revision: 7
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -198,13 +198,19 @@ Zo lang een verplichte controle niet in orde is, kun je de beoordeling niet star
 
 Verder lezen: [Een artikel beoordelen en publiceren](05-beoordelen-en-publiceren.md).
 
-## Op iPhone en iPad
+## Op een telefoon of tablet
 
-![De editor op een iPhone, met de werkbalk onderaan](../afbeeldingen/artikel-telefoon.png)
+De editor werkt op iPhone, iPad en Android. De schermen hieronder komen van een iPhone (iOS 27, Safari) en een Android-telefoon (Android 15, Chrome).
 
-1. De werkbalk staat boven het toetsenbord; elke knop is groot genoeg om met een vinger te raken.
+| | iPhone | Android |
+|---|---|---|
+| **Een artikel lezen** | ![Een artikel gelezen op een iPhone](../afbeeldingen/ios-artikel-lezen.png) | ![Een artikel gelezen op een Android-telefoon](../afbeeldingen/android-artikel-lezen.png) |
+| **Een reactie geven** | ![Een reactie typen onder een artikel op een iPhone](../afbeeldingen/ios-reactie-toevoegen.png) | ![Een reactie typen onder een artikel op een Android-telefoon](../afbeeldingen/android-reactie-toevoegen.png) |
+| **Een artikel bewerken** | ![De editor op een iPhone, met de werkbalk boven het toetsenbord](../afbeeldingen/ios-artikel-bewerken.png) | ![De editor op een Android-telefoon, met de werkbalk onderaan](../afbeeldingen/android-artikel-bewerken.png) |
+
+1. De werkbalk staat onderaan het scherm. Zodra het toetsenbord opent, schuift hij erboven. Elke knop is groot genoeg om met een vinger te raken.
 2. Autocorrectie, woordsuggesties en dicteren werken, in Opmaak en in Markdown.
-3. Op een smal scherm wissel je tussen **Schrijven** en **Voorbeeld** in plaats van ze naast elkaar te zien.
+3. Op een smal scherm wissel je met het potlood en het oog tussen **Schrijven** en **Voorbeeld**, in plaats van ze naast elkaar te zien.
 
 ## Oudere artikelen
 
