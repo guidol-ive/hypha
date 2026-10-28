@@ -25,6 +25,10 @@ export const load = name => lazy[name] ||= import(name).then(m => m.default || m
 // CodeMirror only when the Markdown view is used: most authors write in Opmaak (requirement 4, Lighthouse).
 //
 let CM = null;
+//
+// Counter for the ids of the title fields of callouts.
+//
+let calloutTitles = 0;
 
 //
 // In an interactive block without a fixed height: report the height of the content to the page (as REPORT_HEIGHT of
@@ -126,7 +130,7 @@ export class Editor {
 			math: preview ? (tex, display) => this.mathml(tex, display) : null,
 			highlight: preview ? (code, language) => lazy.hljsLoaded ? lazy.hljsLoaded.highlight(code, { language, ignoreIllegals: true }).value : null : null,
 			interactive: preview ? (code, height, description) => `<figure class="interactief"><iframe data-mde-own="${this.own}:${this.frames.push(this.srcdoc(code, !height)) - 1}" sandbox="allow-scripts" title="${esc(description)}" loading="lazy" referrerpolicy="no-referrer" height="${Math.min(height || 400, 4000)}"${height ? '' : ' data-height="auto"'}></iframe><figcaption>${esc(description)}</figcaption></figure>` : null,
-			imageSrc: src => /^(https?:|\/|data:)/.test(src) ? src : this.cfg.root + src,
+			imageSrc: src => this.pastedImages.get(src) || (/^(https?:|\/|data:)/.test(src) ? src : this.cfg.root + src),
 		};
 	}
 
@@ -634,6 +638,10 @@ export class Editor {
 			input = document.createElement('input');
 			input.type = 'text';
 			input.className = 'callout-title';
+			//
+			// A field without id or name is reported in the Issues panel of Chrome; an id of its own per box.
+			//
+			input.id = 'mdeCalloutTitle' + (++calloutTitles);
 			input.value = node.attrs.title;
 			const name = this.t('callout-' + type);
 			input.placeholder = name === 'callout-' + type ? type : name;
@@ -1400,12 +1408,18 @@ export class Editor {
 			const key = image.key.replace('geplakt-', 'geplakt-' + Date.now().toString(36) + '-');
 			md = md.split('(' + image.key + ')').join('(' + key + ')');
 			uploads.push({ key, src: image.src });
+			//
+			// Until the upload is done the views show the pasted data itself; the name in the text does not exist
+			// on the server yet and would be asked for in vain (a 404 in the console).
+			//
+			this.pastedImages.set(key, image.src);
 		}
 		if (uploads.length) setTimeout(() => this.uploadPasted(uploads), 0);
 		return md;
 	}
 
 	pasteNotes = new Set();
+	pastedImages = new Map();
 
 	async uploadPasted(images) {
 		for (const image of images) {
@@ -1418,6 +1432,7 @@ export class Editor {
 				const r = await (await fetch(this.cfg.root + 'upload/image', { method: 'POST', body, credentials: 'same-origin' })).json();
 				if (r[0]?.thumbUrl && !r[0].error) path = r[0].thumbUrl.replace(this.cfg.root, '').replace(/\?.*$/, '');
 			} catch (e) { /* reported below */ }
+			this.pastedImages.delete(image.key);
 			if (path) this.replaceImageSrc(image.key, path);
 			else { this.pasteNotes.add(this.t('paste-image')); this.refresh(); }
 		}
