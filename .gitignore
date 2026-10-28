@@ -13,3 +13,4 @@ tests/.werk/
 tests/browser/node_modules/
 tools/bundel/node_modules/
 __pycache__/
+!/data/themes/hyphae/
