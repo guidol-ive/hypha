@@ -717,6 +717,72 @@ EOF;
 			$link->setAttribute('href', './');
 	}
 
+	/*
+		Function: sizeImages
+		Give the images of a page their size, so the text does not jump
+		while they load, and let them load when they come into view
+		(#681). The size of an image in data/images/ comes from the file.
+		The logo in the header and the first image after it load at once:
+		they are in view. Attributes that are set already are kept.
+
+		Parameters:
+		element - A DomWrap\Element to process
+	*/
+	function sizeImages($element) {
+		global $hyphaUrl;
+		$first = true;
+		foreach ($element->findXPath(".//img") as $img) {
+			$inHeader = $img->findXPath("ancestor::*[@id='header']")->length > 0;
+			if (!$inHeader && !$first && !$img->hasAttribute('loading')) $img->setAttribute('loading', 'lazy');
+			if (!$inHeader) $first = false;
+			if (!$img->hasAttribute('decoding')) $img->setAttribute('decoding', 'async');
+			if ($img->hasAttribute('width') || $img->hasAttribute('height')) continue;
+			$src = $img->getAttribute('src');
+			if ($hyphaUrl && strpos($src, $hyphaUrl) === 0) $src = substr($src, strlen($hyphaUrl));
+			if (!preg_match('#^(?:\./)?' . preg_quote(HyphaImage::ROOT_URL, '#') . '([^/?\#]+)$#', $src, $match)) continue;
+			$file = HyphaImage::ROOT_PATH . rawurldecode($match[1]);
+			if (!is_file($file)) continue;
+			$size = getimagesize($file);
+			if ($size && $size[0] && $size[1]) {
+				$img->setAttribute('width', $size[0]);
+				$img->setAttribute('height', $size[1]);
+			}
+		}
+	}
+
+	/*
+		Function: addLandmarks
+		Mark the header, the content and the footer of the theme as
+		landmarks, so screen readers, search engines and AI agents can
+		tell the content from what is around it, and add a link to skip
+		to the content (#682). A theme with its own <header>, <main> or
+		<footer>, or the role, keeps it.
+
+		Parameters:
+		element - A DomWrap\Element to process
+	*/
+	function addLandmarks($element) {
+		global $hyphaRequest;
+		foreach (['header' => 'banner', 'footer' => 'contentinfo'] as $name => $role) {
+			if ($element->findXPath("//$name | //*[@role='$role']")->length) continue;
+			$node = $element->findXPath("//*[@id='$name']")->item(0);
+			if ($node) $node->setAttribute('role', $role);
+		}
+		if ($element->findXPath("//main | //*[@role='main']")->length) return;
+		$main = $element->findXPath("//*[@id='page']")->item(0) ?: $element->findXPath("//*[@id='main']")->item(0);
+		$body = $element->findXPath("//body")->item(0);
+		if (!$main || !$body) return;
+		$main->setAttribute('role', 'main');
+		if (!$main->hasAttribute('tabindex')) $main->setAttribute('tabindex', '-1');
+		// The page sets <base href>, so the link names the page itself.
+		$query = isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] !== '' ? '?' . $_SERVER['QUERY_STRING'] : '';
+		$link = $body->ownerDocument->createElement('a');
+		$link->setAttribute('class', 'skip-link');
+		$link->setAttribute('href', $hyphaRequest->getRelativeUrlPath(false) . $query . '#' . $main->getAttribute('id'));
+		$link->appendChild($body->ownerDocument->createTextNode(__('skip-to-content')));
+		$body->insertBefore($link, $body->firstChild);
+	}
+
 	/* Like wikify, but accepts a HTML string instead of a document */
 	function wikify_html($html) {
 		global $hyphaHtml;
