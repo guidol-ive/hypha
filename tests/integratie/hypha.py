@@ -29,9 +29,9 @@ class Client:
         self.csrf = None
         self.last = ""
 
-    def request(self, path, data=None, files=None):
+    def request(self, path, data=None, files=None, method=None, headers=None):
         url = self.base + path.lstrip("/")
-        headers = {}
+        headers = dict(headers or {})
         body = None
         if files:
             boundary = "----hyphatest" + str(int(time.time() * 1000))
@@ -46,13 +46,15 @@ class Client:
         elif data is not None:
             body = urllib.parse.urlencode(data, doseq=True).encode()
             headers["Content-Type"] = "application/x-www-form-urlencoded"
-        req = urllib.request.Request(url, data=body, headers=headers)
+        req = urllib.request.Request(url, data=body, headers=headers, method=method)
         started = time.monotonic()
         try:
             with self.opener.open(req, timeout=60) as response:
                 status, text, location = response.status, response.read().decode("utf-8", "replace"), response.headers.get("Location")
+                self.headers = response.headers
         except urllib.error.HTTPError as error:
             status, text, location = error.code, error.read().decode("utf-8", "replace"), error.headers.get("Location")
+            self.headers = error.headers
         self.elapsed = time.monotonic() - started
         match = re.search(r'name="csrfToken"[^>]*value="([^"]+)"', text) or re.search(r'value="([^"]+)"[^>]*name="csrfToken"', text)
         if match:
@@ -80,7 +82,11 @@ class Client:
         self.get("nl/Start")
         status, _text, _location = self.post("nl/Start", "login", fields={"loginUsername": username, "loginPassword": PASSWORD})
         self.get("nl/Start")
-        assert "logout" in self.last, f"login of {username} failed ({status})"
+        #
+        # Not an assert: a failed login is a broken test, also inside a known-bug test.
+        #
+        if "logout" not in self.last:
+            raise RuntimeError(f"login of {username} failed ({status})")
         return self
 
 
@@ -92,18 +98,44 @@ def test(function):
     return function
 
 
+def known_bug(issue):
+    """A test of a known bug: it states the behaviour as it should be, and is expected to fail on an assertion until
+    issue #issue is solved (tests/bekend/fouten.ndjson). A pass means the issue is probably solved; any other error
+    means the test itself is broken."""
+    def register(function):
+        function.known_bug = issue
+        TESTS.append(function)
+        return function
+    return register
+
+
 def run(base):
-    passed = failed = 0
+    passed = failed = known = 0
+    fixed = []
     started = time.monotonic()
     for function in TESTS:
         t = time.monotonic()
+        issue = getattr(function, "known_bug", None)
         try:
             function(base)
-            passed += 1
-            print(f"ok    {function.__name__:<70} {(time.monotonic() - t) * 1000:7.0f} ms")
+            if issue:
+                fixed.append(issue)
+                print(f"FIXED? #{issue:<5} {function.__name__}: passes, so issue #{issue} is probably solved")
+            else:
+                passed += 1
+                print(f"ok    {function.__name__:<70} {(time.monotonic() - t) * 1000:7.0f} ms")
+        except AssertionError as error:
+            if issue:
+                known += 1
+                print(f"known #{issue:<5} {function.__name__}: {str(error)[:120]}")
+            else:
+                failed += 1
+                print(f"FAIL  {function.__name__}\n      AssertionError: {error}")
+                traceback.print_exc(limit=3, file=sys.stdout)
         except Exception as error:  # noqa: BLE001, a test runner reports every failure
             failed += 1
-            print(f"FAIL  {function.__name__}\n      {type(error).__name__}: {error}")
+            print(f"FAIL  {function.__name__}{f' (known bug #{issue}, but not an assertion)' if issue else ''}\n      {type(error).__name__}: {error}")
             traceback.print_exc(limit=3, file=sys.stdout)
-    print(f"\nintegratie: {passed + failed} tests, {passed} passed, {failed} failed, {time.monotonic() - started:.1f} s")
-    return 1 if failed else 0
+    extra = f", {known} known bugs, {len(fixed)} fixed? ({' '.join('#' + str(n) for n in fixed)})" if known or fixed else ""
+    print(f"\nintegratie: {passed + failed + known + len(fixed)} tests, {passed} passed, {failed} failed{extra}, {time.monotonic() - started:.1f} s")
+    return 1 if failed or fixed else 0

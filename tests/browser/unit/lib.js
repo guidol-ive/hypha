@@ -2,11 +2,16 @@
 // Minimal test framework for the unit pages: test() registers, done() runs and publishes window.hyphaTestResult.
 //
 const tests = [];
-export function test(name, fn) { tests.push([name, fn]); }
+export function test(name, fn) { tests.push([name, fn, 0]); }
+//
+// A test of a known bug (tests/bekend/fouten.ndjson): expected to fail on an assertion until issue #issue is solved.
+//
+export function knownBug(issue, name, fn) { tests.push([name, fn, issue]); }
+const failure = message => Object.assign(new Error(message), { name: 'AssertionFailure' });
 export function same(expected, actual, message = '') {
-	if (expected !== actual) throw new Error((message ? message + ': ' : '') + 'expected ' + JSON.stringify(expected).slice(0, 400) + ', got ' + JSON.stringify(actual).slice(0, 400));
+	if (expected !== actual) throw failure((message ? message + ': ' : '') + 'expected ' + JSON.stringify(expected).slice(0, 400) + ', got ' + JSON.stringify(actual).slice(0, 400));
 }
-export function check(condition, message = 'condition is false') { if (!condition) throw new Error(message); }
+export function check(condition, message = 'condition is false') { if (!condition) throw failure(message); }
 //
 // First line that differs between two texts, for readable failures of round-trip tests.
 //
@@ -17,10 +22,10 @@ export function diffLine(a, b) {
 }
 export async function done() {
 	const results = [];
-	for (const [name, fn] of tests) {
+	for (const [name, fn, issue] of tests) {
 		const t = performance.now();
-		try { await fn(); results.push([name, true, '', performance.now() - t]); }
-		catch (e) { results.push([name, false, String(e && e.message || e), performance.now() - t]); }
+		try { await fn(); results.push([name, true, '', performance.now() - t, issue, '']); }
+		catch (e) { results.push([name, false, String(e && e.message || e), performance.now() - t, issue, e && e.name || 'Error']); }
 	}
 	window.hyphaTestResult = { passed: results.filter(r => r[1]).length, failed: results.filter(r => !r[1]).length, results };
 }

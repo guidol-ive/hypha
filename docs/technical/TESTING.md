@@ -24,11 +24,47 @@ Replace `8.2` by `8.3`, `8.4` or `8.5`. `ENGINE=podman` uses Podman instead of D
    site made by `tests/site/maak-site.php` (five test users, seven tags, all made up), and run
    `tests/integratie/test_*.py` over HTTP. Afterwards every PHP message in the container log
    fails the run, except the messages that already occur without the editor, listed in
-   `tests/integratie/bekende-meldingen.txt`.
+   `tests/bekend/meldingen.ndjson` with the issue that will remove each one.
 3. **Browser tests** (`tests/browser/run.sh`) start the same container and run
    `tests/browser/run.mjs` with Playwright on the installed Google Chrome, headless: the unit
    pages in `tests/browser/unit/` and the end-to-end tests in `tests/browser/e2e/`. Run
    `npm install` in `tests/browser/` once.
+
+## 0a. Known bugs: what should work, and what is known not to work yet
+
+Every test is one of two kinds:
+
+1. **Should work**: `test(...)`, `@test`, `t.test(...)`. A failure fails the run.
+2. **Known bug**: `known_bug(N, ...)` (PHP), `@known_bug(N)` (Python), `t.knownBug(N, ...)` and
+   `knownBug(N, ...)` (browser). It states the behaviour *as it should be*, for the open GitHub issue
+   #N, and is expected to fail on an assertion until that issue is solved. The runners print
+   - `known #N`: it failed on an assertion, so the bug is still there; the run stays green;
+   - `FIXED? #N`: it passed, so the issue is probably solved; the run fails, so someone closes the issue
+     and moves the test to the ordinary tests;
+   - `FAIL`: it failed in another way (an exception, a crash of the test itself): the test is broken.
+
+   The summary line counts them: `integratie: 12 tests, 0 passed, 0 failed, 11 known bugs, 1 fixed? (#579)`.
+
+The known-bug tests are in `tests/bekend/` and test the code of main, not of this branch:
+
+```bash
+sh tests/bekend.sh 8.2                          # against upstream/main, in a separate worktree
+sh tests/bekend.sh 8.2 origin/<branch>          # against a pull request: its tests should say FIXED?
+sh tests/bekend.sh 8.2 .                        # against this checkout: which bugs it already solves
+ONLY=paginas sh tests/bekend.sh 8.5             # one area: test_paginas.py, PaginasTest.php, browser/paginas.mjs
+```
+
+The register `tests/bekend/fouten.ndjson` has one JSON object per line, one per test:
+`{"issue": 541, "runner": "integratie", "file": "tests/bekend/test_platform.py", "test": "...",
+"title": "...", "since": "2026-10-28"}`. `python3 -I tests/bekend/register.py` checks that the code and
+the register agree; with `--github` also that every issue is still open. `tests/bekend.sh` runs that
+check first, and ends with how often each known PHP message of `tests/bekend/meldingen.ndjson` occurred:
+a message of an issue that no longer occurs may mean the issue is solved, or that no test reached it.
+
+The browser tests of WYMeditor (#65, #70, #90) open a new text page, which on this branch opens in the Markdown
+editor, so against `.` they fail as broken tests; run them against main. Race tests run several rounds and stop at
+the second round with an error; a race that does not show reliably when all areas share one site is not registered
+as a known bug, because a pass by luck would report the issue as solved.
 
 ## 1. Unit test of request parsing
 
@@ -87,6 +123,6 @@ with `rename()`: `Cannot lock file data/hypha.xml, open failed: … No such file
 `hypha.xml` is read without a lock, `file_get_contents(data/hypha.xml): Failed to open stream` followed by
 a fatal error in `base.php`. On Linux,
 and with `data/` on a Docker volume or tmpfs, this does not happen (0 errors in 4,924 requests at 8
-clients, measured 2026-10-27), so `tests/integratie/bekende-meldingen.txt` lists it and
+clients, measured 2026-10-27), so `tests/bekend/meldingen.ndjson` lists it (as test setup) and
 `test_gelijktijdig.py` does not count a round with a failed request. Files on the host may also lag
 behind the container; tests that race read the result through Hypha.

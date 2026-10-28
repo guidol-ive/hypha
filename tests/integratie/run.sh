@@ -8,6 +8,7 @@
 #
 set -e
 cd "$(dirname "$0")/../.."
+KNOWN=$(mktemp) && python3 -I tests/bekend/meldingen.py > "$KNOWN"
 V=${1:-8.2}
 shift || true
 ENGINE=${ENGINE:-docker}
@@ -34,11 +35,11 @@ for t in ${@:-tests/integratie/test_*.py}; do
 	HYPHA_WORK="$WORK" python3 -I "$t" "http://127.0.0.1:$PORT" || status=1
 done
 #
-# Messages that already occur on the main branch without the editor are listed in bekende-meldingen.txt and only
+# Messages that already occur on the main branch without the editor are listed in tests/bekend/meldingen.ndjson and only
 # counted; any other PHP message fails the run.
 #
-echo "== PHP messages in the log of $NAME (known ones: $($ENGINE logs $NAME 2>&1 | grep -c -F -f tests/integratie/bekende-meldingen.txt || true)):"
-if $ENGINE logs $NAME 2>&1 | grep -E 'PHP (Warning|Notice|Deprecated|Fatal|Parse)|Uncaught' | grep -v -F -f tests/integratie/bekende-meldingen.txt | sort | uniq -c | sort -rn | head -20 | grep .; then
+echo "== PHP messages in the log of $NAME (known ones: $($ENGINE logs $NAME 2>&1 | grep -c -F -f "$KNOWN" || true)):"
+if $ENGINE logs $NAME 2>&1 | grep -E 'PHP (Warning|Notice|Deprecated|Fatal|Parse)|Uncaught' | grep -v -F -f "$KNOWN" | sort | uniq -c | sort -rn | head -20 | grep .; then
 	status=1
 else
 	echo "   none"

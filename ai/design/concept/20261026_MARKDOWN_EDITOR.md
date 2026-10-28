@@ -1,6 +1,6 @@
 ---
 title: "MARKDOWN EDITOR: een tekst-editor op basis van Markdown naast WYMeditor, functioneel, grafisch en technisch ontwerp"
-revision: 18
+revision: 19
 date_created: 2026-10-26
 date_last_review:
 status: concept
@@ -295,7 +295,7 @@ Zie de schermafbeelding in [§2.1](#21-zo-ziet-artikel-bewerken-er-nu-uit). De p
 | Lighthouse 95+ | Elke Lighthouse-score (prestaties, toegankelijkheid, goede werkwijzen, SEO) is 95 of hoger, op telefoon en computer, voor gepubliceerde artikelen en tekstpagina's van de nieuwe editor; voor de editor zelf alle scores behalve SEO. Zie [§12.16](#1216-prestatie-eisen). |
 | Bestaande inhoud ongemoeid | Oude artikelen en tekstpagina's blijven HTML en blijven met de opmaakeditor bewerkbaar. Geen conversie, geen migratie van de XML. |
 | Geen wijziging in architectuur of complexiteit | Het `<editor>`-element, `loadEditor()`, de formulieren, de XML-opslag met versies, `wikify_html()` en de reviewstroom blijven zoals ze zijn. De Markdown-editor is een tweede *weergave* van hetzelfde formulierveld. Geen database, geen Node.js op de server en geen build-stap bij installatie. |
-| iPhone, iPad en Chromium | Ontwerp eerst voor touch (knoppen ≥ 44 pt) en daarna voor toetsenbord. De editor gebruikt het native tekstinvoermodel, zodat iOS-autocorrectie, dicteren en spellingcontrole blijven werken. Test op Safari iOS/iPadOS en Chrome/Edge. |
+| iPhone, iPad, Android en computer | De editor en de leesweergave **werken volledig op iOS (iPhone), iPadOS (iPad) en Android (telefoon en tablet)**, en op de computer. Ontwerp eerst voor touch (knoppen ≥ 44 pt) en daarna voor toetsenbord. De editor gebruikt het native tekstinvoermodel, zodat autocorrectie, woordsuggesties, dicteren en spellingcontrole van iOS en Android (Gboard, Samsung-toetsenbord) blijven werken. Test op Safari iOS en iPadOS (ook met hardwaretoetsenbord), Chrome op Android, en Chrome, Edge, Firefox en Safari op de computer; zie besluit 28. |
 | Alleen open source met een permissieve licentie (vergelijkbaar met Apache 2.0 of de PHP-licentie) | Toegestaan: MIT, BSD-2/3, Apache-2.0 en ISC. **Uitgesloten**: GPL/LGPL/AGPL en commerciële licenties, en daarmee o.a. TinyMCE 7 (GPLv2+ of commercieel) en CKEditor 5 (GPL of commercieel). |
 | Bij voorkeur geschikt voor Nederlandstaligen | Alle labels, hulpteksten en foutmeldingen in het Nederlands (taalniveau B2), via de bestaande taalbestanden `system/languages/nl.php` en `en.php`. Nederlandse spellingcontrole via de browser (`lang="nl"`, `spellcheck="true"`). Nederlandse aanhalingstekens („…”) mogelijk. |
 | Doorlooptijd (AI-ondersteund) | **Maximaal 160 dagen.** Begroting in [§18](#18-scope-en-begroting): 93 dagen werk plus 14 dagen reserve = 107 dagen. |
@@ -372,7 +372,7 @@ Begroting: **93 dagen plus 14 dagen reserve = 107 dagen**, AI-ondersteund, binne
 7. **Altijd zien hoe het eruit komt te zien.** *Schrijven*, *Voorbeeld* of *Naast elkaar*; het voorbeeld volgt de plek waar je typt. *Naast elkaar* gebruikt de volle breedte van het scherm, met een versleepbare scheiding tussen tekst en voorbeeld. Op een smal scherm wissel je tussen invoer en voorbeeld.
 8. **Alleen tonen wat aandacht vraagt.** De checklist laat standaard alleen problemen zien; een schakelaar toont ook wat in orde is.
 9. **Nooit werk kwijt.** Concepten worden lokaal in de browser bewaard tot je opslaat. Bij tekstpagina's is elke opslag een nieuwe Hypha-versie; bij een *artikel met review* bewaart Hypha alleen de laatste stand (BR-74). Versies van een artikel vallen buiten de scope (#241).
-10. **Touch eerst.** Aanraakvlakken ≥ 44 pt, werkbalk boven het toetsenbord op iPhone, sneltoetsen voor wie een toetsenbord heeft.
+10. **Touch eerst.** Aanraakvlakken ≥ 44 pt, werkbalk boven het toetsenbord op iPhone en Android, sneltoetsen voor wie een toetsenbord heeft. Alles werkt op iPhone, iPad en Android (besluit 28).
 11. **Draagbare tekst.** Wat je schrijft is een gewoon `.md`-bestand, leesbaar in elk Markdown-programma.
 12. **Veilig standaard, vrij waar nodig.** Gewone auteurs krijgen een veilige set eigen HTML. Ingesloten inhoud en JavaScript in een afgeschermd blok staan aan en zijn per rol uit te zetten. Niets wat de editor niet begrijpt gaat verloren.
 
@@ -2272,6 +2272,7 @@ Het maximum is **160 dagen**; de begroting komt uit op **107 dagen**, met een re
 | 25 | 2026-10-27 | Hulpteksten en foutmeldingen op **taalniveau B2** | [§12.6](#126-nederlandse-taal) |
 | 26 | 2026-10-27 | De technische keuzes T1 tot en met T12 van het technisch ontwerp, elk getoetst met een proef | [§13.18](#1318-besluiten-van-het-technisch-ontwerp) |
 | 27 | 2026-10-27 | *Naast elkaar* gebruikt de **volle schermbreedte** met een versleepbare scheiding; het diagramvenster krijgt elf **technische soorten** | stap 2, stap 6b |
+| 28 | 2026-10-28 | De editor en de leesweergave moeten **volledig werken op iOS (iPhone), iPadOS (iPad) en Android** (telefoon en tablet), naast de computer: schrijven in beide weergaven, werkbalk boven het schermtoetsenbord, *Meer*, beeld uit camera en fotobibliotheek, diagrammen, formules, voorbeeld, opslaan en de reviewstroom, met autocorrectie, suggesties en dicteren van het systeem. Getest op Safari iOS en iPadOS en Chrome op Android, in een simulator of emulator en op een echt toestel | [§3.4](#34-randvoorwaarden-waar-een-oplossing-aan-moet-voldoen), [§13.16](#1316-wat-nog-niet-is-getoetst) |
 
 ## 21. Volgende stappen
 

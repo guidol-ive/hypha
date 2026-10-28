@@ -12,28 +12,58 @@
 		public static function run(array $filters): int {
 			$failed = 0;
 			$passed = 0;
+			$known = 0;
+			$fixed = [];
 			$started = microtime(true);
-			foreach (self::$tests as [$name, $file, $callable]) {
+			foreach (self::$tests as [$name, $file, $callable, $issue]) {
 				if ($filters && !array_filter($filters, fn ($f) => stripos($name, $f) !== false || stripos($file, $f) !== false)) continue;
 				$t = microtime(true);
 				try {
 					$callable();
-					$passed++;
-					printf("ok    %-70s %6.1f ms\n", $name, (microtime(true) - $t) * 1000);
+					if ($issue) {
+						$fixed[] = $issue;
+						printf("FIXED? #%-5d %s: passes, so issue #%d is probably solved\n", $issue, $name, $issue);
+					}
+					else {
+						$passed++;
+						printf("ok    %-70s %6.1f ms\n", $name, (microtime(true) - $t) * 1000);
+					}
 				}
-				catch (Throwable $e) {
+				catch (HyphaTestFailure $e) {
+					if ($issue) {
+						$known++;
+						printf("known #%-5d %s: %s\n", $issue, $name, mb_substr($e->getMessage(), 0, 120));
+						continue;
+					}
 					$failed++;
 					printf("FAIL  %-70s\n      %s: %s\n      at %s:%d\n", $name, get_class($e), $e->getMessage(), basename($e->getFile()), $e->getLine());
 				}
+				catch (Throwable $e) {
+					//
+					// A known bug fails on an assertion; any other error means the test itself is broken.
+					//
+					$failed++;
+					printf("FAIL  %-70s%s\n      %s: %s\n      at %s:%d\n", $name, $issue ? " (known bug #$issue, but not an assertion)" : '', get_class($e), $e->getMessage(), basename($e->getFile()), $e->getLine());
+				}
 			}
-			printf("\nPHP %s: %d tests, %d passed, %d failed, %d assertions, %.1f s\n", PHP_VERSION, $passed + $failed, $passed, $failed, self::$assertions, microtime(true) - $started);
-			return $failed ? 1 : 0;
+			$extra = $known || $fixed ? sprintf(', %d known bugs, %d fixed? (%s)', $known, count($fixed), implode(' ', array_map(fn ($n) => "#$n", $fixed))) : '';
+			printf("\nPHP %s: %d tests, %d passed, %d failed%s, %d assertions, %.1f s\n", PHP_VERSION, $passed + $failed + $known + count($fixed), $passed, $failed, $extra, self::$assertions, microtime(true) - $started);
+			return $failed || $fixed ? 1 : 0;
 		}
 	}
 
 	function test(string $name, callable $callable): void {
 		$file = basename(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0]['file']);
-		HyphaTest::$tests[] = [$name, $file, $callable];
+		HyphaTest::$tests[] = [$name, $file, $callable, 0];
+	}
+
+	//
+	// A test of a known bug (tests/bekend/fouten.ndjson): it states the behaviour as it should be and is expected to
+	// fail on an assertion until issue #$issue is solved. A pass means the issue is probably solved.
+	//
+	function known_bug(int $issue, string $name, callable $callable): void {
+		$file = basename(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0]['file']);
+		HyphaTest::$tests[] = [$name, $file, $callable, $issue];
 	}
 
 	function check(bool $condition, string $message = 'condition is false'): void {

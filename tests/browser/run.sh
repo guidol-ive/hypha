@@ -7,6 +7,7 @@
 #
 set -e
 cd "$(dirname "$0")/../.."
+KNOWN=$(mktemp) && python3 -I tests/bekend/meldingen.py > "$KNOWN"
 V=${1:-8.2}
 shift || true
 ENGINE=${ENGINE:-docker}
@@ -17,6 +18,6 @@ status=0
 node tests/browser/run.mjs "http://127.0.0.1:$PORT" "$@" || status=1
 NAME=hypha-md-test-$(echo "$V" | tr -d .)
 echo "== PHP messages in the log of $NAME after the browser tests:"
-if $ENGINE logs $NAME 2>&1 | grep -E 'PHP (Warning|Notice|Deprecated|Fatal|Parse)|Uncaught' | grep -v -F -f tests/integratie/bekende-meldingen.txt | sort | uniq -c | sort -rn | head -20 | grep .; then status=1; else echo "   none"; fi
+if $ENGINE logs $NAME 2>&1 | grep -E 'PHP (Warning|Notice|Deprecated|Fatal|Parse)|Uncaught' | grep -v -F -f "$KNOWN" | sort | uniq -c | sort -rn | head -20 | grep .; then status=1; else echo "   none"; fi
 $ENGINE rm -f $NAME >/dev/null
 exit $status

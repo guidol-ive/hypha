@@ -33,4 +33,7 @@ export async function newArticle(page, base, title, mode = 'visual') {
 	return slug;
 }
 
-export function assert(condition, message) { if (!condition) throw new Error(message); }
+//
+// A failed assertion is an AssertionFailure, so a known-bug test can tell it from a test that is itself broken.
+//
+export function assert(condition, message) { if (!condition) throw Object.assign(new Error(message), { name: 'AssertionFailure' }); }

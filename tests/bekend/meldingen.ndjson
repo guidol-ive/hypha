@@ -1,0 +1,23 @@
+{"message": "Using ${var} in strings is deprecated, use {$var} instead in /var/www/html/system/core/pages.php", "issue": 407}
+{"message": "textpage::makeActionButton(): Implicitly marking parameter", "issue": 409}
+{"message": "peer_reviewed_article::makeDiscussionActionButton(): Implicitly marking parameter", "issue": 409}
+{"message": "peer_reviewed_article::makeActionButton(): Implicitly marking parameter", "issue": 409}
+{"message": "peer_reviewed_article::discussionRender(): Implicitly marking parameter", "issue": 409}
+{"message": "peer_reviewed_article::createCommentForm(): Implicitly marking parameter", "issue": 409}
+{"message": "peer_reviewed_article::constructDiscussionFieldSuffix(): Implicitly marking parameter", "issue": 409}
+{"message": "makeAction(): Implicitly marking parameter", "issue": 409}
+{"message": "mailinglist::makeActionButton(): Implicitly marking parameter", "issue": 409}
+{"message": "festivalpage::makeActionButton(): Implicitly marking parameter", "issue": 409}
+{"message": "DOMDocument::loadHTML(): Attribute class redefined in Entity", "issue": 527}
+{"message": "DOMDocument::loadHTML(): htmlParseCharRef: missing semicolon in Entity", "issue": 527}
+{"message": "DOMDocument::loadHTML(): htmlParseEntityRef: expecting ';' in Entity", "issue": 527}
+{"message": "Function strftime() is deprecated", "issue": 408}
+{"message": "DOMDocument::loadHTML(): Tag editor invalid in Entity", "issue": 527}
+{"message": "Passing null to parameter #2 ($value) of type string is deprecated in /var/www/html/system/core/document.php on line 566", "issue": 408}
+{"message": "Passing null to parameter #1 ($data) of type string is deprecated in /var/www/html/system/core/database.php on line 488", "issue": null, "reason": "not yet traced to an issue"}
+{"message": "DOMDocument::loadHTML(): error parsing attribute name in Entity", "issue": 527}
+{"message": "mail(): Sendmail exited with non-zero exit code 127", "issue": null, "reason": "test setup: the container has no sendmail"}
+{"message": "Call to a member function getElementsByTagName() on null in /var/www/html/system/core/base.php:392", "issue": null, "reason": "not yet traced to an issue"}
+{"message": "Failed to open stream: No such file or directory in /var/www/html/system/core/database.php", "issue": null, "reason": "test setup: macOS bind mount, rename() briefly shows no file (docs/technical/TESTING.md)"}
+{"message": "open failed: fopen(data/", "issue": null, "reason": "test setup: macOS bind mount, rename() briefly shows no file (docs/technical/TESTING.md)"}
+{"message": "Increment on non-numeric string is deprecated, use str_increment() instead in /var/www/html/system/datatypes/index.php", "issue": 514}

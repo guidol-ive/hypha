@@ -32,15 +32,26 @@ await new Promise(r => server.listen(0, '127.0.0.1', r));
 const stat = `http://127.0.0.1:${server.address().port}/`;
 
 const browser = await chromium.launch({ executablePath: CHROME, headless: true });
-let passed = 0, failed = 0;
+let passed = 0, failed = 0, known = 0;
+const fixed = [];
 const started = Date.now();
 function report(name, ok, message, ms) {
 	if (ok) { passed++; console.log(`ok    ${name.padEnd(70)} ${String(Math.round(ms)).padStart(6)} ms`); }
 	else { failed++; console.log(`FAIL  ${name}\n      ${message}`); }
 }
+//
+// A test of a known bug (tests/bekend/fouten.ndjson) is expected to fail on an assertion (an error named
+// AssertionFailure) until its issue is solved; a pass means the issue is probably solved, any other error that the
+// test itself is broken.
+//
+function reportKnown(issue, name, error) {
+	if (!error) { fixed.push(issue); console.log(`FIXED? #${String(issue).padEnd(5)} ${name}: passes, so issue #${issue} is probably solved`); }
+	else if (error.name === 'AssertionFailure') { known++; console.log(`known #${String(issue).padEnd(5)} ${name}: ${String(error.message).slice(0, 120)}`); }
+	else report(name + ` (known bug #${issue}, but not an assertion)`, false, (error.stack || String(error)).split('\n').slice(0, 4).join('\n      '));
+}
 const wanted = name => !filters.length || filters.some(f => name.includes(f));
 
-for (const f of fs.readdirSync(path.join(root, 'tests/browser/unit')).filter(f => f.endsWith('.html')).sort()) {
+for (const f of process.env.E2E ? [] : fs.readdirSync(path.join(root, 'tests/browser/unit')).filter(f => f.endsWith('.html')).sort()) {
 	if (!wanted(f)) continue;
 	const page = await browser.newPage();
 	const errors = [];
@@ -55,22 +66,34 @@ for (const f of fs.readdirSync(path.join(root, 'tests/browser/unit')).filter(f =
 			await new Promise(r => setTimeout(r, 100));
 		}
 		const r = await page.evaluate(() => window.hyphaTestResult);
-		for (const [name, ok, message, ms] of r.results) report(`${f}: ${name}`, ok, message, ms);
+		for (const [name, ok, message, ms, issue, kind] of r.results) {
+			if (issue) reportKnown(issue, `${f}: ${name}`, ok ? null : Object.assign(new Error(message), { name: kind }));
+			else report(`${f}: ${name}`, ok, message, ms);
+		}
 	}
 	catch (e) { report(f, false, String(e)); }
 	if (errors.length) report(`${f}: no errors in the console`, false, errors.slice(0, 5).join('\n      '));
 	await page.close();
 }
 
+//
+// The end-to-end modules: tests/browser/e2e, or another folder in E2E (tests/bekend/browser for known bugs).
+//
+const e2e = path.resolve(root, process.env.E2E || 'tests/browser/e2e');
 if (process.argv[2]) {
-	for (const f of fs.readdirSync(path.join(root, 'tests/browser/e2e')).filter(f => f.endsWith('.mjs')).sort()) {
+	for (const f of fs.readdirSync(e2e).filter(f => f.endsWith('.mjs')).sort()) {
 		if (!wanted(f)) continue;
-		const mod = await import(path.join(root, 'tests/browser/e2e', f));
+		const mod = await import(path.join(e2e, f));
 		if (typeof mod.default !== 'function') continue;
 		const tests = [];
-		await mod.default({ browser, base, stat, root, test: (name, fn) => tests.push([name, fn]) });
-		for (const [name, fn] of tests) {
+		await mod.default({ browser, base, stat, root, test: (name, fn) => tests.push([name, fn, 0]), knownBug: (issue, name, fn) => tests.push([name, fn, issue]) });
+		for (const [name, fn, issue] of tests) {
 			const t = Date.now();
+			if (issue) {
+				try { await fn(); reportKnown(issue, `${f}: ${name}`, null); }
+				catch (e) { reportKnown(issue, `${f}: ${name}`, e); }
+				continue;
+			}
 			try { await fn(); report(`${f}: ${name}`, true, '', Date.now() - t); }
 			catch (e) { report(`${f}: ${name}`, false, (e && e.stack || String(e)).split('\n').slice(0, 4).join('\n      ')); }
 		}
@@ -78,5 +101,6 @@ if (process.argv[2]) {
 }
 await browser.close();
 server.close();
-console.log(`\nbrowser: ${passed + failed} tests, ${passed} passed, ${failed} failed, ${((Date.now() - started) / 1000).toFixed(1)} s`);
-process.exit(failed ? 1 : 0);
+const extra = known || fixed.length ? `, ${known} known bugs, ${fixed.length} fixed? (${fixed.map(n => '#' + n).join(' ')})` : '';
+console.log(`\nbrowser: ${passed + failed + known + fixed.length} tests, ${passed} passed, ${failed} failed${extra}, ${((Date.now() - started) / 1000).toFixed(1)} s`);
+process.exit(failed || fixed.length ? 1 : 0);
