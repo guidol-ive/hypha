@@ -99,11 +99,12 @@ def the_editor_page_does_not_wait_for_the_old_scripts_of_hypha(base):
     #
     status, text, _ = STATE["sanne"].get(f"nl/{SLUG}/edit")
     head = text[:text.find("</head>")]
-    for name in ("jquery-1.7.1.min.js", "help.js", "hypha-preview-image-file-field.js", "bowser.min.js"):
-        tag = re.search(r'<script[^>]*' + re.escape(name) + r'[^>]*>', head)
+    # Any version of jQuery: PR #498 brings 3.7.1.
+    for name in (r"jquery-[0-9.]+\.min\.js", r"help\.js", r"hypha-preview-image-file-field\.js", r"bowser\.min\.js"):
+        tag = re.search(r'<script[^>]*' + name + r'[^>]*>', head)
         assert tag and "defer" in tag.group(0), f"{name} is not deferred on the editor page: {tag.group(0) if tag else 'missing'}"
     status, text, _ = STATE["sanne"].get("nl/Start")
-    assert re.search(r'<script[^>]*jquery-1.7.1.min.js[^>]*>', text) and "defer" not in re.search(r'<script[^>]*jquery-1.7.1.min.js[^>]*>', text).group(0), "other pages keep jQuery as it was"
+    assert re.search(r'<script[^>]*jquery-[0-9.]+\.min\.js[^>]*>', text) and "defer" not in re.search(r'<script[^>]*jquery-[0-9.]+\.min\.js[^>]*>', text).group(0), "other pages keep jQuery as it was"
 
 
 
@@ -119,7 +120,7 @@ def a_script_of_the_theme_in_the_body_keeps_jquery_in_time(base):
     write_same_length(path, text.replace("</body>", '<script src="data/themes/default/proef.js"></script></body>', 1).encode("utf-8"))
     try:
         _, page, _ = STATE["sanne"].get(f"nl/{SLUG}/edit")
-        tag = re.search(r'<script[^>]*jquery-1.7.1.min.js[^>]*>', page)
+        tag = re.search(r'<script[^>]*jquery-[0-9.]+\.min\.js[^>]*>', page)
         assert tag and "defer" not in tag.group(0), f"jQuery is deferred while the theme has a script in the body: {tag.group(0) if tag else 'missing'}"
     finally:
         write_same_length(path, original)
