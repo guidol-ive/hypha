@@ -15,6 +15,7 @@ figure.breed { width: 100%; }
 figure.in-de-tekst { max-width: 75%; }
 figure.klein-rechts { float: right; width: 40%; margin: .3em 0 1em 1.5em; }
 figcaption { font-size: .9em; color: var(--mde-muted); margin-top: .4em; }
+.mde-intro { font-weight: 700; margin: 0 0 1em; }
 figure.diagram details summary { cursor: pointer; font-size: .85em; color: var(--mde-action); }
 figure.interactief iframe, figure.embed iframe { width: 100%; border: 0; }
 .math-block { overflow-x: auto; margin: 1em 0; }

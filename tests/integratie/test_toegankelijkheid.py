@@ -33,5 +33,27 @@ def no_image_on_the_tag_index_lacks_an_alt(base):
     assert not missing, missing
 
 
+
+@test
+def the_article_page_shows_the_intro_and_the_photo(base):
+    # The excerpt and the featured image only showed in the box for the front page, for logged-in users (#520).
+    sanne = Client(base).login("sanne")
+    title = f"Brug met foto {pages.RUN}"
+    slug = pages.article(sanne, title, "published", featured='<featured_image alt="De nieuwe brug" caption="De brug bij nacht" credit="Verzonnen Fotograaf">5f0c0ffee0b30.png</featured_image>')
+    # An article of the new editor: format="markdown" with a source.
+    path = pages.page_file(slug)
+    xml = open(path, encoding="utf-8").read()
+    xml = xml.replace('<article status=', '<article format="markdown" status=', 1).replace(
+        "</context>", '</context><source format="markdown" profile="hypha-1.0"><text>De raad vergaderde over de nieuwe brug.</text>'
+        "<excerpt>De raad sprak over de brug.</excerpt><method/><sources/><frontmatter/></source>", 1)
+    open(path, "w", encoding="utf-8").write(xml)
+    _, text, _ = Client(base).get(f"nl/{slug}")
+    intro = re.search(r'<div class="mde-intro">(.*?)</div>', text, re.S)
+    assert intro and "De raad sprak over de brug" in intro.group(1), "no intro on the article page"
+    figure = re.search(r'<figure class="breed mde-lead">(.*?)</figure>', text, re.S)
+    assert figure, "no photo on the article page"
+    assert 'alt="De nieuwe brug"' in figure.group(1) and "De brug bij nacht" in figure.group(1) and "<i>Verzonnen Fotograaf</i>" in figure.group(1), figure.group(1)
+    assert text.index("mde-intro") < text.index('class="article"'), "the intro is not above the text"
+
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))

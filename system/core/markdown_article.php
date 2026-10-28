@@ -426,6 +426,7 @@
 			}
 			$result = $this->defaultView($request);
 			$this->mdTimeInByline($article);
+			$this->mdLead();
 			hypha_mdeditorReader($this->language, $this->getExcerpt() ? $this->getExcerpt()->textContent : '');
 			if ($this->getStatus() === self::STATUS_PUBLISHED) $this->mdStructuredData();
 			if (!isUser()) return $result;
@@ -467,6 +468,40 @@
 			$time->setAttribute('datetime', date('c', $at));
 			foreach (iterator_to_array($byline->childNodes) as $child) $time->appendChild($child);
 			$byline->appendChild($time);
+		}
+
+		/*
+			Function: mdLead
+			Shows the excerpt as the intro and the featured image as a wide photo with caption and photographer above the
+			text of the article, as in the design (section 13.12) and the preview of the editor. Before, both only showed
+			in the box for the front page, which only logged-in users see.
+		*/
+		protected function mdLead(): void {
+			$text = $this->html->findXPath("//*[@id='main']//div[contains(concat(' ', normalize-space(@class), ' '), ' article ')]")->item(0);
+			if (!$text || $this->html->findXPath("//*[@class='mde-intro']")->length) return;
+			$excerpt = $this->getExcerpt();
+			if ($excerpt && trim($excerpt->textContent) !== '') {
+				$intro = $this->html->createElement('div');
+				$intro->setAttribute('class', 'mde-intro');
+				$intro->appendImportedChildren($excerpt->childNodes);
+				$text->parentNode->insertBefore($intro, $text);
+			}
+			$image = $this->xml->documentElement->get(self::FIELD_NAME_FEATURED_IMAGE);
+			$file = $image ? trim($image->textContent) : '';
+			if ($file === '') return;
+			$figure = $this->html->createElement('figure');
+			$figure->setAttribute('class', 'breed mde-lead');
+			$img = $figure->createChild('img');
+			$img->setAttribute('src', (new HyphaImage($file))->getUrl());
+			$img->setAttribute('alt', $image->getAttribute('alt'));
+			$caption = trim($image->getAttribute('caption'));
+			$credit = trim($image->getAttribute('credit'));
+			if ($caption !== '' || $credit !== '') {
+				$figcaption = $figure->createChild('figcaption');
+				if ($caption !== '') $figcaption->appendChild($this->html->createTextNode($caption . ($credit !== '' ? ' ' : '')));
+				if ($credit !== '') $figcaption->createChild('i')->setText($credit);
+			}
+			$text->parentNode->insertBefore($figure, $text);
 		}
 
 		protected function mdRetractionNotice(HyphaDomElement $parent): HyphaDomElement {
