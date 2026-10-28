@@ -1,6 +1,6 @@
 ---
 title: "Gebruikersbeheer"
-revision: 1
+revision: 2
 date_created: 2026-10-28
 date_last_review:
 ---
@@ -30,16 +30,22 @@ Bij de installatie maak je de systeemgebruiker en de **eerste geprivilegieerde g
 
 ## Gebruikers beheren op de site
 
-Een geprivilegieerde gebruiker beheert de andere gebruikers via **Instellingen**, in de lijst van gebruikers. Per gebruiker staan daar knoppen:
+Een geprivilegieerde gebruiker beheert de andere gebruikers via **Instellingen**, in de lijst van gebruikers. Per gebruiker staan daar twee pictogrammen:
 
-| Knop | Wat er gebeurt |
+| Pictogram | Wat er gebeurt |
 |---|---|
-| **bewerken** | naam, e-mailadres, taal of wachtwoord van de gebruiker wijzigen |
-| **maak geprivilegieerd** | een standaardgebruiker wordt geprivilegieerde gebruiker |
-| **maak standaard** | een geprivilegieerde gebruiker wordt standaardgebruiker; de laatste geprivilegieerde gebruiker kan dat niet |
-| **verwijderen** | de gebruiker wordt *geen gebruiker*: hij kan niet meer inloggen, maar zijn pagina's blijven |
-| **weer actief maken** | iemand die *geen gebruiker* was, wordt weer standaardgebruiker |
-| **herinneren** | een genodigde krijgt de uitnodiging nog een keer |
+| **potlood** | het formulier van de gebruiker opent: naam, e-mailadres, taal, wachtwoord en **Rechten** |
+| **prullenbak** | de gebruiker wordt *geen gebruiker*: hij kan niet meer inloggen, maar zijn pagina's blijven |
+
+Bij een genodigde staat ook **herinneren**: de genodigde krijgt de uitnodiging nog een keer.
+
+In het formulier achter het potlood kies je bij **Rechten**:
+
+1. **Geprivilegieerde gebruiker**: de gebruiker krijgt alle rechten;
+2. **Standaardgebruiker**: de gewone rechten. Zo maak je ook iemand die *geen gebruiker* was weer actief;
+3. **Geen gebruiker**: hetzelfde als de prullenbak.
+
+De laatste geprivilegieerde gebruiker kan geen standaardgebruiker of geen gebruiker worden: een site heeft er altijd minstens één. Een standaardgebruiker ziet het veld **Rechten** niet.
 
 Hoe je iemand uitnodigt, staat in [Inloggen en je account](02-inloggen-en-account.md).
 

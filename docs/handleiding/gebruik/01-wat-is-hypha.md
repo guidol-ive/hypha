@@ -17,9 +17,9 @@ Op een Hypha-site zijn er vier soorten mensen. Het diagram laat zien hoe iemand 
 flowchart LR
     bezoeker([Bezoeker]) -->|krijgt een uitnodiging| genodigde([Genodigde])
     genodigde -->|vult het aanmeldformulier in| standaard([Standaardgebruiker])
-    standaard -->|een geprivilegieerde gebruiker kiest 'maak geprivilegieerd'| geprivilegieerd([Geprivilegieerde gebruiker])
+    standaard -->|een geprivilegieerde gebruiker kiest bij Rechten 'Geprivilegieerde gebruiker'| geprivilegieerd([Geprivilegieerde gebruiker])
     standaard -->|stopt, of wordt verwijderd| geen([Geen gebruiker])
-    geen -->|een geprivilegieerde gebruiker kiest 'weer actief maken'| standaard
+    geen -->|een geprivilegieerde gebruiker kiest bij Rechten 'Standaardgebruiker'| standaard
     bezoeker -.- b1[leest openbare pagina's, reageert op artikelen, meldt zich aan voor een mailinglijst]
     standaard -.- l1[maakt en bewerkt pagina's, beoordeelt artikelen, nodigt nieuwe gebruikers uit]
     geprivilegieerd -.- a1[stelt de site in: menu, thema, tags, gebruikers]

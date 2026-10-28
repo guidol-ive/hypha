@@ -92,16 +92,14 @@ Je account blijft bestaan, maar je bent dan *geen gebruiker* meer; je pagina's e
 
 ## Voor geprivilegieerde gebruikers
 
-In de projectledenlijst heeft een geprivilegieerde gebruiker per gebruiker extra knoppen:
+In de projectledenlijst heeft een geprivilegieerde gebruiker per gebruiker twee pictogrammen:
 
-| Knop | Wat het doet |
+| Pictogram | Wat het doet |
 |---|---|
-| bewerken | de gegevens van de gebruiker wijzigen |
-| verwijderen | de gebruiker wordt *geen gebruiker* en kan niet meer inloggen |
-| herinneren | de uitnodiging nog een keer sturen (alleen bij een genodigde) |
-| maak geprivilegieerd | een standaardgebruiker wordt geprivilegieerde gebruiker |
-| maak standaard | een geprivilegieerde gebruiker wordt standaardgebruiker; de laatste geprivilegieerde gebruiker kan dat niet |
-| weer actief maken | iemand die *geen gebruiker* was, wordt weer standaardgebruiker |
+| potlood | de gegevens van de gebruiker wijzigen, ook de **Rechten**: geprivilegieerde gebruiker, standaardgebruiker of geen gebruiker |
+| prullenbak | de gebruiker wordt *geen gebruiker* en kan niet meer inloggen; de laatste geprivilegieerde gebruiker heeft geen prullenbak |
+
+Bij een genodigde staat ook **herinneren**: de uitnodiging gaat dan nog een keer.
 
 Gebruikers beheren en met de hand een wachtwoord instellen staat in [Gebruikersbeheer](10-gebruikersbeheer.md).
 
