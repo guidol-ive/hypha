@@ -42,7 +42,10 @@ def a_path_without_language_that_is_no_page_gives_404(base):
         status, _, _ = client.follow(client.get(path))
         assert status == 200, f"/{path} gave {status}, the home page expected"
     found = {}
-    for path in ["robots.txt", "favicon.ico", "wp-login.php", "Geen_pagina_i18n"]:
+    #
+    # Not robots.txt and favicon.ico: those get their own answer through #375 (PR #618) and #616 (PR #617).
+    #
+    for path in ["wp-login.php", "Geen_pagina_i18n", "beheer/login.php"]:
         status, text, _ = client.get(path)
         found[path] = status
     assert all(s == 404 for s in found.values()), f"paths without a language answered {found}, 404 expected (they show the home page)"
