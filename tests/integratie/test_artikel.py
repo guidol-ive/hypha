@@ -247,6 +247,11 @@ def published_article_has_structured_data_for_search_engines(base):
     assert m, "no JSON-LD"
     data = _json.loads(m.group(1))
     assert data["@type"] == "NewsArticle" and data["headline"] == TITLE and data["inLanguage"] == "nl" and data["datePublished"], data
+    #
+    # The same date in the byline as <time datetime> (design section 12.10, point 1), around the existing spans.
+    #
+    m = re.search(r'<div class="published_at"><time datetime="([^"]+)"><span class="date">', text)
+    assert m and m.group(1) == data["datePublished"], "no <time> in the byline: " + text[text.find("published_at") - 40:][:300]
 
 
 @test
@@ -270,6 +275,7 @@ def withdraw_with_reason_leaves_overviews_br73_br86(base):
     assert page_node(SLUG).get("retracted") == "on"
     status, text, _ = Client(base).get(f"nl/{SLUG}")
     assert status == 200 and "Een jaartal klopte niet." in text and "De eerste zetels" not in text
+    assert re.search(r'teruggetrokken op <time datetime="\d{4}-\d\d-\d\dT[^"]+">\d+ \w+ \d{4}</time>\.', text), "no <time> in the notice"
     _, index, _ = Client(base).get("index/nl")
     assert SLUG not in index, "a withdrawn article is still in the index"
     STATE["ahmed"].get(f"nl/{SLUG}")

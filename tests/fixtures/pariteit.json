@@ -51,6 +51,11 @@
             "html": "<aside class=\"callout info\" aria-label=\"Open Eemstad in het kort\"><p class=\"callout-title\">Open Eemstad in het kort</p>\n<p>Lokale partij.</p>\n</aside>\n<blockquote class=\"callout quote\">\n<p>Een uitspraak</p>\n</blockquote>\n<aside class=\"callout warning\" aria-label=\"warning\">\n<p>Let op.</p>\n</aside>\n<blockquote>\n<p>[geen kader]\ntekst</p>\n</blockquote>\n<aside class=\"callout note\" aria-label=\"Titel met nadruk\"><p class=\"callout-title\">Titel met nadruk</p>\n<p>body</p>\n</aside>\n<blockquote>\n<p>[!onzin] x</p>\n</blockquote>\n"
         },
         {
+            "name": "hedgedoc-line-numbers",
+            "md": "```javascript=101\nvar a = 1;\nvar b = 2;\n```\n\n```=\neen\n```\n\n```sh=+\ndrie\nvier\n```\n\n```text\nvijf\n```\n",
+            "html": "<pre class=\"code numbered\"><span class=\"line-numbers\" aria-hidden=\"true\">101\n102</span><code class=\"hljs language-javascript\"><span class=\"hljs-keyword\">var</span> a = <span class=\"hljs-number\">1</span>;\n<span class=\"hljs-keyword\">var</span> b = <span class=\"hljs-number\">2</span>;\n</code></pre>\n\n<pre class=\"code numbered\"><span class=\"line-numbers\" aria-hidden=\"true\">1</span><code>een\n</code></pre>\n\n<pre class=\"code numbered\"><span class=\"line-numbers\" aria-hidden=\"true\">2\n3</span><code class=\"hljs language-sh\">drie\nvier\n</code></pre>\n\n<pre class=\"code\"><code class=\"language-text\">vijf\n</code></pre>\n\n"
+        },
+        {
             "name": "hedgedoc",
             "md": ":::info\nUitleg met **vet**.\n:::\n\n:::danger\nGevaar\n:::\n\n> :::info\n> binnen\n> :::\n> na",
             "html": "<aside class=\"callout info\" aria-label=\"info\">\n<p>Uitleg met <strong>vet</strong>.</p>\n</aside>\n<aside class=\"callout warning\" aria-label=\"warning\">\n<p>Gevaar</p>\n</aside>\n<blockquote>\n<aside class=\"callout info\" aria-label=\"info\">\n<p>binnen</p>\n</aside>\n<p>na</p>\n</blockquote>\n"

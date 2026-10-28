@@ -384,6 +384,8 @@
 .mdeditor .wys .math:hover, .mdeditor .wys .math-block:hover { background: var(--bluegreen-light); }
 .mdeditor .art pre.code { background: #F7F8F8; border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; overflow-x: auto; font-size: 14px; line-height: 1.5; }
 .mdeditor .art pre.code code { font-family: var(--mono); }
+.mdeditor .art pre.code.numbered { display: flex; }
+.mdeditor .art pre.code .line-numbers { flex: none; text-align: right; color: #5F656A; border-right: 1px solid var(--line); padding-right: .7em; margin-right: .8em; user-select: none; -webkit-user-select: none; font-family: var(--mono); }
 .mdeditor .hljs-keyword, .mdeditor .hljs-selector-tag, .mdeditor .hljs-built_in { color: #0B7285; font-weight: 700; }
 .mdeditor .hljs-string, .mdeditor .hljs-attr + .hljs-string { color: #237A35; }
 .mdeditor .hljs-number, .mdeditor .hljs-literal { color: #8A4B00; }

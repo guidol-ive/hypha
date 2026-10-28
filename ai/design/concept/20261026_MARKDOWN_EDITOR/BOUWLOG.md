@@ -202,9 +202,23 @@ Upstream: #577 (afronden bij het verkleinen van een upload, deel van #408), ook 
 
 1. **Het opgemerkte tekstdeel markeren** bij een beoordelingsopmerking (stap 8-2): bestaat ook in de huidige Hypha niet, en vraagt een wijziging in de bestaande discussies (L).
 2. **Opmerkingen bij vervallen goedkeuringen doorstrepen** (stap 8-4): de bestaande weergave van discussies kent geen koppeling naar de goedkeuring; vraagt een wijziging in bestaande code.
-3. **`<time datetime>` in de byline**: de byline komt uit de bestaande `defaultView()`.
-4. **Kaarten met miniatuur** in de popup (stap 1-3), **afkortingen** en **typografische aanhalingstekens** (optioneel), **regelnummers** in code, **beheerderscontrole in `tags.php`** (BR-98, aanbevolen; de editor controleert het zelf al) en een omschrijving bij een nieuwe tag.
+3. ~~**`<time datetime>` in de byline**~~: gebouwd op 28 oktober, zie „Datum als `<time>`”.
+4. **Kaarten met miniatuur** in de popup (stap 1-3), **afkortingen** en **typografische aanhalingstekens** (optioneel), ~~**regelnummers** in code~~ (gebouwd op 28 oktober), **beheerderscontrole in `tags.php`** (BR-98, aanbevolen; de editor controleert het zelf al) en een omschrijving bij een nieuwe tag.
 5. **Donkere modus en Dynamic Type** (HIG-aandachtspunten): het thema van de site is licht; een donkere editor in een lichte pagina zou vreemd staan.
+
+### Datum als `<time>` (2026-10-28, ochtend)
+
+1. Gebouwd volgens §12.10, punt 1, naast de bestaande code: na `defaultView()` zet `mdTimeInByline()` de spans met datum en tijd van een Markdown-artikel in een `<time datetime="…">`, binnen de bestaande `div.published_at`. Een thema dat die div opmaakt, ziet geen verschil. `peer_reviewed_article.php` is niet gewijzigd.
+2. De melding bij een teruggetrokken artikel zet alleen de datum in `<time>`. De zin eromheen komt uit het taalbestand.
+3. De `datetime` is gelijk aan `datePublished` in de JSON-LD.
+4. Tests: `test_artikel.py` (de byline en de melding).
+
+### Regelnummers in code (2026-10-28, ochtend)
+
+1. Gebouwd volgens §10.2 en stap 14, zoals in HedgeDoc: met ```` ```javascript= ```` beginnen de nummers bij 1, met `=101` bij 101, en met `=+` gaan ze verder na het vorige genummerde blok. Zonder `=` krijgt een blok geen nummers.
+2. Server en browser schrijven dezelfde HTML (`HyphaMarkdown::pre()` en `pre()` in `hypha-markdown.js`): `<pre class="code numbered">` met een `<span class="line-numbers" aria-hidden="true">` vóór de `<code>`. Een schermlezer leest de nummers niet voor, en de css (`lezer.css`, `mdeditor.css`) houdt ze buiten de selectie, zodat wie kopieert alleen de code krijgt. HyphaFilter laat daarvoor `aria-hidden` toe op `<span>`.
+3. Tests: `MarkdownTest.php` (=, =101, =+, zonder =, leeg blok) en een pariteitsgeval `hedgedoc-line-numbers`. De gouden dataset heeft geen genummerde code, dus het manifest blijft gelijk.
+4. Handleiding: `04-artikel-schrijven.md`, stap 4, punt 6.
 
 ### Hoogte van het interactieve blok (2026-10-28, nacht)
 

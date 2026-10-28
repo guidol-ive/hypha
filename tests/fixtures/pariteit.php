@@ -11,6 +11,7 @@
 		'basis' => "### Kop\n\n**vet** *schuin* `code` [link](https://www.example.org) ![x](a.png \"titel\")\n\n- a\n- b\n\n1. een\n2. twee\n\n> citaat\n\n---\n\nregel  \nbreuk",
 		'gfm' => "| a | b | c |\n|:--|:-:|--:|\n| 1 | 2 | 3 |\n\n~~weg~~ en https://www.example.org/x\n\n- [ ] open\n- [x] klaar",
 		'kaders' => "> [!info] Open Eemstad in het kort\n> Lokale partij.\n\n> [!quote] Citaat\n> Een uitspraak\n\n> [!warning]\n> Let op.\n\n> [geen kader]\n> tekst\n\n> [!note] Titel met *nadruk*\n> body\n\n> [!onzin] x",
+		'hedgedoc-line-numbers' => "```javascript=101\nvar a = 1;\nvar b = 2;\n```\n\n```=\neen\n```\n\n```sh=+\ndrie\nvier\n```\n\n```text\nvijf\n```\n",
 		'hedgedoc' => ":::info\nUitleg met **vet**.\n:::\n\n:::danger\nGevaar\n:::\n\n> :::info\n> binnen\n> :::\n> na",
 		'paginalinks' => "Zie [[Raadsnieuws]], [[Raadsnieuws|de reeks]] en [[Open bestuur#kop-geschiedenis]]. `[[code]]` en [[ ]].",
 		'markeren' => "==rijp== ++nieuw++ 10^3^ H~2~O, a == b, 5 ~ 6, x ^ y, ~niet sub~",

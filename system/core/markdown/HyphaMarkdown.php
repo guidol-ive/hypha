@@ -56,6 +56,7 @@
 		private array $options;
 		private array $renders = [];
 		private array $interactive = [];
+		private int $nextLine = 1;
 		private string $token = '';
 		private ?MarkdownConverter $converter = null;
 		private ?\Highlight\Highlighter $highlighter = null;
@@ -100,6 +101,7 @@
 		 * Markdown to HTML, before the filter (for the parity test with markdown-it).
 		 */
 		public function toHtml(string $markdown): string {
+			$this->nextLine = 1;
 			return (string)$this->converter()->convert($this->preprocess($markdown));
 		}
 
@@ -246,7 +248,7 @@
 				try {
 					$this->highlighter ??= new \Highlight\Highlighter();
 					$result = $this->highlighter->highlight($class, $literal);
-					return '<pre class="code"><code class="hljs language-' . Xml::escape($language) . '">' . $result->value . '</code></pre>' . "\n";
+					return $this->pre($info, $literal) . '<code class="hljs language-' . Xml::escape($language) . '">' . $result->value . '</code></pre>' . "\n";
 				}
 				catch (Throwable $e) {
 					//
@@ -254,7 +256,21 @@
 					//
 				}
 			}
-			return '<pre class="code"><code' . ($language !== '' ? ' class="language-' . Xml::escape($language) . '"' : '') . '>' . Xml::escape($literal) . '</code></pre>' . "\n";
+			return $this->pre($info, $literal) . '<code' . ($language !== '' ? ' class="language-' . Xml::escape($language) . '"' : '') . '>' . Xml::escape($literal) . '</code></pre>' . "\n";
+		}
+
+		//
+		// The opening of a code block, with line numbers when the info asks for them as in HedgeDoc: javascript= starts at
+		// 1, javascript=101 at 101, javascript=+ goes on after the previous numbered block. The numbers are a column of
+		// their own, hidden from screen readers and not selected when copying, so the code stays as written.
+		//
+		private function pre(string $info, string $literal): string {
+			if (!preg_match('/^[^\s{=!]*=(\d*|\+)(?=[\s{!]|$)/', $info, $m)) return '<pre class="code">';
+			$lines = $literal === '' ? 0 : substr_count(rtrim($literal, "\n"), "\n") + 1;
+			$first = $m[1] === '+' ? $this->nextLine : ($m[1] === '' ? 1 : (int)$m[1]);
+			$this->nextLine = $first + $lines;
+			if (!$lines) return '<pre class="code">';
+			return '<pre class="code numbered"><span class="line-numbers" aria-hidden="true">' . implode("\n", range($first, $first + $lines - 1)) . '</span>';
 		}
 
 		//

@@ -110,6 +110,7 @@ fotograaf: Foto (naam fotograaf)
 3. Alles wat je kunt invoegen staat onder de knop **Alle blokken** (het plusje in de werkbalk): subkop, opsomming en genummerde lijst, citaat, kader, voetnoot, tabel, beeld, diagram, formule, code, scheidingslijn en interactief blok. In Markdown kun je ook aan het begin van een lege regel een **/** typen.
 4. Een link naar een andere pagina van de site maak je met `[[` gevolgd door de naam; de editor stelt pagina's voor.
 5. Een **voetnoot** maak je met `[^1]` in de tekst en `[^1]: Bron of uitleg` onderaan.
+6. **Code met regelnummers**: zet in Markdown `=` achter de taal van een codeblok, zoals in HedgeDoc. Met ```` ```javascript= ```` beginnen de nummers bij 1, met ```` ```javascript=101 ```` bij 101, en met ```` ```javascript=+ ```` gaan ze verder na het vorige genummerde blok. Wie de code kopieert, krijgt de nummers niet mee.
 
 > [!tip] Plakken uit Word, Google Docs of LibreOffice
 > Plak gerust tekst uit Word, Google Docs of LibreOffice. De editor neemt vet, schuin, koppen, tabellen, formules, lijsten en links over en laat de rest weg, zodat de opmaak niet verspringt. Kop 1 wordt een tussenkop. Foto's gaan niet altijd mee: voeg ze dan toe met **Beeld…**; de checklist herinnert je eraan. Wil je alleen de tekst, zonder opmaak? Plak dan met ⌘⇧V (Ctrl+Shift+V). Wat niet meekwam, zoals een plaatje zonder bestand of een formule als plaatje, blijft in de checklist staan tot je op **gezien** klikt. Foto's die als bestand meekomen, uploadt de editor zelf.

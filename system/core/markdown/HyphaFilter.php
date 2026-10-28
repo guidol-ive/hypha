@@ -32,7 +32,7 @@
 			'details' => ['open', 'class'], 'summary' => [],
 			'figure' => ['class', 'role', 'aria-label'], 'figcaption' => [],
 			'aside' => ['class', 'aria-label'], 'section' => ['class', 'aria-label'], 'nav' => ['class', 'aria-label'],
-			'span' => ['class', 'title'], 'div' => ['class', 'title'], 'bdi' => [], 'bdo' => [],
+			'span' => ['class', 'title', 'aria-hidden'], 'div' => ['class', 'title'], 'bdi' => [], 'bdo' => [],
 			'input' => ['type', 'checked', 'disabled'],
 			'iframe' => ['src', 'title', 'width', 'height', 'class', 'allow', 'allowfullscreen'],
 		];

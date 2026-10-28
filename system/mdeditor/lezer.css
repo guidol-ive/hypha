@@ -19,6 +19,8 @@ figure.diagram details summary { cursor: pointer; font-size: .85em; color: var(-
 figure.interactief iframe, figure.embed iframe { width: 100%; border: 0; }
 .math-block { overflow-x: auto; margin: 1em 0; }
 pre.code { background: var(--mde-code-bg); padding: .8em 1em; overflow-x: auto; border-radius: 3px; }
+pre.code.numbered { display: flex; }
+pre.code .line-numbers { flex: none; text-align: right; color: var(--mde-muted); border-right: 1px solid #ccc; padding-right: .7em; margin-right: .8em; user-select: none; -webkit-user-select: none; }
 .hljs-keyword, .hljs-selector-tag, .hljs-built_in { color: #8A3B00; }
 .hljs-string, .hljs-attr { color: #1F6B2E; }
 .hljs-comment { color: #5F656A; font-style: italic; }

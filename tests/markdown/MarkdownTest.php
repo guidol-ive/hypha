@@ -256,6 +256,15 @@
 		contains('class="hljs language-javascript"', md("```javascript=101\nvar a = 1;\n```\n"));
 	});
 
+	test('markdown: HedgeDoc line numbers: = starts at 1, =101 at 101, =+ goes on, without = none', function () {
+		contains('<pre class="code numbered"><span class="line-numbers" aria-hidden="true">101' . "\n" . '102</span><code class="hljs language-javascript">', md("```javascript=101\nvar a = 1;\nvar b = 2;\n```\n"));
+		$html = md("```=\neen\ntwee\n```\n\n```sh=+\ndrie\n```\n\n```text\nvier\n```\n");
+		contains('aria-hidden="true">1' . "\n" . '2</span><code>een', $html);
+		contains('aria-hidden="true">3</span><code class="hljs language-sh">', $html);
+		contains('<pre class="code"><code class="language-text">vier', $html);
+		contains('<pre class="code"><code class="hljs language-javascript"/>', md("```javascript=\n```\n"));
+	});
+
 	test('markdown: an uploaded photo gets its size and loads lazily (design 12.16)', function () {
 		$dir = sys_get_temp_dir() . '/hypha-md-img-' . getmypid();
 		@mkdir($dir . '/data/images', 0777, true);

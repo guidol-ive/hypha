@@ -425,6 +425,7 @@
 				return null;
 			}
 			$result = $this->defaultView($request);
+			$this->mdTimeInByline($article);
 			hypha_mdeditorReader($this->language, $this->getExcerpt() ? $this->getExcerpt()->textContent : '');
 			if ($this->getStatus() === self::STATUS_PUBLISHED) $this->mdStructuredData();
 			if (!isUser()) return $result;
@@ -453,6 +454,21 @@
 			return $result;
 		}
 
+		/**
+		 * The publication date in the byline as <time datetime> (design section 12.10, point 1), so that readers, search
+		 * engines and language models get the date without parsing the words. The existing byline is kept: the date and
+		 * time spans move into the time element inside the div, so a theme that styles div.published_at sees no change.
+		 */
+		protected function mdTimeInByline(DOMElement $article): void {
+			$at = (int)ltrim($article->getAttribute(self::FIELD_NAME_PUBLISHED_AT), 't');
+			$byline = $this->html->findOneXPath("//div[@class='published_at']");
+			if (!$at || !$byline || $byline->getElementsByTagName('time')->length) return;
+			$time = $this->html->createElement('time');
+			$time->setAttribute('datetime', date('c', $at));
+			foreach (iterator_to_array($byline->childNodes) as $child) $time->appendChild($child);
+			$byline->appendChild($time);
+		}
+
 		protected function mdRetractionNotice(HyphaDomElement $parent): HyphaDomElement {
 			$retraction = $this->xml->findOneXPath('article/retraction');
 			$notice = $this->html->createElement('p');
@@ -460,8 +476,16 @@
 			$notice->setAttribute('role', 'note');
 			$at = $retraction ? (int)ltrim($retraction->getAttribute('at'), 't') : time();
 			$date = hypha_markdownDate($at, $this->language);
+			//
+			// Only the date itself in <time>; the sentence around it comes from the language file.
+			//
 			$strong = $notice->createChild('strong');
-			$strong->setText(__('mde-retracted-on', ['date' => $date]));
+			[$before, $after] = array_pad(explode("\x01", __('mde-retracted-on', ['date' => "\x01"]), 2), 2, '');
+			$strong->appendText($before);
+			$time = $strong->createChild('time');
+			$time->setAttribute('datetime', date('c', $at));
+			$time->setText($date);
+			$strong->appendText($after);
 			$notice->appendText(' ' . ($retraction ? trim($retraction->textContent) : ''));
 			return $notice;
 		}

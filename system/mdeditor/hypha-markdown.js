@@ -530,7 +530,20 @@ export function createMarkdown(options = {}) {
 		const m = tokens[i].meta;
 		return `<figure class="embed ${esc(m.service)}"><iframe src="${esc(m.src)}" title="${esc(text('embed-' + m.service, m.service[0].toUpperCase() + m.service.slice(1)))}" width="560" height="315" allow="fullscreen; picture-in-picture" allowfullscreen=""></iframe><figcaption><a href="${esc(m.url)}">${esc(m.url)}</a></figcaption></figure>\n`;
 	};
-	r.fence = (tokens, i) => {
+	//
+	// The opening of a code block, with line numbers when the info asks for them as in HedgeDoc: javascript= starts at
+	// 1, javascript=101 at 101, javascript=+ goes on after the previous numbered block (HyphaMarkdown::pre()).
+	//
+	const pre = (info, content, env) => {
+		const m = /^[^\s{=!]*=(\d*|\+)(?=[\s{!]|$)/.exec(info);
+		if (!m) return '<pre class="code">';
+		const lines = content === '' ? 0 : content.replace(/\n+$/, '').split('\n').length;
+		const first = m[1] === '+' ? (env.nextLine || 1) : (m[1] === '' ? 1 : parseInt(m[1], 10));
+		env.nextLine = first + lines;
+		if (!lines) return '<pre class="code">';
+		return '<pre class="code numbered"><span class="line-numbers" aria-hidden="true">' + Array.from({ length: lines }, (x, n) => first + n).join('\n') + '</span>';
+	};
+	r.fence = (tokens, i, opts, env) => {
 		const t = tokens[i];
 		const info = t.info.trim();
 		const lang = (info.split(/[\s{=!]/)[0] || '').toLowerCase();
@@ -551,9 +564,9 @@ export function createMarkdown(options = {}) {
 		const hl = HIGHLIGHT[lang];
 		if (hl && o.highlight) {
 			const html = o.highlight(t.content, hl);
-			if (html != null) return `<pre class="code"><code class="hljs language-${esc(lang)}">${html}</code></pre>\n`;
+			if (html != null) return `${pre(info, t.content, env)}<code class="hljs language-${esc(lang)}">${html}</code></pre>\n`;
 		}
-		return `<pre class="code"><code${lang ? ` class="language-${esc(lang)}"` : ''}>${esc(t.content)}</code></pre>\n`;
+		return `${pre(info, t.content, env)}<code${lang ? ` class="language-${esc(lang)}"` : ''}>${esc(t.content)}</code></pre>\n`;
 	};
 	//
 	// Tables: the alignment as the attribute align, as league/commonmark writes it (no style attribute in HTML).
