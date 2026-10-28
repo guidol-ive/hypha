@@ -28,7 +28,7 @@ flowchart LR
     start([Handleiding van Hypha]) --> gebruik[Gebruikshandleiding]
     start --> techniek[Technische handleiding]
     gebruik --> g1[Wat is Hypha] --> g2[Inloggen en account] --> g3[Tekstpagina] --> g4[Artikel schrijven] --> g5[Beoordelen en publiceren]
-    g5 --> g6[Beeld, links en tags] --> g7[Menu en navigatie] --> g8[Mailinglijst en festival] --> g9[Vragen]
+    g5 --> g6[Beeld, links en tags] --> g7[Menu en navigatie] --> g8[Mailinglijst en festival] --> g9[Vragen] --> g10[Gebruikersbeheer]
     techniek --> t1[Architectuur] --> t2[Installatie] --> t3[Opslag] --> t4[Datatypes en macro's]
     t4 --> t5[Thema's] --> t6[Beheer] --> t7[Beveiliging] --> t8[Tekens en talen] --> t9[Testen]
 ```
@@ -44,6 +44,7 @@ flowchart LR
 7. [Menu en navigatie](gebruik/07-menu-en-navigatie.md)
 8. [Mailinglijst en festival](gebruik/08-andere-paginatypes.md)
 9. [Veelgestelde vragen](gebruik/09-vragen.md)
+10. [Gebruikersbeheer](gebruik/10-gebruikersbeheer.md)
 
 ## Technische handleiding
 

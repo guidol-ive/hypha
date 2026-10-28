@@ -34,7 +34,7 @@ flowchart TD
     docker --> open[Open de site in de browser]
     git --> open
     php --> open
-    open --> inst[Installatiescherm: titel, taal, eerste beheerder]
+    open --> inst[Installatiescherm: titel, taal, eerste geprivilegieerde gebruiker]
 ```
 
 ## Met Docker
@@ -63,14 +63,14 @@ docker build --build-arg PHP_VERSION=8.5 -t localhost/hypha:php8.5 -f docs/conta
    mkdir -p hypha-data/themes && cp -R data/themes/default hypha-data/themes/
    ```
 
-2. Zet vóór het bouwen een gebruikersnaam en wachtwoord voor onderhoud bovenin `hypha.php`. Laat je ze leeg, dan kan iedereen de installatie openen.
+2. Zet vóór het bouwen de gebruikersnaam en het wachtwoord van de **systeemgebruiker** bovenin `hypha.php`. Laat je ze leeg, dan kan iedereen de installatie openen.
 3. Start de container:
 
    ```bash
    docker run -d --name hypha -p 8086:8080 -v ./hypha-data:/var/www/html/data:Z localhost/hypha:php8.2
    ```
 
-4. Open <http://localhost:8086/>. Je komt in het installatiescherm: vul de titel, de standaardtaal, de startpagina, de eerste beheerder en het e-mailadres van het systeem in.
+4. Open <http://localhost:8086/>. Je komt in het installatiescherm: log in als systeemgebruiker en vul de titel, de standaardtaal, de startpagina, de eerste geprivilegieerde gebruiker en het e-mailadres van het systeem in.
 
 ### Met Docker Compose
 
@@ -132,7 +132,7 @@ Zet in `docs/container/hypha-vhost.conf` de regels `SetEnv HTTPS on`, `RemoteIPH
    ```
 
 2. Geef de webserver alleen schrijfrechten op `data/`: `chown -R www-data:www-data /var/www/hypha/data`.
-3. Zet een gebruikersnaam en wachtwoord voor onderhoud bovenin `hypha.php`.
+3. Zet de gebruikersnaam en het wachtwoord van de systeemgebruiker bovenin `hypha.php`.
 4. Open de site in de browser en vul het installatiescherm in.
 5. Haal daarna `hypha.php` weg uit de map van de site, of houd het wachtwoord sterk.
 
@@ -141,8 +141,22 @@ Bijwerken gaat met `git pull`; de map `data/` valt buiten git, behalve het stand
 ## Met hypha.php
 
 1. Download `hypha.php` van hypha.net.
-2. Zet een gebruikersnaam en wachtwoord in de eerste regels.
+2. Zet de gebruikersnaam en het wachtwoord van de systeemgebruiker in de eerste regels.
 3. Zet het bestand in de map van de site en open het in de browser. Het pakt de bestanden uit en opent het installatiescherm.
+
+## Systeemgebruiker en gebruikers van de site
+
+Bij de installatie maak je twee accounts die **los van elkaar** staan.
+
+| | Systeemgebruiker | Eerste geprivilegieerde gebruiker |
+|---|---|---|
+| Waar | `$username` en `$password` bovenin `hypha.php`, leesbaar | `<user rights="admin">` in `data/hypha.xml`, met een hash van het wachtwoord |
+| Inloggen | alleen op `hypha.php` | met de inlogknop op de site |
+| Waarvoor | de installatie, en daarna `hypha.php?maintenance` om de bestanden van Hypha bij te werken | de site: instellingen, thema, menu, gebruikers |
+
+1. Met de systeemgebruiker kun je **niet** op de site inloggen. Daarom vraagt het installatiescherm, na het inloggen als systeemgebruiker, apart om de gebruikersnaam en het wachtwoord van de eerste gebruiker van de site.
+2. Kies voor de twee accounts verschillende wachtwoorden.
+3. Na de installatie maak je via de site meer gebruikers aan: standaardgebruikers, en zo nodig meer geprivilegieerde gebruikers. Zie [Gebruikersbeheer](../gebruik/10-gebruikersbeheer.md), ook voor het met de hand instellen van een wachtwoord als niemand meer kan inloggen.
 
 ## Controleren of het werkt
 

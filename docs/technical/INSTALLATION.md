@@ -12,11 +12,11 @@ git clone --branch dev https://github.com/PlanBCode/hypha.git /var/www/hypha
 1. Give the web server user write access to `data/` only, not to the code:
    `chown -R www-data:www-data /var/www/hypha/data`. Do not follow the old advice to
    `chmod -R 777` the whole folder.
-2. Set the maintenance credentials at the top of `hypha.php` (`$username`, `$password`); with the
-   defaults (empty) the installer is open to anyone (security review SEC-002).
+2. Set the credentials of the **system user** at the top of `hypha.php` (`$username`, `$password`);
+   with the defaults (empty) the installer is open to anyone (security review SEC-002).
 3. Open the site in a browser. Because `data/hypha.xml` is missing, `index.php` sends you to
-   `hypha.php`. Log in with the credentials of step 2 and fill in title, default language, default
-   page, the first administrator and the system e-mail address.
+   `hypha.php`. Log in as the system user of step 2 and fill in title, default language, default
+   page, the first privileged user and the system e-mail address.
 4. Remove `hypha.php` from the web root afterwards, or keep the credentials strong (see
    [OPERATIONS.md](OPERATIONS.md#hardening)).
 
@@ -24,9 +24,26 @@ git clone --branch dev https://github.com/PlanBCode/hypha.git /var/www/hypha
 
 ## With hypha.php
 
-Download `hypha.php` from hypha.net, write a user name and password into the first lines, upload it
+Download `hypha.php` from hypha.net, write the name and password of the system user into the first lines, upload it
 to the web root and open it in a browser. It extracts the files and continues as in step 3 above.
-The same script later serves as "system tools" for administrators.
+The same script later serves as "system tools" for the system user.
+
+## System user and users of the site
+
+The installation creates two accounts that are **separate**:
+
+| | System user | First privileged user |
+|---|---|---|
+| Where | `$username` and `$password` at the top of `hypha.php`, in plain text (#642) | `<user rights="admin">` in `data/hypha.xml`, with a password hash |
+| Log in | only at `hypha.php` | with the login button of the site |
+| For | the installation, and later `hypha.php?maintenance` to update the files of Hypha | the site: settings, theme, menu, users |
+
+The system user cannot log in to the site. After logging in as the system user, the installer asks
+separately for the name and password of the first user of the site. Use different passwords for the
+two. The kinds of site users are privileged user (`rights="admin"`), standard user (`"user"`),
+invited (`"invitee"`) and no user (`"exmember"`). The Dutch user manual,
+[Gebruikersbeheer](../handleiding/gebruik/10-gebruikersbeheer.md), also describes how to set a
+password by hand in `hypha.xml` when nobody can log in.
 
 ## Apache configuration
 
