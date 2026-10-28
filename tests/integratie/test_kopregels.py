@@ -1,4 +1,4 @@
-"""Security headers on every response (#432): the basic three, Cross-Origin-Opener-Policy and a first CSP."""
+"""Security headers on every response (#432): the basic three, Cross-Origin-Opener-Policy, Permissions-Policy and a first CSP."""
 import os
 import sys
 
@@ -15,6 +15,8 @@ def a_page_has_the_security_headers(base):
     assert headers.get("X-Content-Type-Options") == "nosniff", headers.get("X-Content-Type-Options")
     assert headers.get("Referrer-Policy") == "strict-origin-when-cross-origin", headers.get("Referrer-Policy")
     assert headers.get("Cross-Origin-Opener-Policy") == "same-origin", headers.get("Cross-Origin-Opener-Policy")
+    permissions = headers.get("Permissions-Policy") or ""
+    assert "camera=()" in permissions and "geolocation=()" in permissions and "fullscreen" not in permissions, permissions
     csp = headers.get("Content-Security-Policy") or ""
     assert "frame-ancestors 'self'" in csp and "object-src 'none'" in csp, csp
 
