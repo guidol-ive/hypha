@@ -1,6 +1,7 @@
 """The settings of the text editor at /settings/editor (BR-47, design section 10.1): only an administrator changes
 them, lists one per line, host names checked, level 2 per role; an empty form brings back the defaults."""
 import os
+import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -155,6 +156,23 @@ def a_link_to_the_site_itself_keeps_an_address(base):
             beheer.post("settings", "settingsSaveSiteElements", "", {"siteTitle": root.findtext("title"), "siteHeader": f'<a href="{href}"><span>Eemstad</span></a>', "siteFooter": "<p>Verzonnen voettekst</p>"})
             stored = ET.tostring(ET.parse(path).getroot().find("header"), encoding="unicode")
             assert 'href="./"' in stored, f"{href}: {stored}"
+    finally:
+        write_same_length(path, original)
+
+
+@test
+def a_link_in_the_header_without_an_address_leads_home(base):
+    # A header saved earlier has its logo in <a> without href; it leads to the home page (#669).
+    beheer = Client(base).login("beheer")
+    path = os.path.join(WORK, "data/hypha.xml")
+    original = open(path, "rb").read()
+    root = ET.parse(path).getroot()
+    try:
+        beheer.get("settings")
+        beheer.post("settings", "settingsSaveSiteElements", "", {"siteTitle": root.findtext("title"), "siteHeader": '<a><span class="logo">Eemstad</span></a>', "siteFooter": "<p>Verzonnen voettekst</p>"})
+        _, text, _ = Client(base).get("nl/Start")
+        header = re.search(r'id="header".*?</div>', text, re.S)
+        assert header and re.search(r'<a[^>]*href="\./"[^>]*>\s*<span class="logo">', header.group(0)), header.group(0)[:300] if header else "no header"
     finally:
         write_same_length(path, original)
 

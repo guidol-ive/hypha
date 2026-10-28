@@ -49,7 +49,8 @@ def a_member_logs_in_with_the_form_alone(base):
     fields = dict(re.findall(r'<input[^>]*name="(command|csrfToken)"[^>]*value="([^"]*)"', text))
     fields.update({"loginUsername": "lotte", "loginPassword": PASSWORD})
     status, _, location = client.request("nl/Start?login", fields)
-    assert status == 302 and location.endswith("nl/Start?login"), (status, location)
+    # 303 since PR #584 (See Other after a POST).
+    assert status in (302, 303) and location.endswith("nl/Start?login"), (status, location)
     _, text, _ = client.get("nl/Start?login")
     assert "Lotte" in text or "lotte" in text, "not logged in"
     assert "loginPassword" not in re.search(r'<div id="popup".*?</div>', text, re.S).group(0), "form shown after login"

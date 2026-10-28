@@ -69,6 +69,13 @@ class Client:
     def post(self, path, command, argument="", fields=None, files=None):
         if not self.csrf:
             self.get(path)
+        if not self.csrf:
+            # A site with the page cache of PR #518 has no token in an anonymous page: fetch it, as hypha() does.
+            _, text, _ = self.request("csrf-token", {})
+            try:
+                self.csrf = json.loads(text)["token"]
+            except (ValueError, KeyError, TypeError):
+                pass
         data = {"command": command, "argument": argument, "csrfToken": self.csrf}
         data.update(fields or {})
         return self.request(path, data, files)
