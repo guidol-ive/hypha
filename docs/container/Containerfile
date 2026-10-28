@@ -28,6 +28,10 @@ RUN apt-get update \
 RUN a2enmod rewrite headers remoteip
 
 COPY docs/container/php.ini /usr/local/etc/php/conf.d/zz-hypha.ini
+# A thread-safe (ZTS) PHP, such as the 8.6 release candidates of the official image, cannot open /dev/stderr from
+# mod_php: it resolves the path of error_log first, and /dev/stderr points to a pipe. Then PHP writes to a file that
+# the command below follows into the container log. A normal (NTS) build keeps writing to /dev/stderr.
+RUN if php -r 'exit(PHP_ZTS ? 0 : 1);'; then printf 'error_log = /tmp/php-error.log\n' > /usr/local/etc/php/conf.d/zzz-hypha-zts.ini; fi
 COPY docs/container/hypha-vhost.conf /etc/apache2/sites-available/000-default.conf
 # Cap the number of workers to what fits in memory (see the file for how to size it).
 COPY docs/container/mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
@@ -42,3 +46,4 @@ RUN rm -rf /var/www/html/.git /var/www/html/ai /var/www/html/docs \
 VOLUME ["/var/www/html/data"]
 EXPOSE 8080
 USER www-data
+CMD ["sh", "-c", "if [ -f /usr/local/etc/php/conf.d/zzz-hypha-zts.ini ]; then touch /tmp/php-error.log && tail -n 0 -F /tmp/php-error.log >&2 & fi; exec apache2-foreground"]
