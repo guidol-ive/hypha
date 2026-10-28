@@ -96,7 +96,7 @@ sh tests/bekend.sh 8.2 .
 
 1. **Met een branch** zie je of een pull request de fout oplost: de tests van dat issue moeten dan `FIXED?` geven.
 2. **Met `.`** test je je eigen checkout.
-3. **`ONLY=paginas`** draait alleen de tests van één gebied: `beveiliging`, `inhoud`, `lijsten`, `paginas`, `platform`, `mime`, `i18n`, `php9`, `canonical`, `favicon` of `sitemap`.
+3. **`ONLY=paginas`** draait alleen de tests van één gebied: `beveiliging`, `inhoud`, `lijsten`, `paginas`, `platform`, `mime`, `i18n`, `php9`, `canonical`, `favicon`, `sitemap` of `console`.
 
 Het register van alle bekende fouten staat in `tests/bekend/fouten.ndjson`, één regel per test. `python3 -I tests/bekend/register.py` controleert dat de code en het register overeenkomen.
 
