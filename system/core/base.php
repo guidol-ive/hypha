@@ -37,7 +37,9 @@
 	include_once ('database.php');
 	include_once ('language.php');
 	include_once ('crypto.php');
+	include_once ('pagecache.php');
 
+	HyphaCacheGeneration::read();
 	$hyphaXml = new Xml('project', Xml::multiLingualOff, Xml::versionsOff);
 	$hyphaXml->loadFromFile('data/hypha.xml');
 
@@ -625,27 +627,18 @@
 
 	function hypha_getPage($language, $name) {
 		global $hyphaXml;
-		// One query instead of a loop over every page; translate()
-		// lowers A-Z only, as strtolower() does since PHP 8.2 (#675).
-		$upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-		$lower = 'abcdefghijklmnopqrstuvwxyz';
-		// The exact name first: translate() over every page is slow,
-		// and the address nearly always has the name as stored.
-		$page = $hyphaXml->findXPath('pageList/page[language[@id=' . hypha_xpathLiteral((string)$language) . ' and @name=' . hypha_xpathLiteral((string)$name) . ']]')->item(0);
-		if (!$page)
-			$page = $hyphaXml->findXPath('pageList/page[language[@id=' . hypha_xpathLiteral((string)$language) . ' and translate(@name, "' . $upper . '", "' . $lower . '")=' . hypha_xpathLiteral(strtolower((string)$name)) . ']]')->item(0);
-		return $page ?: false;
-	}
-
-	/*
-		Function: hypha_xpathLiteral
-		Returns the string as an XPath 1.0 string literal, also when it
-		holds both kinds of quotes.
-	*/
-	function hypha_xpathLiteral($string) {
-		if (strpos($string, '"') === false) return '"' . $string . '"';
-		if (strpos($string, "'") === false) return "'" . $string . "'";
-		return 'concat("' . str_replace('"', '", \'"\', "', $string) . '")';
+		// One XPath query for all page names instead of one
+		// DOMXPath object per page; rebuilt after a reload.
+		static $map = null, $doc = null;
+		if ($map === null || $doc !== $hyphaXml->documentElement) {
+			$map = [];
+			$doc = $hyphaXml->documentElement;
+			foreach ($hyphaXml->findXPath('pageList/page/language') as $lang) {
+				$key = $lang->getAttribute('id') . '/' . strtolower($lang->getAttribute('name'));
+				if (!isset($map[$key])) $map[$key] = $lang->parentNode;
+			}
+		}
+		return $map[$language . '/' . strtolower($name)] ?? false;
 	}
 
 	function hypha_getPageById($id) {
@@ -1002,8 +995,12 @@
 		// One short line per view, appended under a lock that lasts
 		// microseconds: reading, decoding and rewriting the whole
 		// counter file on every view made all requests wait for
-		// each other (#677).
-		file_put_contents(HYPHA_STATS_LOG, $timestamp . "\n", FILE_APPEND | LOCK_EX);
+		// each other (#677). The views of cached pages, counted in
+		// memory (#411), are added as lines too.
+		$lines = $timestamp . "\n";
+		foreach (HyphaPageCache::addPendingViews([]) as $bucket => $count)
+			$lines .= str_repeat($bucket . "\n", (int)$count);
+		file_put_contents(HYPHA_STATS_LOG, $lines, FILE_APPEND | LOCK_EX);
 	}
 
 	/*

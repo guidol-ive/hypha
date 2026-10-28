@@ -45,6 +45,13 @@
 		- *dataypes* Include modules for available datatypes: textpage, mailinglist, blog et cetera
 	*/
 
+	// Anonymous page cache: serve a cached page from the memory db
+	// before any site data is read, or fall through.
+	require_once 'system/core/language.php';
+	require_once 'system/core/HyphaRequest.php';
+	require_once 'system/core/pagecache.php';
+	HyphaPageCache::serveFast();
+
 	foreach (scandir("system/core/") as $_file) if (substr($_file, -4) == '.php') require_once("system/core/" . $_file);
 
 	// Build request
@@ -102,6 +109,17 @@
 	if ($_path === 'robots.txt') serveRobotsTxt($hyphaUrl);
 	if ($_path === 'llms.txt') serveLlmsTxt($hyphaUrl);
 	if (preg_match('/^sitemap(?:-([1-9][0-9]*))?\.xml$/', $_path, $_matches)) serveSitemap($hyphaUrl, isset($_matches[1]) ? (int)$_matches[1] : null);
+	// The CSRF token for anonymous visitors is not in the HTML: the
+	// hypha() JavaScript function fetches it here before it posts.
+	if ($hyphaQuery === 'csrf-token' && $hyphaRequest->isPost()) {
+		header('Cache-Control: no-store');
+		header('Content-Type: application/json');
+		echo json_encode(['token' => $O_O->getOrGenerateCsrfToken()]);
+		exit;
+	}
+
+	$hyphaPageCacheKey = HyphaPageCache::keyFor($O_O);
+	HyphaRoute::storeIfMissing();
 
 	/*
 		Group: Stage 4 - Load website data
@@ -241,6 +259,11 @@
 		The page gets delivered.
 		Finally, when all is said and done, the page is compiled into HTML and sent to the client.
 	*/
+	$html = $hyphaHtml->toString();
+	if ($hyphaPageCacheKey) {
+		HyphaPageCache::store($hyphaPageCacheKey, $html, $O_O);
+		HyphaPageCache::sendHeaders('miss', time());
+	}
 	header('Content-Type: text/html; charset=utf-8');
-	print $hyphaHtml->toString();
+	print $html;
 	exit;
