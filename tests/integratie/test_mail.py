@@ -18,7 +18,7 @@ import time
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from hypha import Client, run, test  # noqa: E402
+from hypha import Client, run, test, write_same_length  # noqa: E402
 
 WORK = os.environ.get("HYPHA_WORK", "")
 SMTP_PORT = int(os.environ.get("HYPHA_SMTP_PORT", "8162"))
@@ -180,6 +180,34 @@ def withdrawing_a_published_article_sends_no_mail(base):
     #
     messages = mails_after(lambda: command(STATE["sanne"], STATE["path"], "md_withdraw", {"md_reason": "Een jaartal klopte niet."}), 1, timeout=3)
     assert not messages, f"withdrawing sent {len(messages)} messages"
+
+
+@test
+def the_digest_counts_the_page_views_of_the_old_counter_and_the_log(base):
+    # Every view read, decoded and rewrote the whole counter file under one lock; now it appends a line (#677). The
+    # digest adds the old counts and the lines, and drops the lines of the period it reports.
+    Client(base).get("nl/Start")
+    path = os.path.join(WORK, "data/hypha.xml")
+    text = open(path, "rb").read()
+    root = ET.fromstring(text)
+    interval = int(root.get("digestInterval"))
+    old = root.get("lastDigestTime")
+    last = str(int(time.time()) - interval - 600)
+    assert old and len(old) == len(last), old
+    period = str(int(last) + interval)
+    with open(os.path.join(WORK, "data/hypha.stats"), "w") as f:
+        f.write(json.dumps({period: 3}))
+    with open(os.path.join(WORK, "data/hypha.stats.log"), "w") as f:
+        f.write(f"{period}\n{period}\n")
+    with open(os.path.join(WORK, "data/digest"), "w") as f:
+        f.write("<p>Verzonnen wijziging voor de samenvatting.</p>")
+    write_same_length(path, text.replace(f'lastDigestTime="{old}"'.encode(), f'lastDigestTime="{last}"'.encode(), 1))
+    messages = mails_after(lambda: Client(base).get("nl/Start"), 1)
+    assert messages, "no digest mail"
+    message = email.message_from_bytes(messages[0]["raw"], policy=email.policy.default)
+    body = message.get_body(("html", "plain")).get_content()
+    assert re.search(r"\b6 page-visits|\b6 [a-z]", body), body[:400]
+    assert open(os.path.join(WORK, "data/hypha.stats.log")).read().strip() == "", "the reported lines stay in the log"
 
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))
