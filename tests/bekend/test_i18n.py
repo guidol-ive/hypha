@@ -35,8 +35,11 @@ def english_home(base):
 @known_bug(604)
 def a_path_without_language_that_is_no_page_gives_404(base):
     client = Client(base)
+    #
+    # The root shows the home page, directly or after the 301 to the preferred URL of #521 (PR #614).
+    #
     for path in ["", "?utm_source=test", "index.php"]:
-        status, _, _ = client.get(path)
+        status, _, _ = client.follow(client.get(path))
         assert status == 200, f"/{path} gave {status}, the home page expected"
     found = {}
     for path in ["robots.txt", "favicon.ico", "wp-login.php", "Geen_pagina_i18n"]:
@@ -56,7 +59,7 @@ def the_root_of_a_second_language_shows_the_translated_home_page(base):
     name = english_home(base)
     client = Client(base)
     for path in ["en", "en/"]:
-        status, text, _ = client.get(path)
+        status, text, _ = client.follow(client.get(path))
         assert status == 200, f"/{path} gave {status}, the English home page en/{name} expected"
         assert re.search(r'<body[^>]*class="[^"]*\bis_home\b', text), f"/{path} has no body class is_home"
 
