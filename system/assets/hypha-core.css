@@ -60,3 +60,6 @@ img.featured_image {
     max-width: 100%;
     height: auto;
 }
+a:has(> .hypha-icon) {
+    text-decoration: none;
+}
