@@ -75,6 +75,14 @@
 		$meta = $head->createChild('meta');
 		$meta->setAttribute('name', 'robots');
 		$meta->setAttribute('content', 'noindex');
+		//
+		// Hypha's own scripts in the head do not draw the editor: they only define functions for clicks later (login,
+		// commands, help) and bowser, which only warns old browsers that cannot run the editor anyway. Deferred, they no
+		// longer block the first paint on a phone; jQuery alone held it up 1.4 s on slow 4G in Lighthouse.
+		//
+		foreach ($html->findXPath('//head/script[@src]') as $script) {
+			if (preg_match('#system/(assets/(jquery-[0-9.]+\.min|help|hypha-preview-image-file-field)|bowser/bowser\.min)\.js$#', $script->getAttribute('src'))) $script->setAttribute('defer', 'defer');
+		}
 		$viewport = $html->findOneXPath('head/meta[@name="viewport"]');
 		if ($viewport) $viewport->setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
 		//

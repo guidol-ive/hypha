@@ -192,6 +192,10 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
    - na wisselen naar Markdown met open toetsenbord stond de checklist in beeld in plaats van de cursor; de cursor komt nu na de focus in het midden van het venster.
    Nieuwe test op telefoonformaat: de cursor staat tussen de balk „Bewerken als” en de werkbalk, in Opmaak en na wisselen naar Markdown.
 4. **Artikelkop zonder foto**: „foto kiezen” in plaats van „andere foto”, en geen „weghalen” zolang er geen foto is.
+5. **Lighthouse op de telefoon** (editor, ingelogd, Lighthouse 13.4.1, telefoonprofiel met traag 4G, PHP 8.2): van 84–86 naar 94 voor prestaties, in drie metingen achter elkaar (toegankelijkheid 97, goede werkwijzen 100, CLS 0,004). Wat gedaan is:
+   1. op de pagina van de editor laden jQuery, `help.js`, het afbeeldingsveld en `bowser` met `defer`: ze definiëren alleen functies voor later klikken; jQuery alleen hield de eerste weergave 1,4 s op. Het inline-script van `bowser.php` controleert nu eerst of `bowser` er al is. Test: `test_artikel.py`, en andere pagina's houden jQuery zoals het was;
+   2. het standaardthema laadt Dosis met `font-display: swap`: de titel (het grootste element) wachtte op het lettertype.
+   Geprobeerd en teruggedraaid: de css van de editor in de pagina zelf zetten. Dat gaf 95 én 88 in twee metingen, kost de cache en kan de volgorde van de css veranderen. Wat 95 nog tegenhoudt: de vijf stylesheets van Hypha, het thema en de editor in de kop.
 
 ### Ontwerpcontrole en wat daaruit gebouwd is (2026-10-28, nacht)
 
@@ -330,7 +334,7 @@ Gebouwd volgens het ontwerp, per onderdeel van §18.2: 4 (server en filter), 5 (
 
 ### Wat niet af is, en waarom
 
-1. **Lighthouse ≥ 95 overal** (bijgewerkt: de editor op de telefoon haalt nu 85–88, zie „Telefoon en http”): een gepubliceerd artikel haalt met het standaardthema 96–100 / 94 / 100 / 91; met het advies `#0B7285` voor links (en `#5F656A` voor knoppen) en een `robots.txt` van de site 97–100 / 98 / 100 / 100. Beide zijn keuzes van het thema en de site, niet van de editor (standaardkeuze a). De editor op de telefoon haalt 69 voor prestaties (traag 4G met ruim 400 kB code); op de computer 96.
+1. **Lighthouse ≥ 95 overal** (bijgewerkt 2026-10-28: de editor op de telefoon haalt nu 94, zie „Naar 100%”): een gepubliceerd artikel haalt met het standaardthema 96–100 / 94 / 100 / 91; met het advies `#0B7285` voor links (en `#5F656A` voor knoppen) en een `robots.txt` van de site 97–100 / 98 / 100 / 100. Beide zijn keuzes van het thema en de site, niet van de editor (standaardkeuze a). De editor op de telefoon haalt 69 voor prestaties (traag 4G met ruim 400 kB code); op de computer 96.
 2. Punten 2 tot en met 5 van de eerste versie van deze lijst (interactief blok, reviewpunten, gouden site op 8.3 en 8.5, documentatie) zijn af; zie „Verder gebouwd”.
 3. **Twee schrijvers tegelijk** in de oude editor en de andere schermen: daar wint nog de laatste die opslaat; de nieuwe editor waarschuwt (zie „Gelijktijdig werken”). Publiceren tegelijk met goedkeuren of terugtrekken hangt ook af van upstream #570 (`updateToNewStatus()` controleert vóór het slot).
 4. **Bestaande problemen gevonden, niet opgelost** (buiten deze issue): `hypha.php` installeert niet zonder map `data/` en pakt het standaardthema niet in; een nieuw artikel via de oude popup zonder titel gaf een fatale fout (nu opgelost door de titel als tekst te schrijven); `strftime()` en enkele HTML-fouten in de sjablonen van Hypha (`bekende-meldingen.txt`); op PHP 8.5 meldt `mail()` een fout als de container geen sendmail heeft.

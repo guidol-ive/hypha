@@ -92,6 +92,21 @@ def new_article_gets_page_name_from_title_and_markdown_source(base):
 
 
 @test
+def the_editor_page_does_not_wait_for_the_old_scripts_of_hypha(base):
+    #
+    # jQuery, help.js, the image field and bowser only define functions for later; deferred, they do not hold up the
+    # first paint on a phone (Lighthouse).
+    #
+    status, text, _ = STATE["sanne"].get(f"nl/{SLUG}/edit")
+    head = text[:text.find("</head>")]
+    for name in ("jquery-1.7.1.min.js", "help.js", "hypha-preview-image-file-field.js", "bowser.min.js"):
+        tag = re.search(r'<script[^>]*' + re.escape(name) + r'[^>]*>', head)
+        assert tag and "defer" in tag.group(0), f"{name} is not deferred on the editor page: {tag.group(0) if tag else 'missing'}"
+    status, text, _ = STATE["sanne"].get("nl/Start")
+    assert re.search(r'<script[^>]*jquery-1.7.1.min.js[^>]*>', text) and "defer" not in re.search(r'<script[^>]*jquery-1.7.1.min.js[^>]*>', text).group(0), "other pages keep jQuery as it was"
+
+
+@test
 def second_article_with_the_same_title_gets_suffix_2(base):
     sanne = STATE["sanne"]
     assert new_article(sanne, TITLE).endswith(f"nl/{SLUG}-2/edit?mode=markdown")

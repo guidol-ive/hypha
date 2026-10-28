@@ -29,7 +29,8 @@
         ob_start();
 ?>
 	<script>
-		if (bowser.name === 'msie' && !bowser.check({msie: "9.0"})) {
+		// bowser may come later (deferred on the page of the Markdown editor, which old browsers cannot run anyway)
+		if (typeof bowser !== 'undefined' && bowser.name === 'msie' && !bowser.check({msie: "9.0"})) {
 			document.addEventListener('DOMContentLoaded', function showBrowserNotSupportedPopup() {
 				var el = document.getElementById('popup');
 				if (el !== null) {
