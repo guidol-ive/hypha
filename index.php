@@ -193,6 +193,7 @@
 //	if (!$O_O->isUser()) registerPostProcessingFunction('obfuscateEmail');
 
 	if ($hyphaPage) hypha_setBodyClass($O_O, $hyphaPage);
+	if ($hyphaPage) hypha_setAlternateLinks($O_O, $hyphaPage);
 	if ($hyphaPage) hypha_setPreviewPanel($O_O, $hyphaPage);
 
 	// The language of the content on the html element, for screen
