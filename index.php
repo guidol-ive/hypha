@@ -131,6 +131,7 @@
 	registerPostProcessingFunction('addPageTitle');
 	registerPostProcessingFunction('localizeImageUrls');
 	registerPostProcessingFunction('addImageAlts');
+	registerPostProcessingFunction('sizeImages');
 	registerPostProcessingFunction('addSeoMeta');
 
 	// add hypha commands and navigation
