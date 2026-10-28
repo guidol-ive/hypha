@@ -255,7 +255,7 @@ export class Editor {
 		// The bar 'Bewerken als' sticks right below the toolbar, whose height depends on the fonts of the theme.
 		//
 		const editbar = $('.editbar', this.root);
-		if (editbar) new ResizeObserver(() => this.root.style.setProperty('--sticky-top', editbar.offsetHeight + 8 + 'px')).observe(editbar);
+		if (editbar) new ResizeObserver(() => { this.root.style.setProperty('--sticky-top', editbar.offsetHeight + 8 + 'px'); this.followStickyBars(); }).observe(editbar);
 		this.followKeyboard();
 		this.followHeights();
 		this.followScroll();
@@ -442,6 +442,7 @@ export class Editor {
 					view.EditorView.contentAttributes.of({ lang: this.cfg.page.language, spellcheck: 'true', autocorrect: 'on', autocapitalize: 'sentences', 'aria-label': this.t(this.article ? 'region-article' : 'region-page'), 'aria-multiline': 'true', 'aria-describedby': 'mdeTextHelp' }),
 					view.EditorView.updateListener.of(u => { if (u.docChanged) this.onMarkdownChange(); if (u.selectionSet || u.docChanged) { this.dialogs.markdownCursor(u); this.dialogs.updateEditLabels(); this.followCaret(); } }),
 					view.EditorView.domEventHandlers({ paste: e => this.pasteIntoMarkdown(e), drop: e => this.dropFile(e) }),
+					view.EditorView.scrollMargins.of(() => this.stickyMargins()),
 				],
 			}),
 		});
@@ -500,12 +501,19 @@ export class Editor {
 			keymap.keymap(commands.baseKeymap),
 			dropcursor.dropCursor(), gapcursor.gapCursor(), tables.tableEditing(),
 		];
+		const editor = this;
 		const make = (mount, text, label, field) => {
 			const parsed = pmParse(text, this.markdown);
 			const v = new view.EditorView(mount, {
 				state: state.EditorState.create({ doc: parsed.doc, plugins: plugins() }),
 				attributes: { lang: this.cfg.page.language, spellcheck: 'true', 'aria-label': label, 'aria-multiline': 'true', role: 'textbox' },
 				nodeViews: this.nodeViews(),
+				//
+				// Read at each scroll, so they follow the sticky bars: the threshold says when the caret counts as hidden, the
+				// margin how far it then moves.
+				//
+				get scrollThreshold() { return editor.stickyMargins(); },
+				get scrollMargin() { return editor.stickyMargins(); },
 				dispatchTransaction: tr => {
 					v.updateState(v.state.apply(tr));
 					if (tr.docChanged) { this.fields[field] = pmSerialize(v.state.doc, v.parsed); this.changed(); }
@@ -798,6 +806,11 @@ export class Editor {
 			while (pos < end && this.visibleLength(doc.sliceString(doc.line(Math.min(line, doc.lines)).from, pos)) < c.visible) pos++;
 			this.cm.dispatch({ selection: { anchor: pos }, scrollIntoView: true });
 			this.cm.focus();
+			//
+			// Once more after the focus: Safari on iOS scrolls the page for the keyboard when the new view gets the focus,
+			// which put the checklist in view instead of the caret (found on an iPhone).
+			//
+			requestAnimationFrame(() => this.cm.dispatch({ effects: CM.view.EditorView.scrollIntoView(pos, { y: 'center' }) }));
 		});
 	}
 
@@ -1223,6 +1236,24 @@ export class Editor {
 	// of the layout viewport, which Safari on iOS does not make smaller for the keyboard, so it follows the visual
 	// viewport. Not while zoomed in: then the visual viewport is smaller for another reason.
 	//
+	//
+	// How much of the top and the bottom of the window the sticky bars cover: the toolbar with the bar 'Bewerken als'
+	// at the top and, on a phone, the toolbar at the bottom. The editors and the page keep the caret clear of them
+	// (found on an iPhone: the line of the caret was under the bar 'Bewerken als').
+	//
+	stickyMargins() {
+		const height = selector => $(selector, this.root)?.offsetHeight || 0;
+		const bar = $('.toolbar', this.root);
+		const fixed = bar && getComputedStyle(bar).position === 'fixed';
+		return { top: height('.editbar') + height('.editmodebar') + 8, bottom: (fixed ? bar.offsetHeight : 0) + 8, left: 5, right: 5 };
+	}
+
+	followStickyBars() {
+		const m = this.stickyMargins();
+		document.documentElement.style.scrollPaddingTop = m.top + 'px';
+		document.documentElement.style.scrollPaddingBottom = m.bottom + 'px';
+	}
+
 	followKeyboard() {
 		const vv = window.visualViewport;
 		if (!vv) return;
@@ -1239,6 +1270,7 @@ export class Editor {
 			bar.style.transform = '';
 			bar.style.top = on ? Math.round(vv.offsetTop + vv.height - bar.offsetHeight) + 'px' : '';
 			bar.style.bottom = on ? 'auto' : '';
+			this.followStickyBars();
 		};
 		vv.addEventListener('resize', place);
 		vv.addEventListener('scroll', place);

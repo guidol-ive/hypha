@@ -180,6 +180,19 @@ Per afgeronde taak uit [BOUWPLAN.md](BOUWPLAN.md): datum, wat er is gebouwd, wel
    8. Lighthouse op de editor (ingelogd, zonder SEO): computer 96 / 95 / 100, telefoon 69 / 95 / 100. Op de telefoon rekent Lighthouse met traag 4G: de ruim 400 kB code van de editor haalt 95 daar niet. De eis „95 voor de editor” is op de telefoon dus niet gehaald.
 3. Gevonden in de testopstelling: een reeks ontbrekende afbeeldingen (404-pagina's van Hypha) houdt de twee Apache-werkers bezet en vertraagt de volgende pagina met seconden; voor de meting is de voorbeeldfoto uit het lange artikel gehaald.
 
+### Naar 100%: e-mail, iPhone en de laatste merge (2026-10-28, middag)
+
+1. **`main` gemerged** (a019475, met de fixes van #421, #440, #525, #527, #548 en #554). Twee conflicten: in `serveFile()` blijven de voorwaarde voor `Content-Range` van #573 en de CORS-kopregels van `main` allebei staan; in de paginakop van een artikel blijft de `(string)` van deze branch.
+2. **E-mail via een echte SMTP-server.** `tests/integratie/sendmail.php` vervangt sendmail in de testcontainer en geeft elk bericht van `mail()` over SMTP door aan een server die `tests/integratie/test_mail.py` op de host draait. Getest: start beoordeling, derde goedkeuring, publiceren (elk lid één bericht, onderwerp in UTF-8 met de site ervoor, afzender van de site, HTML in UTF-8, regels binnen 998 tekens, volledige link) en terug naar schets.
+   - Fout van Hypha gevonden en verholpen: het onderwerp en de tekst van een statusmail noemden de status bij zijn sleutel (`Status 'approved' voor …`); nu de naam in de taal van de site (`goedgekeurd`).
+   - Eigen fout gevonden en verholpen: terug naar schets (BR-85) stuurde geen bericht, omdat de statusmail van Hypha de status schets overslaat. Nu krijgen de beoordelaars van wie de goedkeuring vervalt een eigen bericht.
+   - Terugtrekken van een gepubliceerd artikel (BR-86) stuurt bewust geen mail; dat staat nu ook in een test.
+3. **iPhone (iOS 27, Safari, simulator).** Autocorrectie en woordsuggesties werken in Opmaak (ProseMirror) en in Markdown (CodeMirror): „tset” wordt „test”, een getikte suggestie komt in de tekst, en het model klopt (de checklist telt de woorden, Markdown toont dezelfde tekst). Twee fouten gevonden en verholpen:
+   - de regel met de cursor viel onder de vaste balk „Bewerken als”; ProseMirror en CodeMirror houden nu marges aan ter hoogte van de vaste balken, en de pagina krijgt dezelfde `scroll-padding` voor het scrollen door de browser zelf;
+   - na wisselen naar Markdown met open toetsenbord stond de checklist in beeld in plaats van de cursor; de cursor komt nu na de focus in het midden van het venster.
+   Nieuwe test op telefoonformaat: de cursor staat tussen de balk „Bewerken als” en de werkbalk, in Opmaak en na wisselen naar Markdown.
+4. **Artikelkop zonder foto**: „foto kiezen” in plaats van „andere foto”, en geen „weghalen” zolang er geen foto is.
+
 ### Ontwerpcontrole en wat daaruit gebouwd is (2026-10-28, nacht)
 
 Een subagent legde het ontwerp punt voor punt naast de code en vond 20 gaten (verslag in de notitiemap van de sessie, `ontwerp-check/RAPPORT.md`). Gebouwd, elk met een test:
@@ -350,11 +363,11 @@ Al eerder gemeld en daarom niet opnieuw: CSRF-controle stopt datatype-opdrachten
 
 ### Wat alleen met de hand kan
 
-1. Een echte **iPhone en iPad**: autocorrectie, woordsuggesties, dicteren en de vergrootloep in CodeMirror 6 en ProseMirror (het grootste risico, §13.16), de leesweergave binnen 250 ms via wifi op een iPhone 16, en Safari in het algemeen (alle tests hier draaiden in Chrome).
+1. Een echte **iPhone en iPad**: dicteren en de vergrootloep in CodeMirror 6 en ProseMirror, en de leesweergave binnen 250 ms via wifi op een iPhone 16. Autocorrectie en woordsuggesties in beide weergaven zijn in de simulator getest (iOS 27, Safari) en werken; zie „Naar 100%”. De simulator kan niet dicteren en meet geen echte snelheid.
 2. **Echte klembord-HTML** uit Word (Windows en macOS) en Google Docs: de testdocumenten zijn nagebouwd; alleen LibreOffice is een echte export. Ook de vorm van een formule uit Google Docs.
 3. **VoiceOver en NVDA** met beide weergaven; axe vindt niet alles.
 4. Een **gebruikerstest** met twee à drie auteurs.
-5. De **e-mail** bij statuswijzigingen met een echte mailserver.
+5. De **e-mail** bij statuswijzigingen bij een echte ontvanger: SPF, DKIM en spamfilters. Wat Hypha verstuurt, is over SMTP getest (`tests/integratie/test_mail.py`); de aflevering zelf hangt af van de mailserver van de site.
 
 ## Afwijkingen
 

@@ -126,4 +126,38 @@ export default async function (t) {
 		assert(await bottom() === scrolled.h, 'toolbar back at the bottom after scrolling');
 		await tp.context().close();
 	});
+	t.test('iPhone: the caret stays clear of the bar Bewerken als and of the toolbar, also after switching views', async () => {
+		const tp = await login(browser, base, 'sanne', { width: 393, height: 852 }, { isMobile: true, hasTouch: true, deviceScaleFactor: 3 });
+		await newArticle(tp, base, 'Cursor in beeld');
+		await tp.evaluate(() => { const e = window.hyphaMdeditor.editor; e.fields.text = Array.from({ length: 40 }, (_, i) => `Alinea ${i} met tekst om te scrollen.`).join('\n\n'); e.loadVisual(); e.changed(); });
+		//
+		// The caret is free when it is below the bar 'Bewerken als' and above the toolbar.
+		//
+		const free = () => tp.evaluate(() => {
+			const e = window.hyphaMdeditor.editor;
+			const r = e.editMode === 'markdown' ? e.cm.coordsAtPos(e.cm.state.selection.main.head) : e.pm.coordsAtPos(e.pm.state.selection.head);
+			const top = document.querySelector('#mdeditor .editmodebar').getBoundingClientRect().bottom;
+			const bottom = document.querySelector('#mdeditor .toolbar').getBoundingClientRect().top;
+			return r.top >= top - 1 && r.bottom <= bottom + 1 ? '' : `caret ${Math.round(r.top)}-${Math.round(r.bottom)}, free between ${Math.round(top)} and ${Math.round(bottom)}`;
+		});
+		//
+		// Paragraph 20 right under the top of the window, behind the sticky bars, and the caret into it.
+		//
+		await tp.evaluate(() => {
+			const v = window.hyphaMdeditor.editor.pm, p = document.querySelectorAll('#mdeVisual .ProseMirror p')[20];
+			window.scrollBy(0, p.getBoundingClientRect().top - 10);
+			v.focus();
+			v.dispatch(v.state.tr.setSelection(v.state.selection.constructor.near(v.state.doc.resolve(v.posAtDOM(p, 0)))).scrollIntoView());
+		});
+		await tp.waitForTimeout(200);
+		let wrong = await free();
+		assert(!wrong, 'Opmaak: ' + wrong);
+		const padding = await tp.evaluate(() => parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop));
+		assert(padding > 40, `scroll-padding-top of the page is ${padding}`);
+		await tp.click('[data-edit="markdown"]');
+		await tp.waitForTimeout(600);
+		wrong = await free();
+		assert(!wrong, 'Markdown after switching: ' + wrong);
+		await tp.context().close();
+	});
 }
