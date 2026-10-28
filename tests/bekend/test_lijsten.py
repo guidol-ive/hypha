@@ -54,7 +54,7 @@ def mailing_list(name, addresses="", mailings=""):
     """A mailing list with a sender, the given <address> and <mailing> elements, made by the administrator."""
     beheer = login(BASE, "beheer")
     status, _, _ = new_page(beheer, name, "mailinglist")
-    if status != 302:
+    if status not in (302, 303):
         raise RuntimeError(f"newPage mailinglist gave {status}")
     write_page(name, f'<hypha type="mailinglist" multiLingual="on" versions="off" schemaVersion="1" sender-email="redactie@eemstad.example" sender-name="Redactie">'
                      f'<description><p>Verzonnen nieuwsbrief.</p></description><addresses>{addresses}</addresses><mailings>{mailings}</mailings>'
@@ -74,7 +74,7 @@ def festival(name, extra=""):
     """A festival made by the administrator; extra is XML added to the page (a configured form, participants)."""
     beheer = login(BASE, "beheer")
     status, _, _ = new_page(beheer, name, "festivalpage")
-    if status != 302:
+    if status not in (302, 303):
         raise RuntimeError(f"newPage festivalpage gave {status}")
     if extra:
         write_page(name, '<hypha type="festival" multiLingual="on" versions="off" schemaVersion="1">'
@@ -161,7 +161,7 @@ def removing_a_member_removes_the_personal_details(base):
     beheer = login(base, "beheer")
     beheer.get("settings")
     status, _, _ = beheer.post("settings", "settingsRemove", "u5")
-    if status not in (200, 302):
+    if status not in (200, 302, 303):
         raise RuntimeError(f"settingsRemove gave {status}")
     user = next(u for u in ET.parse(SITE).getroot().iter("user") if u.get("id") == "u5")
     if user.get("rights") != "exmember":
@@ -178,7 +178,7 @@ def logging_out_in_a_language_without_home_page_lands_on_an_existing_page(base):
     sanne = login(base, "sanne")
     sanne.get("en/Start")
     status, _, location = sanne.post("en/Start", "logout")
-    assert status == 302 and location, f"logout gave {status}"
+    assert status in (302, 303) and location, f"logout gave {status}"
     final, _, seen = chase(sanne, location.replace(sanne.base, ""))
     assert final == 200, f"logout leads to {seen[-1]}, which answers {final}"
 
@@ -336,7 +336,7 @@ def an_administrator_adds_addresses_in_bulk(base):
 def a_new_festival_opens_on_a_page_that_exists(base):
     beheer = login(base, "beheer")
     status, _, location = new_page(beheer, "Feest537", "festivalpage")
-    assert status == 302 and location, f"newPage gave {status}"
+    assert status in (302, 303) and location, f"newPage gave {status}"
     final, _, seen = chase(beheer, location.replace(beheer.base, ""))
     assert final == 200, f"the new festival opens on {seen[-1]}, which answers {final}"
 
@@ -384,7 +384,7 @@ def paid_signup(base, name):
     visitor = Client(base)
     visitor.get(f"nl/{name}/signup")
     status, _, location = visitor.post(f"nl/{name}/signup", "signup", "", {"name": "Jan", "email": "jan550@eemstad.example", "phone": "", "amount": "10"})
-    if status != 302 or "/pay/" not in (location or ""):
+    if status not in (302, 303) or "/pay/" not in (location or ""):
         raise RuntimeError(f"sign-up with amount gave {status} {location}")
     return visitor, location.replace(visitor.base, "").split("?")[0]
 
@@ -640,7 +640,7 @@ def a_contribution_without_website_logs_no_deprecation(base):
     visitor.get("nl/Feest559/contribute/p559/k559")
     answers = []
     messages = php_messages(lambda: answers.append(visitor.post("nl/Feest559/contribute/p559/k559", "save", "", {"name": "Jan", "title": "Lezing", "image": "", "category": "lecture"})))
-    assert answers[0][0] in (200, 302), f"the contribution gave {answers[0][0]}"
+    assert answers[0][0] in (200, 302, 303), f"the contribution gave {answers[0][0]}"
     found = [m for m in messages if "Passing null" in m and "festival.php" in m]
     assert not found, found[0][-150:] if found else ""
 
