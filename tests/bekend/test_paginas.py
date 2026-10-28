@@ -570,30 +570,11 @@ def publishing_twice_at_the_same_moment_sends_the_status_mail_once(base):
     assert not doubled, f"publishing at the same moment sent the status mail more than once: {doubled}"
 
 
-@known_bug(560)
-def two_members_renaming_a_page_at_the_same_moment_get_no_server_error(base):
-    sanne = Client(base).login("sanne")
-    ahmed = Client(base).login("ahmed")
-    errors = []
-    #
-    # Up to 30 rounds, stopping at the second round with an error (see the next test).
-    #
-    for n in range(30):
-        if len(errors) > 1:
-            break
-        name = f"Dubbel hernoemd {RUN} {n}"
-        slug = new_page(sanne, name)
-        for client in (sanne, ahmed):
-            client.get(f"nl/{slug}/edit")
-        statuses = together(*[lambda c=c, who=who: c.post(f"nl/{slug}/edit", "edit", "", {"textPagename": f"{name} {who}", "textContent": f"<p>Versie van {who}.</p>" + LONG})[0]
-                              for c, who in ((sanne, "Sanne"), (ahmed, "Ahmed"))])
-        if 500 in statuses:
-            errors.append(f"round {n}: {statuses}")
-    #
-    # One round with a 500 may be the macOS bind mount, which sometimes shows a page that another request is
-    # writing as missing (see test_gelijktijdig.py); the bug gives a 500 in most rounds.
-    #
-    assert len(errors) <= 1, f"two renames at the same moment gave a server error in {len(errors)} rounds: {errors[:3]}"
+#
+# Not a known-bug test either: two renames of a page at the same moment (#560) failed in most rounds on main when run
+# alone, but passed by luck on six of forty rebased pull request branches that do not touch this code, so it would
+# report #560 as solved. #560 has no automated known-bug test for now; the race is described in the issue.
+#
 
 
 #
