@@ -6,6 +6,7 @@ the data folder of the fictional site ($HYPHA_WORK/data), as tests/integratie/te
 $HYPHA_WORK/data/mail.log. A failing setup step raises RuntimeError, so it shows as FAIL and never as a known bug.
 """
 import base64
+import email.header
 import email.utils
 import html
 import os
@@ -844,6 +845,36 @@ def the_motivation_field_of_a_contribution_has_dutch_texts(base):
     status, text, _ = beheer.get(path + "/contributions")
     setup(status == 200 and "Past bij het thema" in text, f"the list of contributions gave {status} without the motivation")
     assert "motivation:" not in text, "the list of contributions shows the bare key 'motivation:'"
+
+
+@known_bug(632)
+def the_status_mail_names_the_status_in_the_language_of_the_site(base):
+    #
+    # An article in review with two approvals; the third one, of beheer, makes it approved and mails every member.
+    #
+    beheer = Client(base).login("beheer")
+    name = uniq("Status_")
+    new_page(beheer, name, "textpage")
+    pid = page_id(name, "textpage")
+    write(HYPHA_XML, read(HYPHA_XML).replace(f'id="{pid}" type="textpage"', f'id="{pid}" type="peer_reviewed_article"'))
+    title = "Statusmail " + name
+    write(os.path.join(DATA, "pages", pid), (
+        '<?xml version="1.0" encoding="UTF-8"?>\n<hypha type="peer_reviewed_article" multiLingual="off" versions="off" schemaVersion="1">'
+        '<article status="review" author="Sanne de Vries" created_by="u2" created_at="t1793000000" updated_at="t1793000000">'
+        f'<content><text><p>Tekst.</p></text><sources/></content><context><title>{title}</title><excerpt><p>Kort</p></excerpt>'
+        '<featured_image/><method><p>Methode</p></method></context></article><discussions><review/><public/></discussions>'
+        '<approves><approve user="u3" created_at="t1793000000"/><approve user="u4" created_at="t1793000000"/></approves></hypha>'))
+    log = os.path.join(DATA, "mail.log")
+    before = os.path.getsize(log) if os.path.exists(log) else 0
+    beheer.get("nl/" + name)
+    beheer.post("nl/" + name, "approve")
+    with open(log, "rb") as f:
+        f.seek(before)
+        new = f.read().decode("utf-8", "replace")
+    subjects = [str(email.header.make_header(email.header.decode_header(m))) for m in re.findall(r"^Subject: (.*(?:\n[ \t].*)*)", new, re.M)]
+    mine = [s for s in subjects if title in s]
+    setup(mine, f"no status mail for {title} in mail.log ({len(subjects)} other subjects)")
+    assert all("goedgekeurd" in s and "approved" not in s for s in mine), f"the status mail says {mine[0]!r}"
 
 
 if __name__ == "__main__":

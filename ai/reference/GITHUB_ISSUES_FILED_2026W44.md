@@ -199,5 +199,7 @@ The pull requests #501, #481, #531, #533, #562 and #566 were merged into `main` 
 | #622 | #626 | WYMeditor | Image upload dialog: unclosed `<select>` gives a console warning |
 | #628 | #630 | article | The heading of the comments comes after the comments and the form |
 | #629 | #631 | festival | The motivation field of a contribution has no Dutch text, and the list of contributions shows the key |
+| #632 | #634 | article | The status mail names the new status by its key ('approved') instead of its name in the language of the site |
+| #633 | #635 | theme | Default theme: Dosis has no font-display, so titles stay invisible until the font has loaded |
 
 #624 and #625 change the same lines of the festival forms; the one merged second needs a small rebase.
