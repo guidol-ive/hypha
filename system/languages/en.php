@@ -554,6 +554,8 @@
 		"mde-retract" => "retract",
 		"mde-retract-confirm" => "The article goes back to draft and the approvals lapse. The comments stay. Continue?",
 		"mde-retracted-to-draft" => "The article is a draft again.",
+		"mde-mail-retracted-subject" => "Back to draft: '[[title]]'",
+		"mde-mail-retracted-body" => "[[author]] took the article '<a href=\"[[link]]\">[[title]]</a>' back to draft. Your approval has lapsed; your comments stay. You will hear when the article is up for review again.<br />------------------------------<br />This is an automated mail; please do not reply to it.",
 		"mde-withdraw-dialog" => "withdraw…",
 		"mde-withdraw" => "withdraw",
 		"mde-withdraw-title" => "Withdraw a published article",

@@ -617,14 +617,39 @@
 			$this->xml->findOneXPath('article')->setAttribute(self::FIELD_NAME_PUBLISHED_AT, '');
 			$approves = $this->xml->findOneXPath(self::FIELD_NAME_APPROVE_CONTAINER);
 			$lapsed = $this->xml->documentElement->getOrCreate('lapsed_approves');
+			$reviewers = [];
 			foreach (iterator_to_array($approves->childNodes) as $approve) {
-				if ($approve instanceof DOMElement) $approve->setAttribute('lapsed_at', 't' . time());
+				if ($approve instanceof DOMElement) {
+					$approve->setAttribute('lapsed_at', 't' . time());
+					$reviewers[] = $approve->getAttribute(self::FIELD_NAME_USER);
+				}
 				$lapsed->appendChild($approve);
 			}
 			$this->xml->saveAndUnlock();
 			$this->mdSetPrivate();
-			$this->sendStatusChangeMail();
+			$this->mdMailRetracted($reviewers);
 			return null;
+		}
+
+		/**
+		 * Tells the reviewers whose approval lapsed that the author took the article back to draft (BR-85). The mail of
+		 * a status change of Hypha leaves out the status draft, so this has its own text.
+		 */
+		protected function mdMailRetracted(array $reviewerIds): void {
+			$emails = [];
+			foreach (array_unique($reviewerIds) as $id) {
+				$user = hypha_getUserById($id);
+				if ($user && $user->getAttribute('email')) $emails[] = $user->getAttribute('email');
+			}
+			if (!$emails) return;
+			$title = $this->getTitle();
+			$subject = __('mde-mail-retracted-subject', ['title' => $title]);
+			$message = __('mde-mail-retracted-body', [
+				'link' => htmlspecialchars($this->constructFullPath($this->pagename)),
+				'title' => htmlspecialchars($title),
+				'author' => htmlspecialchars($this->O_O->getUser()->getAttribute('fullname')),
+			]);
+			$this->sendMail(implode(',', $emails), $subject, $message);
 		}
 
 		/**

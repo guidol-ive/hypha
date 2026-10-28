@@ -548,6 +548,8 @@
 		"mde-retract" => "trek terug",
 		"mde-retract-confirm" => "Het artikel gaat terug naar schets en de goedkeuringen vervallen. De opmerkingen blijven staan. Doorgaan?",
 		"mde-retracted-to-draft" => "Het artikel is weer een schets.",
+		"mde-mail-retracted-subject" => "Terug naar schets: '[[title]]'",
+		"mde-mail-retracted-body" => "[[author]] heeft het artikel '<a href=\"[[link]]\">[[title]]</a>' teruggezet naar schets. Je goedkeuring is vervallen; je opmerkingen blijven staan. Als het artikel opnieuw ter beoordeling komt, krijg je bericht.<br />------------------------------<br />Dit is een geautomatiseerde mail. Antwoorden hierop heeft geen zin.",
 		"mde-withdraw-dialog" => "trek terug…",
 		"mde-withdraw" => "trek terug",
 		"mde-withdraw-title" => "Gepubliceerd artikel terugtrekken",

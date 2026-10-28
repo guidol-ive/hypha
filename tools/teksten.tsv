@@ -19,6 +19,8 @@ mde-approve-why-disabled	Vink eerst alle punten van het redactiestatuut aan.	Fir
 mde-retract	trek terug	retract
 mde-retract-confirm	Het artikel gaat terug naar schets en de goedkeuringen vervallen. De opmerkingen blijven staan. Doorgaan?	The article goes back to draft and the approvals lapse. The comments stay. Continue?
 mde-retracted-to-draft	Het artikel is weer een schets.	The article is a draft again.
+mde-mail-retracted-subject	Terug naar schets: '[[title]]'	Back to draft: '[[title]]'
+mde-mail-retracted-body	[[author]] heeft het artikel '<a href="[[link]]">[[title]]</a>' teruggezet naar schets. Je goedkeuring is vervallen; je opmerkingen blijven staan. Als het artikel opnieuw ter beoordeling komt, krijg je bericht.<br />------------------------------<br />Dit is een geautomatiseerde mail. Antwoorden hierop heeft geen zin.	[[author]] took the article '<a href="[[link]]">[[title]]</a>' back to draft. Your approval has lapsed; your comments stay. You will hear when the article is up for review again.<br />------------------------------<br />This is an automated mail; please do not reply to it.
 mde-withdraw-dialog	trek terug…	withdraw…
 mde-withdraw	trek terug	withdraw
 mde-withdraw-title	Gepubliceerd artikel terugtrekken	Withdraw a published article
