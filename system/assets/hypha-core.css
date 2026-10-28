@@ -82,3 +82,18 @@ a:has(> .hypha-icon) {
 img[width][height] {
     height: auto;
 }
+
+/* The link to skip to the content shows only when it has the keyboard focus (#682). */
+.skip-link {
+    position: absolute;
+    left: -10000px;
+}
+.skip-link:focus {
+    left: 8px;
+    top: 8px;
+    z-index: 1000;
+    padding: 8px 12px;
+    background: #fff;
+    color: #000;
+    outline: 2px solid;
+}

@@ -14,6 +14,7 @@
 		"delete" => "verwijderen",
 		"translate" => "vertalen",
 		"revert" => "terugdraaien",
+		"skip-to-content" => "Naar de inhoud",
 		"login" => "inloggen",
 		"login-icon" => "<span class=\"hypha-icon hypha-icon-login\" aria-hidden=\"true\"></span>",
 		"logout" => "uitloggen",

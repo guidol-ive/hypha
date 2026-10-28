@@ -128,6 +128,7 @@
 
 	registerPostProcessingFunction('dewikify');
 	registerPostProcessingFunction('addHeaderHomeLink');
+	registerPostProcessingFunction('addLandmarks');
 	registerPostProcessingFunction('addPageTitle');
 	registerPostProcessingFunction('localizeImageUrls');
 	registerPostProcessingFunction('addImageAlts');

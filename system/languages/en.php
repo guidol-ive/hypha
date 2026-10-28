@@ -14,6 +14,7 @@
 		"delete" => "delete",
 		"translate" => "translate",
 		"revert" => "revert",
+		"skip-to-content" => "Skip to content",
 		"login" => "login",
 		"login-icon" => "<span class=\"hypha-icon hypha-icon-login\" aria-hidden=\"true\"></span>",
 		"logout" => "logout",
