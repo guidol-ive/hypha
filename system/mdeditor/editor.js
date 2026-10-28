@@ -244,6 +244,7 @@ export class Editor {
 		document.addEventListener('keydown', e => {
 			if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'v') { this.plainPaste = true; setTimeout(() => { this.plainPaste = false; }, 1000); }
 		}, true);
+		this.followWidth();
 		this.fitToolbar();
 		new ResizeObserver(() => this.fitToolbar()).observe($('.toolbar', this.root));
 		//
@@ -1186,6 +1187,21 @@ export class Editor {
 			more.hidden = false;
 		}
 		this.moved = hidden;
+	}
+
+	//
+	// The layout follows the width of the editor itself (a theme with a narrow page column): the classes narrow and
+	// compact of mdeditor.css. Not a CSS container query, which would make the editor the containing block of the
+	// fixed toolbar.
+	//
+	followWidth() {
+		const fit = () => {
+			const width = this.root.getBoundingClientRect().width;
+			this.root.classList.toggle('narrow', width <= 1020);
+			this.root.classList.toggle('compact', width <= 700);
+		};
+		new ResizeObserver(fit).observe(this.root);
+		fit();
 	}
 
 	//

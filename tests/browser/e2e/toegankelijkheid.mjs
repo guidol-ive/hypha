@@ -96,6 +96,34 @@ export default async function (t) {
 		assert(before === 852 && above === 852 - 336, `toolbar bottom ${before} -> ${above}`);
 		await tp.evaluate(() => window.mdeKeyboard(0));
 		assert(await bottom() === 852, 'toolbar back at the bottom');
+		//
+		// Also with the page scrolled to the text, as when typing: the toolbar is fixed to the screen, not to the editor
+		// (a CSS container on #mdeditor made it the containing block, found on Android). Newer Chrome no longer gives a
+		// container layout containment, so the measurement alone does not see it here: no ancestor may catch a fixed
+		// element either.
+		//
+		const catching = await tp.evaluate(() => {
+			const found = [];
+			for (let e = document.querySelector('#mdeditor .toolbar').parentElement; e; e = e.parentElement) {
+				const cs = getComputedStyle(e);
+				if (cs.containerType !== 'normal' || /layout|paint|strict|content/.test(cs.contain) || cs.transform !== 'none' || cs.filter !== 'none' || cs.perspective !== 'none' || /transform|filter/.test(cs.willChange) || (cs.backdropFilter && cs.backdropFilter !== 'none')) found.push((e.id ? '#' + e.id : e.tagName.toLowerCase() + '.' + e.className).slice(0, 60));
+			}
+			return found;
+		});
+		assert(!catching.length, 'containing block of the fixed toolbar: ' + catching.join(', '));
+		const scrolled = await tp.evaluate(() => {
+			document.querySelector('#mdeVisual .ProseMirror').scrollIntoView({ block: 'start' });
+			window.scrollBy(0, 200);
+			return { y: window.scrollY, h: window.innerHeight };
+		});
+		assert(scrolled.y > 0, 'the page did not scroll');
+		const still = await bottom();
+		assert(still === scrolled.h, `toolbar bottom ${still} after scrolling, not ${scrolled.h}`);
+		await tp.evaluate(() => window.mdeKeyboard(336));
+		const scrolledAbove = await bottom();
+		assert(scrolledAbove === scrolled.h - 336, `toolbar bottom ${scrolledAbove} with keyboard after scrolling, not ${scrolled.h - 336}`);
+		await tp.evaluate(() => window.mdeKeyboard(0));
+		assert(await bottom() === scrolled.h, 'toolbar back at the bottom after scrolling');
 		await tp.context().close();
 	});
 }

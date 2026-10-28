@@ -615,19 +615,16 @@
 @media (max-width: 700px) { .mdeditor .toolbar.above-keyboard { padding-bottom: 2px; box-shadow: 0 -1px 4px rgba(0,0,0,.12); } }
 /*
 // A theme with a narrow page column (such as 'destadsbron'): the layout follows the width of the editor itself, not
-// only the width of the screen.
+// only the width of the screen. The classes narrow (at most 1020 px) and compact (at most 700 px) are set by
+// followWidth() in editor.js. Not a CSS container: container-type makes #mdeditor the containing block of the fixed
+// toolbar, which then left the bottom of the screen and the on-screen keyboard (found on Android).
 */
-.mdeditor { container: mde / inline-size; }
-@container mde (max-width: 1020px) {
-	.mdeditor .layout { grid-template-columns: minmax(0, 1fr); }
-	.mdeditor aside.side { position: static; max-height: none; overflow: visible; }
-	.mdeditor .panes.side { grid-template-columns: minmax(0, 1fr); height: auto; }
-}
-@container mde (max-width: 700px) {
-	.mdeditor .wh-media { flex-direction: column; }
-	.mdeditor .wh-img { flex-basis: auto; width: 100%; }
-	.mdeditor .grid { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-}
+.mdeditor.narrow .layout { grid-template-columns: minmax(0, 1fr); }
+.mdeditor.narrow aside.side { position: static; max-height: none; overflow: visible; }
+.mdeditor.narrow .panes.side { grid-template-columns: minmax(0, 1fr); height: auto; }
+.mdeditor.compact .wh-media { flex-direction: column; }
+.mdeditor.compact .wh-img { flex-basis: auto; width: 100%; }
+.mdeditor.compact .grid { grid-template-columns: minmax(0, 1fr); gap: 4px; }
 /*
 // Fields of the dialogs, also where a theme gives textarea and input its own size.
 */
@@ -652,7 +649,7 @@
 */
 .mdeditor .tags .pair { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
 .mdeditor .tags .pair > .wh-key { white-space: nowrap; }
-@container mde (max-width: 700px) { .mdeditor .tags .pair { flex: 1 1 100%; } }
+.mdeditor.compact .tags .pair { flex: 1 1 100%; }
 /*
 // Phone, preview: the formatting buttons do nothing there, so they make room for 'Schrijven' and 'Voorbeeld' with their
 // words; with only a pencil there was no visible way back to writing (found on an iPhone).
