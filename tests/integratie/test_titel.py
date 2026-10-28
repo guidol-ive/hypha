@@ -5,6 +5,15 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hypha import Client, run, test, write_same_length  # noqa: E402
+import hypha  # noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bekend"))
+import test_paginas as pages  # noqa: E402
+
+#
+# Only the helpers of test_paginas.py, not its tests.
+#
+hypha.TESTS.clear()
 
 WORK = os.environ.get("HYPHA_WORK", "")
 
@@ -43,6 +52,19 @@ def a_site_title_with_an_ampersand_is_saved_as_text(base):
     finally:
         write_same_length(path, original)
 
+
+
+@test
+def a_page_has_its_heading_before_the_site_title(base):
+    # Every page was titled with the site title only, so tabs and search results could not tell pages apart (#521).
+    _, home, _ = Client(base).get("nl/Start")
+    site = page_title(home)
+    assert site and "|" not in site, f"the default page: {site}"
+    sanne = Client(base).login("sanne")
+    title = f"Nieuwe brug {pages.RUN}"
+    slug = pages.article(sanne, title, "published")
+    _, text, _ = Client(base).get(f"nl/{slug}")
+    assert page_title(text) == f"{title} | {site}", page_title(text)
 
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))
