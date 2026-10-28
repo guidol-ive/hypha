@@ -106,7 +106,7 @@ def an_empty_maintenance_login_is_refused(base):
     #
     client = Client(base)
     status, text, _ = client.request("hypha.php?maintenance", {"command": "login", "username": "", "password": ""})
-    assert "hypha superuser login" in text.lower(), f"empty credentials opened the maintenance tools ({status})"
+    assert "hypha superuser login" in text.lower() or "hypha system user login" in text.lower(), f"empty credentials opened the maintenance tools ({status})"
 
 
 @known_bug(415)
