@@ -223,15 +223,20 @@ export default async function (t) {
 		await command(page, 'nl/Start', 'mdPreferences', JSON.stringify({ mode: 'visual' }));
 	});
 
-	t.test('without a photo the header offers to choose one and nothing to remove', async () => {
-		const state = () => editor(() => { const q = id => document.getElementById(id); const shown = e => getComputedStyle(e).display !== 'none'; return [q('mdeHeroLabel').textContent, shown(q('mdeHeroDel')), shown(q('mdeHeroThumb'))]; });
+	t.test('without a photo the header offers to choose one, and only with a photo its fields', async () => {
+		const state = () => editor(() => { const q = id => document.getElementById(id); const shown = e => !e.closest('[hidden]') && getComputedStyle(e).display !== 'none'; return [q('mdeHeroLabel').textContent, shown(q('mdeHeroDel')), shown(q('mdeHeroThumb')), shown(q('mdeHeroAlt')), shown(q('mdeHeroCredit'))]; });
 		await editor(() => { const e = window.hyphaMdeditor.editor; e.fields.image = ''; e.renderHead(); });
-		const [label, remove, thumb] = await state();
-		assert(label === 'foto kiezen' && !remove && !thumb, `without a photo: label "${label}", remove ${remove}, thumbnail ${thumb}`);
+		const [label, remove, thumb, alt, credit] = await state();
+		assert(label === 'Foto kiezen' && !remove && !thumb && !alt && !credit, `without a photo: label "${label}", remove ${remove}, thumbnail ${thumb}, description ${alt}, photographer ${credit}`);
 		await editor(() => { const e = window.hyphaMdeditor.editor; e.fields.image = 'beeld/proef.png'; e.renderHead(); });
-		const [label2, remove2] = await state();
-		assert(label2 === 'andere foto' && remove2, `with a photo: label "${label2}", remove ${remove2}`);
+		const [label2, remove2, , alt2, credit2] = await state();
+		assert(label2 === 'Foto vervangen' && remove2 && alt2 && credit2, `with a photo: label "${label2}", remove ${remove2}, description ${alt2}, photographer ${credit2}`);
 		await editor(() => { const e = window.hyphaMdeditor.editor; e.fields.image = ''; e.renderHead(); });
+	});
+
+	t.test('the sections are in alphabetical order, whatever the order of the settings', async () => {
+		const names = await editor(() => { const e = window.hyphaMdeditor.editor; e.cfg.settings.sections = ['Wonen', 'Cultuur', 'onderwijs', 'Politiek en bestuur']; e.renderHead(); return [...document.querySelectorAll('#mdeSection option')].slice(1).map(o => o.textContent); });
+		assert(names.join('|') === 'Cultuur|onderwijs|Politiek en bestuur|Wonen', names.join('|'));
 	});
 
 	t.test('no errors in the console', async () => {
