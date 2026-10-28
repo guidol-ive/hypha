@@ -641,6 +641,34 @@ def a_contribution_without_website_logs_no_deprecation(base):
     assert not found, found[0][-150:] if found else ""
 
 
+
+#
+# #587: renaming a mailing list to a name that another page has.
+#
+@known_bug(587)
+def renaming_a_mailing_list_to_a_taken_name_says_so_and_stays_on_the_list(base):
+    mailing_list("Lijst587een")
+    beheer = mailing_list("Lijst587twee")
+    beheer.get("nl/Lijst587twee/edit")
+    status, text, location = beheer.post("nl/Lijst587twee/edit", "save", "", {
+        "page_name": "Lijst587een", "sender_name": "Redactie Eemstad", "sender_email": "redactie@eemstad.example",
+        "description": "<p>Twee</p>", "email_welcome_text": "<p>Welkom</p>"})
+    assert not (location or "").split("?")[0].endswith("/Lijst587een"), f"the editor is sent to the other list: {location}"
+
+
+#
+# #588: a sign-up form without a phone field.
+#
+@known_bug(588)
+def a_signup_without_a_phone_field_logs_no_deprecation(base):
+    festival("Feest588", SIGNUP_FORM.replace('<tr><td><input type="text" name="phone"/></td></tr>', ""))
+    visitor = Client(base)
+    visitor.get("nl/Feest588/signup")
+    messages = php_messages(lambda: visitor.post("nl/Feest588/signup", "signup", "", {"name": "Jan", "email": "jan588@eemstad.example"}))
+    found = [m for m in messages if "festival.php" in m and "Passing null" in m]
+    assert not found, f"the sign-up logs: {found[:1]}"
+
+
 if __name__ == "__main__":
     BASE = sys.argv[1]
     sys.exit(run(sys.argv[1]))

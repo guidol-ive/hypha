@@ -179,3 +179,6 @@
 {"issue": 581, "runner": "integratie", "file": "tests/bekend/test_inhoud.py", "test": "an_unknown_upload_type_gets_404", "title": "upload/<unknown type> gets 404", "since": "2026-10-28"}
 {"issue": 581, "runner": "integratie", "file": "tests/bekend/test_inhoud.py", "test": "an_upload_above_post_max_size_gets_413", "title": "An upload above post_max_size gets 413", "since": "2026-10-28"}
 {"issue": 581, "runner": "integratie", "file": "tests/bekend/test_inhoud.py", "test": "an_upload_that_is_not_an_image_gets_415", "title": "An upload that is not an image gets 415", "since": "2026-10-28"}
+{"issue": 586, "runner": "integratie", "file": "tests/bekend/test_platform.py", "test": "a_form_has_one_csrf_token_field", "title": "A form has exactly one csrfToken field", "since": "2026-10-28"}
+{"issue": 587, "runner": "integratie", "file": "tests/bekend/test_lijsten.py", "test": "renaming_a_mailing_list_to_a_taken_name_says_so_and_stays_on_the_list", "title": "Renaming a mailing list to a taken name gives an error and does not send the editor to the other list", "since": "2026-10-28"}
+{"issue": 588, "runner": "integratie", "file": "tests/bekend/test_lijsten.py", "test": "a_signup_without_a_phone_field_logs_no_deprecation", "title": "A festival sign-up without a phone field logs no deprecation", "since": "2026-10-28"}

@@ -554,5 +554,16 @@ def the_page_index_answers_with_a_page_name_after_z(base):
         beheer.post("nl/_platform", "delete")
 
 
+
+#
+# #586: two XPath expressions in document.php miss the @, so every form gets a second csrfToken field.
+#
+@known_bug(586)
+def a_form_has_one_csrf_token_field(base):
+    status, text, _ = Client(base).login("beheer").get("nl/Start/edit")
+    count = text.count('name="csrfToken"')
+    assert count == 1, f"the edit form of a text page has {count} csrfToken fields"
+
+
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))
