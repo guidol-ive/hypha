@@ -196,6 +196,7 @@
 	if ($hyphaPage) hypha_setCanonicalLink($O_O, $hyphaPage);
 
 	registerPostProcessingFunction('dewikify');
+	registerPostProcessingFunction('addHeaderHomeLink');
 	registerPostProcessingFunction('addPageTitle');
 	registerPostProcessingFunction('localizeImageUrls');
 	registerPostProcessingFunction('addImageAlts');

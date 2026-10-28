@@ -18,7 +18,10 @@ export async function login(browser, base, username, viewport = { width: 1280, h
 
 export async function command(page, path, cmd, argument = '', fields = {}) {
 	return page.evaluate(async ([path, cmd, argument, fields]) => {
-		const body = new URLSearchParams(Object.assign({ command: cmd, argument, csrfToken: document.querySelector('input[name=csrfToken]').value }, fields));
+		let csrfToken = document.querySelector('input[name=csrfToken]').value;
+		// A site with the page cache of PR #518 has no token in an anonymous page: fetch it, as hypha() does.
+		if (!csrfToken) csrfToken = (await (await fetch('csrf-token', { method: 'POST' })).json()).token;
+		const body = new URLSearchParams(Object.assign({ command: cmd, argument, csrfToken }, fields));
 		const r = await fetch(path, { method: 'POST', body, redirect: 'manual' });
 		return r.status;
 	}, [path, cmd, argument, fields]);
