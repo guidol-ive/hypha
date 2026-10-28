@@ -284,6 +284,9 @@
 				// Do not continue with this POST: the page's
 				// process() would still handle its command.
 				// Reload the page with a GET to show the error.
+				// The Markdown editor posts with ajax=1 and reads
+				// JSON, not the page (issue #520).
+				if ($request->getPostValue('ajax') === '1') hypha_mdeditorJson(['ok' => false, 'errors' => [__('csrf-error')]]);
 				notify('error', __('csrf-error'));
 				$processed = true;
 				processCommandResult('reload'); // Exits
