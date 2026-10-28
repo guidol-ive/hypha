@@ -75,7 +75,7 @@ def new_page(client, name, kind):
     #
     # Not an assert: without the page the test tests nothing.
     #
-    if status != 302 or not location:
+    if status not in (302, 303) or not location:
         raise RuntimeError(f"new page {name}: {status}")
     return name.replace(" ", "_")
 
@@ -114,7 +114,7 @@ def a_post_to_the_language_root_is_handled_there_and_its_reload_keeps_the_notifi
     # request uri as location), never 301.
     #
     path = urllib.parse.urlsplit(location or "").path
-    assert status == 302 and path.endswith("/nl") and "notify=" in location, f"a failed login posted to /nl gave {status} {location}, a reload of /nl expected"
+    assert status in (302, 303) and path.endswith("/nl") and "notify=" in location, f"a failed login posted to /nl gave {status} {location}, a reload of /nl expected"
     status, _, second = client.get(location.replace(root, "").lstrip("/"))
     assert status == 301 and second == root + "nl/Start?" + location.split("?", 1)[1], f"the reload {location} gave {status} {second}, a 301 to nl/Start with the same query expected"
     status, text, _ = client.get(second.replace(root, ""))

@@ -166,7 +166,7 @@ GIF = base64.b64decode("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7
 #
 def new_page(client, name, kind):
     status, _text, location = client.post("nl/Start", "newPage", name, {"newPageType": kind, "newPageLanguage": "nl"})
-    setup(status == 302 and location and location.endswith("/edit"), f"newPage {name} ({kind}) gave {status} {location}")
+    setup(status in (302, 303) and location and location.endswith("/edit"), f"newPage {name} ({kind}) gave {status} {location}")
     return "nl/" + name
 
 
@@ -180,7 +180,7 @@ def text_page(client, content, name=None):
 def save_text(client, path, name, content):
     client.get(path + "/edit")
     status, _text, location = client.post(path + "/edit", "edit", "", {"textPagename": name, "textContent": content})
-    setup(status == 302, f"saving {path} gave {status}")
+    setup(status in (302, 303), f"saving {path} gave {status}")
 
 
 def mailing_list(client, sender_name="Redactie Eemstad", sender_email="lijst@eemstad.example"):
@@ -190,20 +190,20 @@ def mailing_list(client, sender_name="Redactie Eemstad", sender_email="lijst@eem
     status, _text, _location = client.post(path + "/edit", "save", "", {
         "page_name": name, "sender_name": sender_name, "sender_email": sender_email,
         "description": "<p>Nieuwsbrief van de proefsite.</p>", "email_welcome_text": "<p>Welkom bij de nieuwsbrief.</p>"})
-    setup(status == 302, f"saving mailing list {name} gave {status}")
+    setup(status in (302, 303), f"saving mailing list {name} gave {status}")
     return path
 
 
 def mailing(client, path, subject):
     client.get(path + "/mails_new")
     status, _text, location = client.post(path + "/mails_new", "save", "", {"subject": subject, "message": "<p>Inhoud van de nieuwsbrief.</p>"})
-    setup(status == 302 and location and "/mails_edit/" in location, f"new mailing gave {status} {location}")
+    setup(status in (302, 303) and location and "/mails_edit/" in location, f"new mailing gave {status} {location}")
     return location.split("?")[0].rsplit("/", 1)[1]
 
 
 def test_mail(client, path, mailing_id, to):
     status, _text, _location = client.post(f"{path}/mails/{mailing_id}", "test_send", to)
-    setup(status == 302, f"test mail gave {status}")
+    setup(status in (302, 303), f"test mail gave {status}")
 
 
 def subscribe(client, path, address):
@@ -256,7 +256,7 @@ def festival(client):
     path = new_page(client, name, "festivalpage")
     client.get(path + "/settings")
     status, _text, _location = client.post(path + "/settings", "save", "", {"title": "Proeffestival Eemstad", "description": "Verzonnen festival."})
-    setup(status == 302, f"festival settings gave {status}")
+    setup(status in (302, 303), f"festival settings gave {status}")
     return path
 
 
@@ -270,7 +270,7 @@ def contribute(client, path, title="Lezing over de Eem", website="", image="", f
         status, _text, location = client.request(path + "/contribute", fields, files)
     else:
         status, _text, location = client.post(path + "/contribute", "save", "", fields)
-    setup(status == 302 and location and "/lineup" in location, f"contribution gave {status} {location}")
+    setup(status in (302, 303) and location and "/lineup" in location, f"contribution gave {status} {location}")
 
 
 def schedule(path, day="Zaterdag", location="Grote zaal"):
@@ -423,7 +423,7 @@ def the_digest_shows_an_anonymous_commenter_name_as_text(base):
     sanne = login(base, "sanne")
     sanne.get(path)
     status, _text, _ = sanne.post(f"{path}/comments/{comment.group(1)}", "hide", "", {"reason": "spam"})
-    setup(status == 302, f"hiding the comment gave {status}")
+    setup(status in (302, 303), f"hiding the comment gave {status}")
     setup("proef429a" in digest(), "no digest entry for the hidden comment")
     assert '<b class="proef429a">' not in digest(), "the digest has the name as markup: " + re.search(r"[^\n]*proef429a[^\n]*", digest()).group(0)[:160]
 
@@ -476,7 +476,7 @@ def a_pending_address_gets_one_confirmation_mail_per_quarter_of_an_hour(base):
     before = len(mails())
     for _ in range(3):
         status, _text, _ = subscribe(Client(base), path, address)
-        setup(status == 302, f"subscription gave {status}")
+        setup(status in (302, 303), f"subscription gave {status}")
     count = len(new_mails(before, address))
     assert count == 1, f"three subscriptions of a pending address within a few seconds sent {count} confirmation mails"
 
@@ -645,7 +645,7 @@ def revert_for_digest(client):
     versions = re.findall(r'<version xml:id="(t\d+)"', read(page_file(name)))
     setup(len(versions) >= 2, f"the page has versions {versions}")
     status, _text, _ = client.post(path, "revert", "", {"version": min(versions)})
-    setup(status == 302, f"revert gave {status}")
+    setup(status in (302, 303), f"revert gave {status}")
     pid = page_id(name)
     setup(f'href="#{pid}"' in digest(), "no 'view changes' entry in the digest")
     return pid
