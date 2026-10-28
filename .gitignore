@@ -7,6 +7,7 @@
 /data/hypha.stats
 /data/hypha.probe
 /data/hypha.selfcheck
+/data/hypha.throttle
 /mockup/node_modules
 DEBUG
 /data/themes/*/
