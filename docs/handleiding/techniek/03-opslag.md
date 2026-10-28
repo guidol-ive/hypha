@@ -1,6 +1,6 @@
 ---
 title: "Opslag: hypha.xml en de map data"
-revision: 3
+revision: 4
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -15,7 +15,7 @@ Hypha heeft geen database. Alles wat een site bevat, staat als bestanden in de m
 |---|---|
 | `data/hypha.xml` | instellingen van de site, gebruikers, de lijst van pagina's, tags, menu, kop en voet, de wachtrij van de samenvatting |
 | `data/pages/‹id›` | één XML-bestand per pagina: alle talen en alle versies; bij een artikel ook de discussies en goedkeuringen |
-| `data/images/` | geüploade foto's; `images/org/` bewaart de originelen die groter waren dan 1120 bij 800 |
+| `data/images/` | geüploade foto's; `images/org/` bewaart de originelen die groter waren dan 1120 bij 800. Kleinere kopieën, zoals `‹naam›_800w.jpg` voor een overzicht van artikelen, maakt Hypha zelf, de eerste keer dat ze nodig zijn |
 | `data/files/` | andere geüploade bestanden |
 | `data/themes/‹naam›/` | het thema: `hypha.html` (sjabloon), `hypha.css` en bijbehorende bestanden |
 | `data/digest` | wijzigingen voor de volgende samenvatting |

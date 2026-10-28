@@ -1,6 +1,6 @@
 ---
 title: "Inloggen en je account"
-revision: 3
+revision: 4
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -57,16 +57,21 @@ Zolang de genodigde zich niet heeft aangemeld, staat ze in de projectledenlijst 
 
 ![De startpagina na het inloggen, met rechtsboven de knoppen voor gebruikers en „Aangemeld als”](../afbeeldingen/start-lid.png)
 
-1. Klik rechtsboven op het pictogram om in te loggen.
-2. Vul je **gebruikersnaam** en **wachtwoord** in en kies **inloggen**.
-3. Je blijft op dezelfde pagina. Je ziet nu knoppen als **bewerken**, **nieuwe pagina** en **instellingen**.
+1. Klik rechtsboven op het pictogram om in te loggen. Het venster om in te loggen opent.
+2. Vul je **Gebruikersnaam** en **Wachtwoord** in en kies **inloggen**. Met **annuleren** sluit je het venster. Annuleren staat in elk venster links, de knop die iets doet rechts.
+3. Je blijft op dezelfde pagina. Rechtsboven staat nu **Aangemeld als** met je gebruikersnaam. Je ziet knoppen als **bewerken**, **nieuwe pagina** en **instellingen**.
 4. Uitloggen doe je met het pictogram rechtsboven. Was je op een privépagina, dan ga je naar de startpagina.
+
+> [!info] Inloggen zonder JavaScript
+> Inloggen werkt ook als JavaScript in je browser uit staat. Het pictogram is een gewone link: het opent de pagina met `?login` achter het adres, bijvoorbeeld `/nl/Start?login`. Daar staat het venster om in te loggen al open. Alleen **heraanmelden** heeft nog JavaScript nodig.
 
 ## Wachtwoord of gebruikersnaam vergeten
 
-1. Klik op inloggen en daarna op **heraanmelden**, onder de knoppen.
-2. Vul je **gebruikersnaam of e-mailadres** in en kies **versturen**.
-3. Je krijgt een e-mail met een link. Open die link.
+![Het venster heraanmelden, met het veld voor je gebruikersnaam of e-mailadres](../afbeeldingen/wachtwoord-vergeten.png)
+
+1. Klik op inloggen en daarna op **heraanmelden**, onder de knoppen. Het venster lijkt op het venster om in te loggen.
+2. Vul je **Gebruikersnaam of e-mailadres** in en kies **versturen**. Met **annuleren** ga je terug naar het venster om in te loggen.
+3. Bovenaan de pagina staat of het gelukt is. Je krijgt een e-mail met een link. Open die link.
 4. Je ziet hetzelfde formulier als bij het aanmelden. Kies een nieuw wachtwoord en kies **versturen**.
 
 > [!tip] Geen e-mail gekregen?
@@ -93,6 +98,8 @@ Je account blijft bestaan, maar je bent dan *geen gebruiker* meer; je pagina's e
 ## Voor geprivilegieerde gebruikers
 
 In de projectledenlijst heeft een geprivilegieerde gebruiker per gebruiker twee pictogrammen:
+
+![De lijst van gebruikers met per gebruiker een potlood en een prullenbak](../afbeeldingen/gebruikers-lijst.png)
 
 | Pictogram | Wat het doet |
 |---|---|

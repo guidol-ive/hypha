@@ -1,6 +1,6 @@
 ---
 title: "Een artikel schrijven"
-revision: 8
+revision: 9
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -39,11 +39,11 @@ flowchart LR
 
 ![Het venster nieuwe pagina voor een artikel: titel, webadres en de keuze hoe je schrijft](../afbeeldingen/nieuw-artikel.png)
 
-1. Klik op **nieuwe pagina**.
-2. Kies als type **artikel met review**.
-3. Typ de **titel** van het artikel. Het webadres volgt er vanzelf uit: de woorden in kleine letters, met streepjes ertussen en zonder accenten, bijvoorbeeld `/nl/vertrekkend-raadslid-bram-hoekstra-twintig-jaar-strijd-voor-open-bestuur`. Je ziet het adres meteen onder de titel. Bestaat het al, dan komt er `-2` achter.
-4. Een nieuw artikel opent **altijd in de nieuwe tekst-editor**.
-5. Kies **maak pagina**. Het artikel heeft nu de status *schets* en is alleen zichtbaar voor ingelogde gebruikers. Het webadres ligt nu vast; verander je de titel later flink, dan stelt de checklist voor het adres bij te werken, zolang het artikel nog niet gepubliceerd is.
+1. Klik op **nieuwe pagina**. Het venster **Maak Nieuwe Pagina** opent.
+2. Kies bij **Soort** de soort **artikel met review**. Het veld **Paginanaam** heet nu **Titel**.
+3. Typ de **Titel** van het artikel. Het webadres volgt er vanzelf uit: de woorden in kleine letters, met streepjes ertussen en zonder accenten, bijvoorbeeld `/nl/vertrekkend-raadslid-bram-hoekstra-twintig-jaar-strijd-voor-open-bestuur`. Je ziet het adres meteen onder de titel. Bestaat het al, dan komt er `-2` achter.
+4. Een nieuw artikel opent **altijd in de nieuwe tekst-editor**. Kies bij **Hoe wil je meestal schrijven?** voor **Opmaak** of **Markdown**. Vink **Onthoud keuze** aan, dan vraagt Hypha het niet meer.
+5. Kies **maken**. Het artikel heeft nu de status *schets* en is alleen zichtbaar voor ingelogde gebruikers. Het webadres ligt nu vast; verander je de titel later flink, dan stelt de checklist voor het adres bij te werken, zolang het artikel nog niet gepubliceerd is. Met **annuleren**, links van **maken**, sluit je het venster zonder artikel.
 
 ### 2. Kiezen hoe je schrijft
 
@@ -79,6 +79,13 @@ Bovenaan staat de **artikelkop** met vaste velden. Ze horen bij elk artikel:
 
 1. De **rubriek** en de tags kies je uit een lijst. Een artikel heeft precies één rubriek en één of meer tags. Een nieuwe tag kan alleen een geprivilegieerde gebruiker maken; vraag het de redactie als je er een mist.
 2. De **beschrijving** van een foto is voor wie de foto niet kan zien, bijvoorbeeld met voorleessoftware. Beschrijf wat er op de foto staat.
+3. Zonder foto staat er alleen de knop **Foto kiezen**. Pas als er een foto is, zie je de velden voor beschrijving, bijschrift en fotograaf, en de knop **Foto vervangen**.
+4. De rubrieken staan op alfabet.
+5. De velden voor titel en uittreksel worden vanzelf zo hoog als hun tekst.
+
+Op de pagina van het artikel ziet de lezer het **uittreksel** vet als inleiding. Daaronder staat de **foto** over de hele breedte, met bijschrift en fotograaf. Dan volgt de tekst.
+
+Het uittreksel is ook de beschrijving voor zoekmachines. Deelt iemand een link naar het artikel, bijvoorbeeld op sociale media, dan toont de voorvertoning de titel, het uittreksel en de foto.
 
 In Markdown staan dezelfde velden als *Frontmatter* bovenaan de tekst, tussen twee regels `---`:
 

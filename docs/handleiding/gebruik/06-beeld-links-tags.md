@@ -1,6 +1,6 @@
 ---
 title: "Beeld, links en tags"
-revision: 4
+revision: 5
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -59,6 +59,20 @@ In Markdown ziet een foto er zo uit. De beschrijving staat tussen de rechte hake
 
 Bij oudere pagina's en artikelen gebruik je de knop voor een afbeelding in de werkbalk. Kies **upload bestand**, of geef een **afbeeldingsurl**. Vul de **alternatieve tekst** in: wat er op de foto staat.
 
+### Wat Hypha zelf aan een foto toevoegt
+
+Elke foto op de site krijgt een **beschrijving** (*alt*-tekst) voor voorleessoftware. Heb je er zelf geen ingevuld, dan vult Hypha er een in:
+
+| Foto | Beschrijving |
+|---|---|
+| foto in de tekst zonder beschrijving | het bijschrift; zonder bijschrift de titel van de foto; anders leeg, als versiering |
+| foto die als enige in een link staat | de titel van de foto, zodat de link een naam heeft |
+| foto bij een artikel in een overzicht | de titel van het artikel |
+| foto bij een bijdrage aan een festival | de titel van de bijdrage |
+| voorbeeld in een formulier | „voorbeeld van de gekozen afbeelding” |
+
+In een overzicht van artikelen laadt Hypha een **kleinere versie** van de foto, 800 beeldpunten breed. Die maakt Hypha één keer en bewaart hem naast het origineel, als `naam_800w.jpg`. De foto laadt pas als de lezer erbij komt. Zo blijft de pagina snel, ook als het origineel een paar MB is. De foto boven een artikel is ook kleiner, 1200 beeldpunten breed.
+
 ## Een link naar een andere pagina
 
 ### In de nieuwe tekst-editor
@@ -89,6 +103,8 @@ Selecteer de tekst en kies de knop voor een link. Kies als **link type** een **l
 3. In Markdown kun je ook schrijven: `[tekst](https://www.eemstad.example/raad)`.
 
 Gebruik altijd een volledig adres dat begint met `https://`.
+
+Een link naar het adres van de site zelf, zoals `https://www.eemstad.example/`, bewaart Hypha als `./`. Browsers en zoekmachines zien een lege link niet als link.
 
 ## Tags
 

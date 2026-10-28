@@ -1,6 +1,6 @@
 ---
 title: "Installatie, ook met Docker"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -15,7 +15,7 @@ Deze pagina legt uit hoe je Hypha installeert: met git, met het installatiebesta
 |---|---|
 | PHP | 8.2, 8.3, 8.4 of 8.5 |
 | PHP-extensies | dom, libxml, xml, mbstring, gd (met jpeg en png), curl, openssl, zlib, fileinfo, session |
-| Webserver | Apache 2.4 met mod_rewrite; `AllowOverride FileInfo` voor de map van de site |
+| Webserver | Apache 2.4 met mod_rewrite; `AllowOverride FileInfo` voor de map van de site; mod_headers voor de beveiligingsheaders (zie [Beveiliging](07-beveiliging.md#beveiligingsheaders)) |
 | Ervoor | meestal NGINX, die TLS afhandelt |
 | E-mail | een werkende `mail()` (sendmail of een relay) |
 | Schijf | een schrijfbare map `data/` voor de gebruiker van de webserver |

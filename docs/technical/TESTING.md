@@ -126,3 +126,9 @@ and with `data/` on a Docker volume or tmpfs, this does not happen (0 errors in 
 clients, measured 2026-10-27), so `tests/bekend/meldingen.ndjson` lists it (as test setup) and
 `test_gelijktijdig.py` does not count a round with a failed request. Files on the host may also lag
 behind the container; tests that race read the result through Hypha.
+
+**Changing a file the running site reads.** Docker Desktop shows the container a changed file a moment
+later with its old length, which cuts a longer file short (for example `hypha.xml` changed by a test).
+An integration test that changes such a file therefore writes it with `write_same_length()` from
+`tests/integratie/hypha.py`: the new content gets exactly the length of the old, by taking away spaces
+of the indentation or adding spaces at the end.

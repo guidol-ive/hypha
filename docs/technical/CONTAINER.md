@@ -14,7 +14,7 @@ is still to be done (NS-GLE-2026W44-hypha-020); the files use only portable feat
 | File | Role |
 |---|---|
 | `Containerfile` | `php:${PHP_VERSION}-apache` + GD (jpeg, png, freetype) + mod_rewrite and mod_headers; listens on 8080 and runs as `www-data`; copies the source to `/var/www/html` and leaves out `.git`, `ai/` and `docs/`; `data/` is a volume |
-| `hypha-vhost.conf` | Virtual host on 8080 with `AllowOverride FileInfo Options`, logs to stdout/stderr, three security headers, `data/` refused except themes |
+| `hypha-vhost.conf` | Virtual host on 8080 with `AllowOverride FileInfo Options`, logs to stdout/stderr, the same five security headers as `.htaccess` (see [OPERATIONS.md](OPERATIONS.md#security-headers)), `data/` refused except themes |
 | `mpm_prefork.conf` | Caps Apache at 2 workers for a 256 MB container; each worker needs about 85 MB. Raise `MaxRequestWorkers` to about (memory for Apache) / 100 MB on a larger host |
 | `php.ini` | Errors to the log (`/dev/stderr`), never to the browser; upload limits 16/20 MB; session hardening; time zone Europe/Amsterdam. A thread-safe (ZTS) PHP, such as the official 8.6 release candidates, cannot open `/dev/stderr` from mod_php (it resolves the path, and `/dev/stderr` is a pipe), and dropped every deprecation, notice and warning; the `Containerfile` then sets `error_log = /tmp/php-error.log` and its command follows that file into the container log (checked 2026-10-28 on 8.2, 8.5 and 8.6.0RC4) |
 | `compose.yaml` | One service, port 8086, data in `./hypha-data`, 256 MB memory |

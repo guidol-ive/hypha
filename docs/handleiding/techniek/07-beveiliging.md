@@ -1,6 +1,6 @@
 ---
 title: "Beveiliging"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -99,6 +99,25 @@ De uitkomst is XHTML, die Hypha in het XML-bestand van de pagina bewaart. Het fi
 > [!warning] De oude opmaakeditor
 > Pagina's en artikelen in de oude opmaakeditor (WYMeditor) gaan **niet** door dit filter. Hypha weigert daar alleen `<script>`. Een gebruiker kan in de oude editor dus meer HTML kwijt dan in de nieuwe. Geef alleen mensen die je vertrouwt een account.
 
+## Beveiligingsheaders
+
+Bij elk antwoord stuurt Hypha een paar headers mee. Ze staan in `.htaccess` en werken als Apache `mod_headers` heeft geladen. De container zet dezelfde headers in `docs/container/hypha-vhost.conf`.
+
+| Header | Waarde | Waarom |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | de browser houdt zich aan het type van een bestand |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | een andere site ziet alleen het adres van de site, niet het pad van een pagina |
+| `X-Frame-Options` | `SAMEORIGIN` | een andere site kan Hypha niet in een frame tonen |
+| `Cross-Origin-Opener-Policy` | `same-origin` | een venster van een andere site kan niet bij de pagina |
+| `Content-Security-Policy` | `frame-ancestors 'self'; object-src 'none'` | geen frame op een andere site, geen plug-ins |
+
+De Content-Security-Policy is een eerste stap. Twee dingen ontbreken nog bewust:
+
+1. **Geen regels voor scripts** (`script-src`, *Trusted Types*). Hypha en de thema's hebben scripts in de pagina zelf en `onclick` in knoppen. Die moeten eerst naar aparte bestanden.
+2. **Geen `base-uri` en `form-action`.** Achter een proxy die HTTPS verbergt, wijst de `<base href>` naar `http://` (issue [#398](https://github.com/PlanBCode/hypha/issues/398), PR [#477](https://github.com/PlanBCode/hypha/pull/477)). Die regels zouden dan alle formulieren blokkeren.
+
+`Strict-Transport-Security` zet je waar HTTPS eindigt, meestal in NGINX. Zie [`docs/technical/OPERATIONS.md`](../../technical/OPERATIONS.md#security-headers).
+
 ## Aanbevelingen voor wie de server beheert
 
 Tot de bevindingen van de beveiligingsreview zijn opgelost:
@@ -110,7 +129,7 @@ Tot de bevindingen van de beveiligingsreview zijn opgelost:
 5. Geef de gebruiker van de webserver alleen schrijfrechten op `data/`.
 6. Zet nooit een bestand `DEBUG` op de echte site.
 7. Begrens het aantal `POST`-verzoeken in NGINX als er spam of gegok naar wachtwoorden komt.
-8. Laat een geprivilegieerde gebruiker het account weghalen van wie niet meer meedoet: met **verwijderen** in de projectledenlijst wordt die persoon *geen gebruiker* en kan niet meer inloggen.
+8. Laat een geprivilegieerde gebruiker het account weghalen van wie niet meer meedoet: met de **prullenbak** in de lijst van gebruikers wordt die persoon *geen gebruiker* en kan niet meer inloggen (zie [Gebruikersbeheer](../gebruik/10-gebruikersbeheer.md)).
 
 > [!tip] Wie mag geprivilegieerde gebruiker zijn?
 > Maak zo weinig mensen geprivilegieerd als nodig, maar altijd aan minstens twee, zodat de site niet afhangt van één persoon.

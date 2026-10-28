@@ -57,6 +57,9 @@ def the_article_page_shows_the_intro_and_the_photo(base):
     assert figure, "no photo on the article page"
     assert 'alt="De nieuwe brug"' in figure.group(1) and "De brug bij nacht" in figure.group(1) and "<i>Verzonnen Fotograaf</i>" in figure.group(1), figure.group(1)
     assert text.index("mde-intro") < text.index('class="article"'), "the intro is not above the text"
+    # Also with a slash at the end of the address, as a link from elsewhere often has.
+    _, text, _ = Client(base).get(f"nl/{slug}/")
+    assert '<div class="mde-intro">' in text and "mde-lead" in text, "no intro or photo with a slash at the end"
 
 
 def png(path, width, height):
