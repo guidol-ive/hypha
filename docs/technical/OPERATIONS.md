@@ -108,7 +108,8 @@ concurrent clients: 1,000 pages on 1 CPU 123/132/133/132; 10,000 pages on 1 CPU 
    8 workers at 10,000 pages in 256 MB under load, were OOM-killed; 4 workers in 512 MB and 8 in
    1 GB were fine.
 6. Throughput is about CPUs divided by CPU time per request, capped by the workers; more workers
-   than about twice the cores does not help. Derived: one core serves about 200 readers who open a
+   than about twice the cores does not help and under a container CPU limit even hurts (see
+   [Scaling over CPUs](#scaling-over-cpus)). Derived: one core serves about 200 readers who open a
    page every 10 seconds at 10,000 pages, over 1,000 at 1,000 pages. An editor (open plus save,
    0.3 s CPU at 10,000 pages) is cheap: ten editors saving every minute use about 5% of a core.
 7. Set `MaxRequestWorkers` (prefork) or `pm.max_children` (PHP-FPM) to the memory for the web
@@ -116,6 +117,28 @@ concurrent clients: 1,000 pages on 1 CPU 123/132/133/132; 10,000 pages on 1 CPU 
    container kills workers and the site stops responding for everyone; capped, extra requests
    queue. See also [`../../ai/measurement/20261026_SCALABILITY_DOS.md`](../../ai/measurement/20261026_SCALABILITY_DOS.md)
    (a real site of 1,330 pages on `dev` measured 85 MB per worker).
+
+### Scaling over CPUs
+
+Measured 2026-10-28 on a fictional site of 1,000 text pages and 300 articles (`hypha.xml`
+188 KB), PHP 8.5, 256 MB, anonymous home page, with `ab` inside the Docker network. Details in
+[`../../ai/measurement/20261029_SCALABILITY_CPUS.md`](../../ai/measurement/20261029_SCALABILITY_CPUS.md).
+
+| CPUs (workers) | before the line-level optimisations | after (#675, #677) | with the page cache of PR #518 |
+|---|---|---|---|
+| 1 (2) | 115 req/s, some 500s | 211 req/s | 2,179 req/s |
+| 2 (4) | 215 req/s, some 500s | 345 req/s | 4,129 req/s |
+| 8 (8) | 514 req/s, some 500s | 733 req/s | 6,192 req/s |
+
+1. Throughput grows with CPUs only when `MaxRequestWorkers` is about one to two per CPU. On 1 CPU
+   the same code gave 211 req/s with 2 workers and 56-59 req/s with 4 or 16: under a container CPU
+   limit, more runnable workers than CPUs exhaust the quota early in every period and then wait.
+2. Memory was not the limit: 8 to 16 workers used 54-161 MB of the 256 MB; 32 workers reached the
+   limit on the page index and gave fewer requests than 16.
+3. Load-test from inside the Docker network or from another machine. Through the port forwarding of
+   Docker Desktop the same container seemed to stop at about 2,300 req/s.
+4. The page index is generated per request (240-250 req/s on 8 CPUs); the page cache does not help
+   it.
 
 ## Behind NGINX
 
