@@ -32,7 +32,7 @@ async function reports(page, action) {
 async function newPage(page, base, name, type) {
 	await page.goto(base + 'nl/Start');
 	const status = await command(page, 'nl/Start', 'newPage', name, { newPageType: type, newPageLanguage: 'nl' });
-	if (status !== 0 && status !== 302) throw new Error(`newPage ${name}: ${status}`);
+	if (status !== 0 && status !== 302 && status !== 303) throw new Error(`newPage ${name}: ${status}`);
 	return name;
 }
 

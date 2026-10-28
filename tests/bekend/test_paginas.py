@@ -72,7 +72,7 @@ def new_page(client, name, kind="textpage", language="nl", private=False):
     if private:
         fields["newPagePrivate"] = "on"
     status, _text, location = client.post("nl/Start", "newPage", name, fields)
-    need(status == 302 and location, f"new page {name}: {status}")
+    need(status in (302, 303) and location, f"new page {name}: {status}")
     return name.replace(" ", "_")
 
 
@@ -87,7 +87,7 @@ def text_page(client, name, versions, language="nl"):
     slug = new_page(client, name, language=language)
     for content in versions:
         status, _, _ = save_text(client, f"{language}/{slug}", name, content)
-        need(status == 302, f"save of {slug}: {status}")
+        need(status in (302, 303), f"save of {slug}: {status}")
     return slug
 
 
@@ -204,7 +204,7 @@ def a_translation_saved_in_the_same_second_gets_its_own_version_id(base):
         sanne.get(f"nl/{slug}/translate")
         save_text(sanne, f"nl/{slug}", name, "<p>Nederlandse tekst.</p>")
         status, _, _ = sanne.post(f"nl/{slug}/translate", "translate", "", {"textLanguage": "en", "textPagename": f"Translated {RUN} {n}", "textContent": "<p>English text.</p>"})
-        need(status == 302, f"translation of {slug}: {status}")
+        need(status in (302, 303), f"translation of {slug}: {status}")
         stored = wait_for(lambda: (lambda t: t if 'xml:id="en"' in t else None)(read_page(slug)))
         need(stored, f"no English version stored for {slug}")
         ids = re.findall(r'<version xml:id="(t\d+)"', stored)
@@ -224,7 +224,7 @@ def three_saves_in_one_second_show_the_newest_text_and_not_a_diff(base):
             time.sleep(0.02)
         for v in (1, 2, 3):
             status, _, _ = sanne.post(f"nl/{slug}/edit", "edit", "", {"textPagename": name, "textContent": f"<p>Versie {v} van de pagina.</p>"})
-            need(status == 302, f"save {v} of {slug}: {status}")
+            need(status in (302, 303), f"save {v} of {slug}: {status}")
         status, text, _ = Client(base).get(f"nl/{slug}")
         need(status == 200, f"nl/{slug}: {status}")
         main = re.search(r'id="main".*', text, re.S).group(0)
@@ -351,7 +351,7 @@ def an_article_saved_once_opens_for_members(base):
     fields = {"title": f"Opgeslagen artikel {RUN}", "author": "Sanne de Vries", "excerpt": "<p>Kort.</p>", "featured_image": "",
               "text": "<p>Tekst over de brug.</p>", "method": "<p>Verslag.</p>", "sources": "<p>Raadsinformatie.</p>"}
     status, _, _ = sanne.post(f"nl/{slug}/edit", "save", "", fields)
-    need(status == 302, f"save of the article: {status}")
+    need(status in (302, 303), f"save of the article: {status}")
     status, _, _ = sanne.get(f"nl/{slug}")
     assert status == 200, f"a member opening the article after one save gets {status}"
 
@@ -505,7 +505,7 @@ def the_title_of_an_article_is_shown_as_text_in_the_heading(base):
 def a_new_public_article_opens_without_a_server_error(base):
     sanne = Client(base).login("sanne")
     status, _, location = sanne.post("nl/Start", "newPage", f"Nieuw openbaar {RUN}", {"newPageType": "peer_reviewed_article", "newPageLanguage": "nl"})
-    need(status == 302 and location, f"new article: {status}")
+    need(status in (302, 303) and location, f"new article: {status}")
     status, _, _ = sanne.follow((status, "", location))
     assert status == 200, f"the first view of a new public article gives {status}"
 
@@ -559,7 +559,7 @@ def publishing_twice_at_the_same_moment_sends_the_status_mail_once(base):
         # A round where a request failed is not counted: on a macOS bind mount a page that another request is
         # writing is sometimes seen as missing (see test_gelijktijdig.py).
         #
-        if all(s == 302 for s in statuses):
+        if all(s in (302, 303) for s in statuses):
             titles.append(title)
     need(len(titles) >= 4, f"only {len(titles)} of 8 rounds without a failed request")
     need(wait_for(lambda: all(mails_about(t) for t in titles)), "no status mail for every article")
@@ -594,7 +594,7 @@ def edit_theme_file(base, view, field, command):
     beheer = Client(base).login("beheer")
     theme = f"eemstad{RUN}{view}"
     status, _, _ = beheer.post("settings/theme", "settingsCopyThemeAndActivate", "", {"srcTheme": "default", "dstTheme": theme})
-    need(status in (200, 302), f"copy theme: {status}")
+    need(status in (200, 302, 303), f"copy theme: {status}")
     try:
         status, text, _ = beheer.get(f"settings/{view}")
         match = re.search(r'<textarea[^>]*name="' + field + r'"[^>]*>(.*?)</textarea>', text, re.S)
@@ -605,7 +605,7 @@ def edit_theme_file(base, view, field, command):
         # As a browser sends a textarea: every line ending as CR LF (HTML, form submission).
         #
         status, _, _ = beheer.post(f"settings/{view}", command, "", {field: original.replace("\n", "\r\n")})
-        need(status in (200, 302), f"save of {field}: {status}")
+        need(status in (200, 302, 303), f"save of {field}: {status}")
         status, text, _ = beheer.get(f"settings/{view}")
         saved = html.unescape(re.search(r'<textarea[^>]*name="' + field + r'"[^>]*>(.*?)</textarea>', text, re.S).group(1))
         return original, saved

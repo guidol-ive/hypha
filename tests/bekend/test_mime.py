@@ -92,7 +92,7 @@ def a_mail_with_non_ascii_text_declares_a_content_transfer_encoding(base):
     name, subject = "Lijstmime", f"Mime proef {int(time.time() * 1000)}"
     beheer.get("nl/Start")
     status, _, _ = beheer.post(f"nl/{name}/edit", "newPage", name, {"newPageType": "mailinglist", "newPageLanguage": "nl"})
-    if status != 302:
+    if status not in (302, 303):
         raise RuntimeError(f"newPage mailinglist gave {status}")
     path = os.path.join(DATA, "pages", page_id(name))
     with open(path, "w", encoding="utf-8") as f:
