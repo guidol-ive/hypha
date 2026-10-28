@@ -15,7 +15,7 @@ export default async function (t) {
 				return sheet ? [...sheet.cssRules].map(r => r.selectorText || '') : null;
 			});
 			assert(selectors, 'hypha-core.css is not loaded');
-			for (const wanted of ['.hypha-icon', '.hypha-icon-remove', 'textarea', 'textarea.hypha-code', 'table.hypha-fit label', 'img.featured_image', 'a:has(> .hypha-icon)', '.login-wrapper label[for="searchLogin"]'])
+			for (const wanted of ['.hypha-icon', '.hypha-icon-remove', 'textarea', 'textarea.hypha-code', 'table.hypha-fit label', 'img.featured_image', 'a:has(> .hypha-icon)', '#popup .login-wrapper label[for="searchLogin"]'])
 				assert(selectors.includes(wanted), `the browser does not know the rule ${wanted}: ${selectors.join(' | ')}`);
 		} finally {
 			await page.close();
