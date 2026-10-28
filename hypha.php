@@ -69,7 +69,10 @@
 		if ($dir == 'system/datatypes') return true;
 		if ($dir == 'system/languages') return true;
 		if ($dir == 'system/php-dom-wrapper') return true;
-		if ($dir == 'system/wymeditor') return true;
+		if ($dir == 'system/wymeditor' || strpos($dir, 'system/wymeditor/') === 0) return true;
+		if ($dir == 'system/assets' || $dir == 'system/bowser' || $dir == 'system/macros') return true;
+		// The default theme, which hypha.html and hypha.css of a new site point to.
+		if ($dir == 'data/themes/default' || strpos($dir, 'data/themes/default/') === 0) return true;
 		// The Markdown editor (issue #520): its renderer, its browser code and the libraries of both.
 		if ($dir == 'system/core/markdown') return true;
 		if ($dir == 'system/mdeditor' || str_starts_with($dir, 'system/mdeditor/')) return true;
@@ -89,7 +92,7 @@
 		if ($handle = opendir($dir)) {
 			while (false !== ($file = readdir($handle))) {
 				if ($file != "." && $file != "..") {
-					// A folder first: a subfolder of an allowed folder (system/mdeditor/vendor) is not a file.
+					// A folder first: a subfolder of an allowed folder (system/wymeditor/skins, system/mdeditor/vendor) is not a file.
 					if (is_dir($dir.'/'.$file)) $index = array_merge($index, index($dir.'/'.$file));
 					elseif (isAllowedFile($dir.'/'.$file)) $index[preg_replace("/^\.\//i","",$dir.'/'.$file)] = filemtime($dir.'/'.$file);
 				}
@@ -221,6 +224,7 @@
 			require_once('system/core/crypto.php');
 
 			// create data folders
+			if (!file_exists('data')) mkdir('data', 0755);
 			mkdir('data/pages', 0755);
 			mkdir('data/images', 0755);
 
