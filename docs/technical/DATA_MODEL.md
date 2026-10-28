@@ -6,7 +6,7 @@ Everything a site holds is under `data/`. Copying this folder copies the site.
 |---|---|
 | `data/hypha.xml` | Site settings, users, page list, tags, menu, header, footer, digest queue |
 | `data/pages/<id>` | One XML file per page: all languages and all versions, and for articles also discussions and approvals |
-| `data/images/` | Images uploaded through the editor or forms; `images/org/` keeps originals larger than 1120x800; thumbnails are made on demand |
+| `data/images/` | Images uploaded through the editor or forms; `images/org/` keeps originals larger than 1120x800; thumbnails are made on demand, and so are the scaled copies `<name>_800w.jpg` (teasers) and `<name>_1200w.jpg` (photo above a Markdown article) next to the image (#672) |
 | `data/files/` | Other uploaded files |
 | `data/themes/<name>/` | `hypha.html` (template), `hypha.css`, and theme assets |
 | `data/digest` | Queue of changes for the next digest |

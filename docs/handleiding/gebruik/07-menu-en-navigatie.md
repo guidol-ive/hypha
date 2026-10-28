@@ -1,6 +1,6 @@
 ---
 title: "Menu en navigatie"
-revision: 3
+revision: 4
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -90,6 +90,8 @@ Een pagina vertalen staat in [Een tekstpagina maken en bewerken](03-tekstpagina.
 
 Rechtsboven staat de knop **index** (het lijstje). Die toont de **Pagina-index**: alle pagina's van de site in de huidige taal. Een bezoeker ziet alleen openbare pagina's; een ingelogde gebruiker ziet ook de privépagina's. Via de index vind je ook pagina's die niet in het menu staan.
 
+Kies je op de Pagina-index **nieuwe pagina**, dan is de paginanaam nog leeg. Zie [Een tekstpagina maken en bewerken](03-tekstpagina.md#een-nieuwe-tekstpagina-maken).
+
 ## Tags
 
 Onder elke pagina staan haar **tags**. Klik op een tag voor een lijst van alle pagina's met die tag. Zie [Beeld, links en tags](06-beeld-links-tags.md#tags).
@@ -99,7 +101,7 @@ Onder elke pagina staan haar **tags**. Klik op een tag voor een lijst van alle p
 ![Het scherm site-elementen met titel, kop en voet](../afbeeldingen/instellingen-elementen.png)
 
 1. Klik op **instellingen** en kies **site elementen**.
-2. Vul de **titel** van de site in. Die staat in de titelbalk van de browser.
+2. Vul de **titel** van de site in. Die staat in de titelbalk van de browser, en in de voorvertoning als iemand een link deelt. De titel is gewone tekst, zonder opmaak.
 3. Vul de **header** (de kop) en de **footer** (de voet) in, bijvoorbeeld het logo, het adres van de redactie en een link naar de privacyverklaring.
 4. Kies **opslaan**.
 

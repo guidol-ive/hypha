@@ -54,6 +54,8 @@ The repository's `.htaccess` needs mod_rewrite and `AllowOverride FileInfo`:
 - every request that is not an existing file or folder goes to `index.php`;
 - `ai/`, `docs/`, `tests/` and the Markdown files in the root (including `README.md`) are refused
   with 403 (added 2026-10-26).
+- with mod_headers loaded, it sends the security headers of
+  [OPERATIONS.md](OPERATIONS.md#security-headers); without mod_headers they are skipped.
 
 A virtual host, as used for the local test set-up of De Stadsbron:
 

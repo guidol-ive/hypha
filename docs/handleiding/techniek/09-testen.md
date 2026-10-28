@@ -1,6 +1,6 @@
 ---
 title: "Testen als ontwikkelaar"
-revision: 2
+revision: 3
 date_created: 2026-10-28
 date_last_review:
 ---
@@ -115,6 +115,7 @@ PORT=8186 NAME=hypha-bekend-86 sh tests/bekend.sh 8.6-rc
 ## Veelvoorkomende problemen
 
 1. **Een test faalt alleen soms bij veel verzoeken tegelijk, met `Cannot lock file` of `Failed to open stream`.** Op macOS ziet een container een bestand dat net wordt vervangen soms heel even niet. Dat ligt aan de bind mount van Docker Desktop, niet aan Hypha. Deze melding staat daarom in `tests/bekend/meldingen.ndjson`.
-2. **Na een wijziging aan `docs/container/Containerfile` gebruiken de tests nog het oude image.** De tests bouwen het image alleen als het ontbreekt. Verwijder het met `docker rmi hypha-md:php8.2` (of de versie die je test).
-3. **De browsertests vinden Chrome niet.** Zet het pad in `CHROME`, bijvoorbeeld `CHROME=/usr/bin/google-chrome`.
-4. **Een poort is bezet.** De gewone tests gebruiken 8152 tot en met 8155, de gouden dataset 8172 tot en met 8175, de bekende fouten 8182 tot en met 8185. Stop de container die op die poort draait, of kies bij `tests/bekend.sh` een andere met `PORT`.
+2. **Een test wijzigt een bestand dat de site leest, zoals `hypha.xml`. De site ziet dan een afgekapt bestand.** Docker Desktop toont de container een gewijzigd bestand soms even later, met de oude lengte. Schrijf zo'n bestand daarom met `write_same_length()` uit `tests/integratie/hypha.py`. Die geeft de nieuwe inhoud precies de lengte van de oude.
+3. **Na een wijziging aan `docs/container/Containerfile` gebruiken de tests nog het oude image.** De tests bouwen het image alleen als het ontbreekt. Verwijder het met `docker rmi hypha-md:php8.2` (of de versie die je test).
+4. **De browsertests vinden Chrome niet.** Zet het pad in `CHROME`, bijvoorbeeld `CHROME=/usr/bin/google-chrome`.
+5. **Een poort is bezet.** De gewone tests gebruiken 8152 tot en met 8155, de gouden dataset 8172 tot en met 8175, de bekende fouten 8182 tot en met 8185. Stop de container die op die poort draait, of kies bij `tests/bekend.sh` een andere met `PORT`.

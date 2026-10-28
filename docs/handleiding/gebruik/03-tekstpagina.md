@@ -1,6 +1,6 @@
 ---
 title: "Een tekstpagina maken en bewerken"
-revision: 3
+revision: 4
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -32,14 +32,16 @@ flowchart LR
 
 ## Een nieuwe tekstpagina maken
 
-![Het venster nieuwe pagina met het type tekstpagina en de keuze hoe je schrijft](../afbeeldingen/nieuwe-tekstpagina.png)
+![Het venster Maak Nieuwe Pagina met de soort webpagina, de paginanaam en de taal](../afbeeldingen/nieuwe-tekstpagina.png)
 
-1. Klik rechtsboven op **nieuwe pagina**.
-2. Kies als paginatype **webpagina**.
-3. Typ de **paginanaam**, bijvoorbeeld `Over ons`. De naam is ook de titel van de pagina.
-4. Kies de **taal** van de pagina.
-5. Vink **privepagina** aan als alleen ingelogde gebruikers de pagina mogen zien.
-6. Kies **maken**. De pagina opent meteen om te bewerken.
+1. Klik rechtsboven op **nieuwe pagina**. Het venster **Maak Nieuwe Pagina** opent.
+2. Kies bij **Soort** de soort **webpagina**. De soorten staan op alfabet.
+3. Typ bij **Paginanaam** de naam, bijvoorbeeld `Over ons`. De naam is ook de titel van de pagina.
+4. Kies bij **Taal** de taal van de pagina.
+5. Vink **Privépagina** aan als alleen ingelogde gebruikers de pagina mogen zien.
+6. Kies **maken**. De pagina opent meteen om te bewerken. Met **annuleren**, links van **maken**, sluit je het venster.
+
+Open je een adres van een pagina die nog niet bestaat? Kies dan **maken**: haar naam staat al ingevuld. Op de **Pagina-index** is de paginanaam leeg.
 
 Het webadres volgt uit de paginanaam. Spaties worden liggende streepjes: *Over ons* krijgt het adres `/nl/Over_ons`. Leestekens als `?` en `!` kunnen niet in een paginanaam.
 
@@ -57,6 +59,8 @@ In de nieuwe tekst-editor:
 3. Gebruik de knoppen voor een tussenkop, vet, een lijst, een citaat of een kader. Typ aan het begin van een lege regel een **/** voor alles wat je kunt invoegen: tabel, beeld, diagram, formule, code.
 4. Een foto voeg je toe met **Beeld…**; een link naar een andere pagina met `[[`. Zie [Beeld, links en tags](06-beeld-links-tags.md).
 5. Kies **opslaan**.
+
+De eerste zinnen van de tekst gebruikt Hypha als beschrijving voor zoekmachines, en voor de voorvertoning als iemand een link naar de pagina deelt. Begin daarom met een zin die zegt waar de pagina over gaat.
 
 Hoe de editor verder werkt, met Opmaak en Markdown, het voorbeeld en plakken uit Word, staat in [Een artikel schrijven](04-artikel-schrijven.md). Voor een tekstpagina werkt het hetzelfde.
 

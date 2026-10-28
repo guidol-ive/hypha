@@ -1,6 +1,6 @@
 ---
 title: "Thema's"
-revision: 3
+revision: 4
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -39,6 +39,8 @@ Hypha laadt `hypha.html` bij elk verzoek en vult de elementen met deze `id` in:
 | `popup` | vensters, zoals inloggen en nieuwe pagina |
 
 Daarnaast vult Hypha elk element met de klasse `hyphaCommands` met de knoppen rechtsboven (index, inloggen, nieuwe pagina, instellingen).
+
+De pictogrammen van die knoppen tekent Hypha zelf, met `system/assets/hypha-core.css`. Een thema heeft er dus geen lettertype met pictogrammen (*icon font*) voor nodig. Ze krijgen de kleur van de tekst. Index, inloggen en instellingen zijn gewone links; ze werken ook zonder JavaScript.
 
 > [!warning] Houd de id's
 > Haal geen van deze elementen weg uit het sjabloon. Zonder `main` of `popup` werkt de site niet goed meer.

@@ -27,7 +27,7 @@ Every section separates two things:
 | Language list | Translations of the current page | Only on text pages and the page index |
 | Index and tags per language | `index/<language>`, `tag/<language>/<label>` | Index works; tag index lists pages in the default language (#310) |
 | Mail and digest | In the recipient's language (#181) | In the language of whoever triggers it; some texts in English (#607) |
-| Search engines | (not designed) | No `<html lang>` (#521), no `hreflang` (#606), no `Vary` (#593), no canonical (#521) |
+| Search engines | (not designed) | `<html lang>` and a meta description since #662 and #663 (#521); no `hreflang` (#606), no `Vary` (#593), no canonical (#521) |
 
 ## 1. Two languages
 
@@ -58,7 +58,8 @@ Every section separates two things:
    content language. **Actual** consequences: `index/en` shows English page names under a Dutch
    interface with body class `lang_nl`, and its index button points to `index/nl`; the tag index
    renders every page in the default language (#310). The *new page* dialog on a system page
-   proposes the default language (#363).
+   proposes the default language (#363). On `index/<language>` it no longer takes the language
+   code for the name of the new page (#656).
 
 ## 3. How the interface language is chosen
 
@@ -129,8 +130,8 @@ Every section separates two things:
    pages, the translate button, the version list and the *new page* dialog, which proposes the
    current content language.
 3. **Search engine.** Exactly what an anonymous visitor without `Accept-Language` gets. **Actual**:
-   there is nothing that tells it the language or the relation between translations: no
-   `<html lang>` (#521), no `Content-Language`, no `<link rel="alternate" hreflang>` (#606,
+   only `<html lang>` gives the language of the content (#662, for #521); there is nothing that
+   tells it the relation between translations: no `Content-Language`, no `<link rel="alternate" hreflang>` (#606,
    fix #610), no canonical URL (#521), no `Vary: Accept-Language` (#593), no sitemap (#375) or
    robots.txt (#523; today `/robots.txt` is the home page as HTML, #604). The `<title>` is the site
    title on every page (#521). Body classes `lang_<code>` exist for themes, not for crawlers.
@@ -205,7 +206,8 @@ Every section separates two things:
 Existing issues that cover multilingual behaviour:
 
 1. #593 (fix #598): `Accept-Language` quality values and `Vary`.
-2. #521: `<html lang>`, canonical URL, title, meta description.
+2. #521: canonical URL and title; `<html lang>` (#662) and the meta description with Open Graph
+   and Twitter Card tags (#663) are done.
 3. #310: content language of system pages, tag index, `pagelist`.
 4. #363: *new page* from a system page proposes the default language.
 5. #181: mail in the language of the sender, not the recipient.

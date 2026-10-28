@@ -138,3 +138,26 @@ Until the findings of the security review are fixed (NS-GLE-2026W44-hypha-002 to
 - Give the web server user write access to `data/` only.
 - Keep `DEBUG` absent on production.
 - Add rate limiting for `POST` requests at the proxy if spam or login guessing appears.
+
+### Security headers
+
+`.htaccess` sends these headers when mod_headers is loaded, for pages and for the files that
+`index.php` serves (#432, PR #489, #671). [`hypha-vhost.conf`](../container/hypha-vhost.conf)
+sets the same; `Header always set` replaces rather than duplicates, so both may be active.
+
+| Header | Value | Why |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | The browser keeps to the declared type of an upload. |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Other sites see the origin, not the path of a private page. |
+| `X-Frame-Options` | `SAMEORIGIN` | No framing by other sites (clickjacking), for old browsers. |
+| `Cross-Origin-Opener-Policy` | `same-origin` | Hypha opens no window of another site that needs a reference back. |
+| `Content-Security-Policy` | `frame-ancestors 'self'; object-src 'none'` | No framing by other sites, no plugins. |
+
+The Content-Security-Policy is a first step that Hypha does not break:
+
+- No `script-src` and no Trusted Types yet: Hypha and its themes use inline scripts and `onclick`
+  handlers. They have to move to files first.
+- No `base-uri` and no `form-action`: behind a proxy that hides https, the `<base href>` is
+  `http://` (#398; PR #477 makes Hypha build `https://` URLs). `base-uri 'self'` and
+  `form-action 'self'` would then block that base and every form.
+- `Strict-Transport-Security` belongs where TLS ends: see [REVERSE_PROXY.md](REVERSE_PROXY.md).

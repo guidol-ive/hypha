@@ -18,15 +18,19 @@ invitee choose a user name and password. A user can resend the invitation.
 
 | Part | Address | What |
 |---|---|---|
-| Users | `/settings` | Make a user privileged or standard, remove (becomes no user), make active again |
+| Users | `/settings` | Per user a pencil, which opens the account form with the field **Rights** (privileged user, standard user, no user), and a bin, which makes the user *no user*. Choosing standard user in **Rights** makes a former user active again. The last privileged user has no bin and cannot be demoted |
 | Hypha settings | `/settings/hypha` | Default content language, default interface language, default page (the home page), default type for new pages, system e-mail address (sender and reply-to of system mail), digest interval (days, hours, minutes) |
-| Site elements | `/settings/elements` | Title, header and footer |
+| Site elements | `/settings/elements` | Title (plain text, also in the browser tab and the Open Graph tags), header and footer |
 | Menu | `/settings/menu` | Links in the menu |
 | Theme | `/settings/theme` | Choose a theme, preview it, copy a theme to make an own one |
 | Markup | `/settings/markup` | The HTML template of the theme |
 | Styles | `/settings/styles` | The style sheet of the theme |
 | System tools | `hypha.php?maintenance` | Separate maintenance script with its own login, the system user (see below) |
 | Text editor | `/settings/editor` | Sections (rubrieken), the editorial statute, embedded content and interactive blocks (level 2) on or off per role, and the allowed hosts, one per line; an empty field gives the default list. Stored as the element `mdeditor` in `data/hypha.xml`, see [`../technical/DATA_MODEL.md`](../technical/DATA_MODEL.md#hypha-xml) |
+
+The text areas of Markup, Styles and Text editor fit the column of the theme (#660).
+
+In every form the cancel button comes first and the main action (save, send) last.
 
 ## System tools (`hypha.php`)
 

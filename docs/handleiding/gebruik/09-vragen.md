@@ -1,6 +1,6 @@
 ---
 title: "Veelgestelde vragen"
-revision: 2
+revision: 3
 date_created: 2026-10-27
 date_last_review:
 ---
@@ -15,6 +15,7 @@ Deze pagina beantwoordt vragen die gebruikers vaak stellen, en legt foutmeldinge
 2. **Ik ben mijn wachtwoord vergeten.** Klik op inloggen en daarna op **heraanmelden**. Vul je gebruikersnaam of e-mailadres in. Je krijgt een e-mail met een link om een nieuw wachtwoord te kiezen.
 3. **Ik kan niet meer inloggen, terwijl mijn wachtwoord klopt.** Misschien is je account gedeactiveerd: je bent dan *geen gebruiker* meer. Alleen een geprivilegieerde gebruiker kan het weer actief maken.
 4. **Kan ik mijn gebruikersnaam wijzigen?** Ja, bij **instellingen**, **bewerken**. Gebruik alleen letters en cijfers.
+5. **Werkt de site zonder JavaScript?** Grotendeels. Lezen, inloggen en de meeste knoppen werken ook zonder. Voor **heraanmelden**, het venster **nieuwe pagina**, de editor en knoppen die eerst om een bevestiging vragen, zoals verwijderen, is JavaScript nodig.
 
 ## Pagina's
 
@@ -37,6 +38,7 @@ Deze pagina beantwoordt vragen die gebruikers vaak stellen, en legt foutmeldinge
 | Melding | Wat het betekent | Wat je doet |
 |---|---|---|
 | inloggen mislukt | de gebruikersnaam of het wachtwoord klopt niet | typ ze opnieuw, of kies **heraanmelden** |
+| Fout: geen gebruiker of e-mailadres gevonden met die naam | bij **heraanmelden** past de naam of het e-mailadres bij geen gebruiker | controleer wat je typte, of vraag een geprivilegieerde gebruiker |
 | private pagina, log in om hem te kunnen zien | de pagina is alleen voor ingelogde gebruikers | log in |
 | Deze pagina bestaat niet | er is geen pagina met dit adres in deze taal | controleer het adres, of zoek de pagina in de index |
 | pagina bestaat al | er is al een pagina met deze naam in deze taal | kies een andere naam |

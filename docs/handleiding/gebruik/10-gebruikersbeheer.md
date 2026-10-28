@@ -1,6 +1,6 @@
 ---
 title: "Gebruikersbeheer"
-revision: 2
+revision: 3
 date_created: 2026-10-28
 date_last_review:
 ---
@@ -32,6 +32,8 @@ Bij de installatie maak je de systeemgebruiker en de **eerste geprivilegieerde g
 
 Een geprivilegieerde gebruiker beheert de andere gebruikers via **Instellingen**, in de lijst van gebruikers. Per gebruiker staan daar twee pictogrammen:
 
+![De lijst van gebruikers, met per gebruiker een potlood en een prullenbak](../afbeeldingen/gebruikers-lijst.png)
+
 | Pictogram | Wat er gebeurt |
 |---|---|
 | **potlood** | het formulier van de gebruiker opent: naam, e-mailadres, taal, wachtwoord en **Rechten** |
@@ -39,11 +41,15 @@ Een geprivilegieerde gebruiker beheert de andere gebruikers via **Instellingen**
 
 Bij een genodigde staat ook **herinneren**: de genodigde krijgt de uitnodiging nog een keer.
 
+![Het formulier van een gebruiker, met onderaan het veld Rechten](../afbeeldingen/gebruiker-bewerken.png)
+
 In het formulier achter het potlood kies je bij **Rechten**:
 
 1. **Geprivilegieerde gebruiker**: de gebruiker krijgt alle rechten;
 2. **Standaardgebruiker**: de gewone rechten. Zo maak je ook iemand die *geen gebruiker* was weer actief;
 3. **Geen gebruiker**: hetzelfde als de prullenbak.
+
+Kies daarna **opslaan**. Met **annuleren** ga je terug zonder iets te wijzigen.
 
 De laatste geprivilegieerde gebruiker kan geen standaardgebruiker of geen gebruiker worden: een site heeft er altijd minstens één. Een standaardgebruiker ziet het veld **Rechten** niet.
 
@@ -51,9 +57,11 @@ Hoe je iemand uitnodigt, staat in [Inloggen en je account](02-inloggen-en-accoun
 
 ## Wachtwoord vergeten
 
+![Het venster heraanmelden](../afbeeldingen/wachtwoord-vergeten.png)
+
 Wie zijn wachtwoord kwijt is, kiest in het venster om in te loggen **heraanmelden** en vult zijn gebruikersnaam of e-mailadres in. Hypha stuurt dan een e-mail met een link om een nieuw wachtwoord te kiezen. Dat werkt alleen als de site e-mail kan versturen.
 
-Een geprivilegieerde gebruiker kan ook het wachtwoord van een ander wijzigen met **bewerken**.
+Een geprivilegieerde gebruiker kan ook het wachtwoord van een ander wijzigen, met het **potlood** in de lijst van gebruikers.
 
 ## Met de hand een wachtwoord instellen in hypha.xml
 

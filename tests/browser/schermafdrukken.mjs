@@ -83,6 +83,10 @@ console.log('Screenshots in ' + path.relative(root, out) + ':');
 	await page.waitForSelector('#loginUsername', { state: 'visible' });
 	await page.fill('#loginUsername', 'sanne');
 	await shot(page, 'inloggen');
+	await page.click('#popup .forgot-password a');
+	await page.waitForSelector('#searchLogin', { state: 'visible' });
+	await page.fill('#searchLogin', 'sanne');
+	await shot(page, 'wachtwoord-vergeten');
 	await context.close();
 }
 {
@@ -92,6 +96,13 @@ console.log('Screenshots in ' + path.relative(root, out) + ':');
 		await page.goto(base + address);
 		await shot(page, name);
 	}
+	//
+	// Gebruikersbeheer: the list with pencil and bin, and the form of a user with the field Rechten.
+	//
+	await page.goto(base + 'settings');
+	await shot(page, 'gebruikers-lijst', { element: 'table.user-list' });
+	await page.goto(base + 'settings/user/sanne');
+	await shot(page, 'gebruiker-bewerken');
 	await page.goto(base + 'nl/Start/edit');
 	await page.waitForTimeout(1500);
 	await shot(page, 'tekstpagina-wymeditor');
