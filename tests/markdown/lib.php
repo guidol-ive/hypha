@@ -32,7 +32,7 @@
 				catch (HyphaTestFailure $e) {
 					if ($issue) {
 						$known++;
-						printf("known #%-5d %s: %s\n", $issue, $name, mb_substr($e->getMessage(), 0, 120));
+						printf("known #%-5d %s: %s\n", $issue, $name, hypha_testCut($e->getMessage(), 120));
 						continue;
 					}
 					$failed++;
@@ -50,6 +50,13 @@
 			printf("\nPHP %s: %d tests, %d passed, %d failed%s, %d assertions, %.1f s\n", PHP_VERSION, $passed + $failed + $known + count($fixed), $passed, $failed, $extra, self::$assertions, microtime(true) - $started);
 			return $failed || $fixed ? 1 : 0;
 		}
+	}
+
+	//
+	// The start of a text for a message; without mbstring (as in the PHP 8.6 release candidate CLI image) by bytes.
+	//
+	function hypha_testCut(string $text, int $length): string {
+		return function_exists('mb_substr') ? mb_substr($text, 0, $length) : substr($text, 0, $length);
 	}
 
 	function test(string $name, callable $callable): void {
@@ -78,12 +85,12 @@
 
 	function contains(string $needle, string $haystack, string $message = ''): void {
 		HyphaTest::$assertions++;
-		if (strpos($haystack, $needle) === false) throw new HyphaTestFailure(($message ? $message . ': ' : '') . 'missing ' . var_export($needle, true) . ' in ' . var_export(mb_substr($haystack, 0, 600), true));
+		if (strpos($haystack, $needle) === false) throw new HyphaTestFailure(($message ? $message . ': ' : '') . 'missing ' . var_export($needle, true) . ' in ' . var_export(hypha_testCut($haystack, 600), true));
 	}
 
 	function lacks(string $needle, string $haystack, string $message = ''): void {
 		HyphaTest::$assertions++;
-		if (stripos($haystack, $needle) !== false) throw new HyphaTestFailure(($message ? $message . ': ' : '') . 'unexpected ' . var_export($needle, true) . ' in ' . var_export(mb_substr($haystack, 0, 600), true));
+		if (stripos($haystack, $needle) !== false) throw new HyphaTestFailure(($message ? $message . ': ' : '') . 'unexpected ' . var_export($needle, true) . ' in ' . var_export(hypha_testCut($haystack, 600), true));
 	}
 
 	function throws(callable $callable, string $class = Throwable::class): void {

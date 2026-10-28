@@ -46,4 +46,4 @@ RUN rm -rf /var/www/html/.git /var/www/html/ai /var/www/html/docs \
 VOLUME ["/var/www/html/data"]
 EXPOSE 8080
 USER www-data
-CMD ["sh", "-c", "if [ -f /usr/local/etc/php/conf.d/zzz-hypha-zts.ini ]; then touch /tmp/php-error.log && tail -n 0 -F /tmp/php-error.log >&2 & fi; exec apache2-foreground"]
+CMD ["sh", "-c", "if [ -f /usr/local/etc/php/conf.d/zzz-hypha-zts.ini ]; then touch /tmp/php-error.log && tail -n 0 -s 0.1 -F /tmp/php-error.log >&2 & fi; exec apache2-foreground"]
