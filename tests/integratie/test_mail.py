@@ -146,7 +146,7 @@ def the_third_approval_mails_every_member_the_new_status(base):
     for name in ("lotte", "joris"):
         command(Client(base).login(name), path, "approve", {"md_statute[]": STATUTE})
     messages = mails_after(lambda: command(Client(base).login("beheer"), path, "approve", {"md_statute[]": STATUTE}), len(members()))
-    check(messages, base, path, TITLE, ["goedgekeurd"])
+    check(messages, base, path, TITLE, ["Goedgekeurd"])
 
 
 @test
@@ -170,7 +170,7 @@ def review_again_and_publish_mails_every_member(base):
     for name in ("lotte", "joris", "beheer"):
         command(Client(base).login(name), path, "approve", {"md_statute[]": STATUTE})
     messages = mails_after(lambda: command(sanne, path, "status_change_published"), len(members()))
-    check(messages, base, path, TITLE, ["gepubliceerd"])
+    check(messages, base, path, TITLE, ["Gepubliceerd"])
 
 
 @test
@@ -208,6 +208,34 @@ def the_digest_counts_the_page_views_of_the_old_counter_and_the_log(base):
     body = message.get_body(("html", "plain")).get_content()
     assert re.search(r"\b6 page-visits|\b6 [a-z]", body), body[:400]
     assert open(os.path.join(WORK, "data/hypha.stats.log")).read().strip() == "", "the reported lines stay in the log"
+
+@test
+def a_failed_digest_names_the_addresses_with_a_space_after_each_comma(base):
+    # The addresses were joined with ',' only, one long word that ran out of the notification box.
+    Client(base).get("nl/Start")
+    path = os.path.join(WORK, "data/hypha.xml")
+    text = open(path, "rb").read()
+    root = ET.fromstring(text)
+    old = root.get("lastDigestTime")
+    last = str(int(time.time()) - int(root.get("digestInterval")) - 600)
+    with open(os.path.join(WORK, "data/digest"), "w") as f:
+        f.write("<p>Verzonnen wijziging voor de samenvatting.</p>")
+    # Same length: an address without @ is not valid, so sendMail() reports it without trying.
+    broken = text.replace(f'lastDigestTime="{old}"'.encode(), f'lastDigestTime="{last}"'.encode(), 1)
+    for name in ("sanne", "ahmed"):
+        broken = broken.replace(f'"{name}@eemstad.example"'.encode(), f'"{name}_eemstad.example"'.encode(), 1)
+    write_same_length(path, broken)
+    try:
+        _, page, _ = Client(base).get("nl/Start")
+    finally:
+        fixed = open(path, "rb").read()
+        for name in ("sanne", "ahmed"):
+            fixed = fixed.replace(f'"{name}_eemstad.example"'.encode(), f'"{name}@eemstad.example"'.encode(), 1)
+        write_same_length(path, fixed)
+    assert "sanne_eemstad.example, ahmed_eemstad.example" in page, re.findall(r"[a-z]+_eemstad\.example.{0,40}", page)
+    _, css, _ = Client(base).get("system/assets/hypha-core.css")
+    assert re.search(r"#hyphaNotify div\s*\{[^}]*overflow-wrap:\s*anywhere", css), "a long notification does not wrap"
+
 
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))

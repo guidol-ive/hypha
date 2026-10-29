@@ -18,13 +18,13 @@ def order(text, first, last):
 @test
 def editing_a_text_page_shows_cancel_before_save(base):
     _, text, _ = Client(base).login("beheer").get("nl/Start/edit")
-    assert order(text, "annuleren", "opslaan"), "save comes before cancel"
+    assert order(text, "Annuleren", "Opslaan"), "save comes before cancel"
 
 
 @test
 def the_settings_show_cancel_before_save(base):
     _, text, _ = Client(base).login("beheer").get("settings/hypha")
-    assert order(text, "annuleren", "opslaan"), "save comes before cancel"
+    assert order(text, "Annuleren", "Opslaan"), "save comes before cancel"
 
 
 if __name__ == "__main__":

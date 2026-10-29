@@ -208,7 +208,7 @@ def author_cannot_approve_br94(base):
     command(sanne, f"nl/{SLUG}", "approve", {"md_statute[]": STATUTE})
     assert len(article_xml(SLUG).find("approves")) == 0
     _, text, _ = sanne.get(f"nl/{SLUG}")
-    assert "geef goedkeuring" not in text
+    assert "Geef goedkeuring" not in text
 
 
 @test
@@ -223,7 +223,7 @@ def approve_needs_every_point_of_the_statute_br10(base):
 def approve_with_statute_and_comment_br67(base):
     ahmed = STATE["ahmed"]
     _, text, _ = ahmed.get(f"nl/{SLUG}")
-    assert "mdeApprove" in text and "geef goedkeuring" in text
+    assert "mdeApprove" in text and "Geef goedkeuring" in text
     command(ahmed, f"nl/{SLUG}", "approve", {"md_statute[]": STATUTE, "md_comment": "Goed onderbouwd."})
     root = article_xml(SLUG)
     approve = root.find("approves/approve")
