@@ -366,7 +366,11 @@ class peer_reviewed_article extends HyphaDatatypePage {
 				$commentCountText = __('art-public-comment-count-plural', ['count' => $commentCount]);
 			}
 
-			$this->html->getElementById('pagename')->before('<div class="number_of_comments">'.$commentCountText.'</div>');
+			// DOM before() inserts a string as text, so build the element.
+			$countDiv = $this->html->createElement('div');
+			$countDiv->setAttribute('class', 'number_of_comments');
+			$countDiv->setText($commentCountText);
+			$this->html->getElementById('pagename')->before($countDiv);
 		}
 
 		if (self::STATUS_PUBLISHED === $status && !$this->privateFlag) {
