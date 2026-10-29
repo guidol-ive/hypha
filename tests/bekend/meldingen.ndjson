@@ -19,3 +19,4 @@
 {"message": "Failed to open stream: No such file or directory in /var/www/html/system/core/database.php", "issue": null, "reason": "test setup: macOS bind mount, rename() briefly shows no file (docs/technical/TESTING.md)"}
 {"message": "open failed: fopen(data/", "issue": null, "reason": "test setup: macOS bind mount, rename() briefly shows no file (docs/technical/TESTING.md)"}
 {"message": "Increment on non-numeric string is deprecated, use str_increment() instead in /var/www/html/system/datatypes/index.php", "issue": 514}
+{"message": "DOMDocument::loadHTML(): Tag macro invalid in Entity", "issue": null, "reason": "libxml does not know the <macro> tag of Hypha; seen on every page with a macro (test_rss.py, #128), the same as Tag editor invalid"}
