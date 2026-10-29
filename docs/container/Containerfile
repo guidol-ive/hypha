@@ -24,6 +24,12 @@ RUN apt-get update \
  && docker-php-ext-install -j"$(nproc)" gd \
  && rm -rf /var/lib/apt/lists/*
 
+# APCu holds the cache of anonymous page views and site data (system/core/pagecache.php,
+# PlanBCode/hypha#411). Without it Hypha works, but renders every page again.
+RUN pecl install apcu \
+ && docker-php-ext-enable apcu \
+ && rm -rf /tmp/pear
+
 # mod_rewrite is required: .htaccess sends every request through index.php.
 RUN a2enmod rewrite headers remoteip
 
