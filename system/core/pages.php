@@ -641,15 +641,10 @@ EOF;
 		$title = $pagename ? trim($clean($pagename->textContent), ' *') : '';
 		if ($title === '') $title = $siteTitle;
 		$text = '';
-		if ($hyphaPage instanceof peer_reviewed_article && $hyphaPage->getExcerpt()) $text = $clean($hyphaPage->getExcerpt()->textContent);
+		if ($hyphaPage instanceof peer_reviewed_article && $hyphaPage->getExcerpt()) $text = hypha_plainText($hyphaPage->getExcerpt());
 		if ($text === '') {
 			$main = $doc->findXPath('//*[@id="main"]')->item(0);
-			if ($main) {
-				$copy = $main->cloneNode(true);
-				foreach (iterator_to_array($copy->getElementsByTagName('script')) as $script) $script->parentNode->removeChild($script);
-				foreach (iterator_to_array($copy->getElementsByTagName('style')) as $style) $style->parentNode->removeChild($style);
-				$text = $clean($copy->textContent);
-			}
+			if ($main) $text = hypha_plainText($main);
 		}
 		// The page index is a list of names: its title says more.
 		if ($request->getSystemPage() == HyphaRequest::HYPHA_SYSTEM_PAGE_INDEX) $text = '';
@@ -752,7 +747,9 @@ EOF;
 		while they load, and let them load when they come into view
 		(#681). The size of an image in data/images/ comes from the file.
 		The logo in the header and the first image after it load at once:
-		they are in view. Attributes that are set already are kept.
+		they are in view, also when a datatype made that image lazy, such
+		as the featured image of the first teaser in a list (#698). Other
+		attributes that are set already are kept.
 
 		Parameters:
 		element - A DomWrap\Element to process
@@ -763,6 +760,7 @@ EOF;
 		foreach ($element->findXPath(".//img") as $img) {
 			$inHeader = $img->findXPath("ancestor::*[@id='header']")->length > 0;
 			if (!$inHeader && !$first && !$img->hasAttribute('loading')) $img->setAttribute('loading', 'lazy');
+			if (!$inHeader && $first && $img->getAttribute('loading') === 'lazy') $img->removeAttribute('loading');
 			if (!$inHeader) $first = false;
 			if (!$img->hasAttribute('decoding')) $img->setAttribute('decoding', 'async');
 			if ($img->hasAttribute('width') || $img->hasAttribute('height')) continue;

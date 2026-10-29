@@ -200,6 +200,12 @@ class peer_reviewed_article extends HyphaDatatypePage {
 		$article = $this->xml->findOneXPath(self::FIELD_NAME_ARTICLE);
 		$this->appendAuthorAndTimestamp($container, $article);
 		$this->renderExcerptBody($container);
+
+		// The tag index and the page list put the teaser in a link, and
+		// a link inside a link is invalid HTML, so a link of the excerpt
+		// keeps only its content (#695).
+		foreach (iterator_to_array($container->findXPath('.//a')) as $link)
+			$link->replaceWith(...iterator_to_array($link->childNodes));
 	}
 
 	public function renderExcerptBody(HyphaDomElement $container) {
@@ -704,7 +710,7 @@ class peer_reviewed_article extends HyphaDatatypePage {
 			'mainEntityOfPage' => $this->constructFullPath($this->pagename),
 			'inLanguage' => $this->language,
 		];
-		$excerpt = trim(preg_replace('/\s+/', ' ', $this->getExcerpt()->textContent));
+		$excerpt = hypha_plainText($this->getExcerpt());
 		if ($excerpt)
 			$data['description'] = $excerpt;
 		$featuredImageSrc = $this->xml->documentElement->getOrCreate(self::FIELD_NAME_FEATURED_IMAGE)->getText();
@@ -1745,7 +1751,7 @@ EOF;
 				}
 				if (null !== $msgId) {
 					$path = str_replace('{id}', $discussion->getId(), self::PATH_DISCUSSIONS_CLOSED);
-					$commentList->createChild('p')->appendChild($this->makeActionButton(__($msgId), $path, self::CMD_DISCUSSION_CLOSED));
+					$discussionHtml->createChild('p')->appendChild($this->makeActionButton(__($msgId), $path, self::CMD_DISCUSSION_CLOSED));
 				}
 			}
 
@@ -1758,8 +1764,9 @@ EOF;
 				];
 				$replyForm = $this->createCommentForm($type, $formData, $discussion);
 				$replyForm->updateDom();
-				$replyForm->appendTo($commentList);
-				$commentList->appendChild($this->makeDiscussionActionButton($type, $replyForm, $discussion));
+				// After the list: a list holds only its items (#696).
+				$replyForm->appendTo($discussionHtml);
+				$discussionHtml->appendChild($this->makeDiscussionActionButton($type, $replyForm, $discussion));
 			}
 
 			$reviewCommentContainersSorted[(int)$closed][(int)!$blocking][] = $discussionHtml;
