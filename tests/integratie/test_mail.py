@@ -146,7 +146,7 @@ def the_third_approval_mails_every_member_the_new_status(base):
     for name in ("lotte", "joris"):
         command(Client(base).login(name), path, "approve", {"md_statute[]": STATUTE})
     messages = mails_after(lambda: command(Client(base).login("beheer"), path, "approve", {"md_statute[]": STATUTE}), len(members()))
-    check(messages, base, path, TITLE, ["goedgekeurd"])
+    check(messages, base, path, TITLE, ["Goedgekeurd"])
 
 
 @test
@@ -170,7 +170,7 @@ def review_again_and_publish_mails_every_member(base):
     for name in ("lotte", "joris", "beheer"):
         command(Client(base).login(name), path, "approve", {"md_statute[]": STATUTE})
     messages = mails_after(lambda: command(sanne, path, "status_change_published"), len(members()))
-    check(messages, base, path, TITLE, ["gepubliceerd"])
+    check(messages, base, path, TITLE, ["Gepubliceerd"])
 
 
 @test

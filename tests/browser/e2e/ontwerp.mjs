@@ -57,7 +57,7 @@ export default async function (t) {
 		await setText(':::info Over de raad\nDe raad heeft 37 leden.\n:::\n\n```\n:::info blijft\n:::\n```\n');
 		const [download] = await Promise.all([page.waitForEvent('download'), editor(() => window.hyphaMdeditor.editor.download())]);
 		const text = await (await import('node:fs')).promises.readFile(await download.path(), 'utf8');
-		assert(/\nstatus: schets\n/.test(text), 'status: ' + text.slice(0, 300));
+		assert(/\nstatus: Schets\n/.test(text), 'status: ' + text.slice(0, 300));
 		assert(text.includes('> [!info] Over de raad\n> De raad heeft 37 leden.') && text.includes('```\n:::info blijft\n:::\n```'), 'boxes: ' + text.slice(-200));
 	});
 
@@ -180,7 +180,7 @@ export default async function (t) {
 		await page.waitForTimeout(200);
 		const checks = await page.textContent('#mdeChecks');
 		assert(/Niet getoond op de site: .*onclick=/.test(checks) && checks.includes('<macro>'), 'checklist: ' + checks.slice(0, 300));
-		assert(/vrijheidsniveau 2/.test(await page.textContent('#mdeFacts')), 'no level');
+		assert(/Vrijheidsniveau 2/.test(await page.textContent('#mdeFacts')), 'no level');
 		await setText('Gewone tekst.\n');
 		assert(await editor(() => window.hyphaMdeditor.editor.save()), 'save 2');
 		await page.waitForTimeout(200);
