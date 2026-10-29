@@ -37,6 +37,10 @@
  *    descending date).
  *  - limit:
  *    Show at most this many pages.
+ *  - rss:
+ *    When set to "yes", the page that holds the macro offers the same
+ *    pages as an RSS feed at <language>/<page>/rss, newest first and
+ *    without private pages, and advertises it in its head.
  *
  * Example usage:
  *
@@ -51,6 +55,63 @@ class PagelistMacro extends HyphaMacro {
 		$pages = $this->paginatePages($pages);
 
 		return $this->renderPages($pages);
+	}
+
+	/**
+	 * Returns the pages of this list as an RSS 2.0 feed: public pages
+	 * only, newest first, at most the limit of the macro.
+	 *
+	 * @param string $title The title of the feed
+	 * @param string $link The absolute url of the page with the list
+	 * @param string $feedUrl The absolute url of the feed itself
+	 * @param string $language The language of the feed
+	 * @return string
+	 */
+	public function invokeRss($title, $link, $feedUrl, $language) {
+		global $hyphaUrl;
+		$pages = $this->getPages(false);
+		usort($pages, function($a, $b) {
+			$aDate = $a->getSortDateTime();
+			$bDate = $b->getSortDateTime();
+			return ($bDate ? $bDate->getTimestamp() : 0) - ($aDate ? $aDate->getTimestamp() : 0);
+		});
+		$pages = $this->paginatePages($pages);
+
+		$rss = new DOMDocument('1.0', 'UTF-8');
+		$rss->formatOutput = true;
+		$root = $rss->appendChild($rss->createElement('rss'));
+		$root->setAttribute('version', '2.0');
+		$root->setAttribute('xmlns:atom', 'http://www.w3.org/2005/Atom');
+		$channel = $root->appendChild($rss->createElement('channel'));
+		$add = function(DOMElement $parent, $name, $text) use ($rss) {
+			$child = $parent->appendChild($rss->createElement($name));
+			$child->appendChild($rss->createTextNode($text));
+			return $child;
+		};
+		$add($channel, 'title', $title);
+		$add($channel, 'link', $link);
+		$add($channel, 'description', $title);
+		$add($channel, 'language', $language);
+		$self = $channel->appendChild($rss->createElement('atom:link'));
+		$self->setAttribute('href', $feedUrl);
+		$self->setAttribute('rel', 'self');
+		$self->setAttribute('type', 'application/rss+xml');
+
+		foreach ($pages as $page) {
+			$item = $channel->appendChild($rss->createElement('item'));
+			$url = $hyphaUrl . $page->language . '/' . $page->pagename;
+			$add($item, 'title', $page->getTitle());
+			$add($item, 'link', $url);
+			$add($item, 'guid', $url)->setAttribute('isPermaLink', 'true');
+			$date = $page->getSortDateTime();
+			if ($date)
+				$add($item, 'pubDate', $date->format(DATE_RSS));
+			$excerpt = method_exists($page, 'getExcerpt') ? $page->getExcerpt() : null;
+			$description = $excerpt ? trim(preg_replace('/\s+/', ' ', $excerpt->textContent)) : '';
+			if ($description)
+				$add($item, 'description', $description);
+		}
+		return $rss->saveXML();
 	}
 
 	private function paginatePages(array $pages) {
@@ -117,7 +178,7 @@ class PagelistMacro extends HyphaMacro {
 		return $tags;
 	}
 
-	private function findPageNodes() {
+	private function findPageNodes($allowPrivate = true) {
 		// Allow filtering by tag
 		$tagsattr = $this->macro_tag->getAttribute("tags");
 		$tags = self::lookupTags($tagsattr);
@@ -128,7 +189,7 @@ class PagelistMacro extends HyphaMacro {
 		// Include private pages only when logged in and enabled
 		// TODO: Better checking of option values (and maybe
 		// allow Yes/true/TrUe/etc.)
-		$includePrivate = isUser() && ($this->macro_tag->getAttribute("include-private") == "yes");
+		$includePrivate = $allowPrivate && isUser() && ($this->macro_tag->getAttribute("include-private") == "yes");
 
 		// Allow filtering by page type
 		$pageTypes = [];
@@ -177,8 +238,8 @@ class PagelistMacro extends HyphaMacro {
 		]);
 	}
 
-	private function getPages() {
-		$pageNodes = $this->findPageNodes();
+	private function getPages($allowPrivate = true) {
+		$pageNodes = $this->findPageNodes($allowPrivate);
 
 		// These use ! to set the time part to midnight (in the
 		// default timezone), rather than using the current
