@@ -8,9 +8,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from hypha import Client, run, test  # noqa: E402
 import hypha  # noqa: E402
 import test_paginas as pages  # noqa: E402
+import test_platte_tekst as plain  # noqa: E402
 
 #
-# Only the helpers of test_paginas.py, not its tests.
+# Only the helpers of test_paginas.py and test_platte_tekst.py, not their tests.
 #
 hypha.TESTS.clear()
 
@@ -34,6 +35,14 @@ def llms_txt_lists_the_public_pages_and_articles(base):
     assert "[Start](" in text, "the default page is missing"
     assert draft not in text, "a draft is listed"
     assert secret not in text and secret.replace("_", " ") not in text, "a private page is listed"
+
+
+@test
+def llms_txt_has_a_space_between_the_paragraphs_of_an_excerpt(base):
+    plain.published(Client(base).login("sanne"), f"Avond in het buurthuis {pages.RUN}")
+    _, text, _ = Client(base).get("llms.txt")
+    assert plain.PLAIN in text, "the excerpt of the article is glued or missing (#697)"
+    assert "\ufeff" not in text and "\u200b" not in text, "a byte-order mark or zero-width space in llms.txt"
 
 
 if __name__ == "__main__":
