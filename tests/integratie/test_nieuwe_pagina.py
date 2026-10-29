@@ -17,7 +17,7 @@ def popup(text):
 def the_popup_has_dutch_labels_with_a_capital(base):
     _, text, _ = Client(base).login("lotte").get("nl/Start")
     html = popup(text)
-    for label in ("Maak Nieuwe Pagina", "<th>Soort</th>", "<th>Taal</th>", "Privépagina"):
+    for label in ("Maak nieuwe pagina", "<th>Soort</th>", "<th>Taal</th>", "Privépagina"):
         assert label in html, label
     assert "kies het juiste paginatype" not in html, "the instruction is still there"
 

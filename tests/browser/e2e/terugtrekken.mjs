@@ -13,12 +13,12 @@ export default async function (t) {
 		assert(await page.evaluate(() => window.hyphaMdeditor.editor.save()), 'save');
 		await command(page, 'nl/' + slug, 'status_change_review');
 		await page.goto(base + 'nl/' + slug);
-		const button = page.locator('#pageCommands input[value="trek terug"]');
+		const button = page.locator('#pageCommands input[value="Trek terug"]');
 		assert(await button.count() === 1, 'no button trek terug');
 		page.on('dialog', d => d.accept());
 		await Promise.all([page.waitForNavigation(), button.click()]);
 		assert(!page.errors.length, page.errors.join('\n'));
-		assert(await page.locator('#pageCommands input[value="trek terug"]').count() === 0, 'the article is still in review');
+		assert(await page.locator('#pageCommands input[value="Trek terug"]').count() === 0, 'the article is still in review');
 		await page.context().close();
 	});
 }
