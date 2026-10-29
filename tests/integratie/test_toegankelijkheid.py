@@ -85,7 +85,9 @@ def a_teaser_loads_a_smaller_image_with_its_size_when_it_comes_into_view(base):
     tag = img.group(0)
     src = re.search(r'src="([^"]*)"', tag).group(1)
     assert src.endswith("_800w.jpg"), tag
-    assert 'width="800"' in tag and 'height="450"' in tag and 'loading="lazy"' in tag, tag
+    # The only teaser of this tag index is the first image, which loads at once (#698); test_platte_tekst.py tests
+    # the lazy loading of the teasers below it.
+    assert 'width="800"' in tag and 'height="450"' in tag, tag
     status, _, _ = Client(base).get(src)
     assert status == 200, f"{src}: {status}"
 
