@@ -1,6 +1,7 @@
 """/llms.txt (llmstxt.org): the public pages of the site in Markdown for language models and AI agents."""
 import os
 import re
+import time
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -43,6 +44,20 @@ def llms_txt_has_a_space_between_the_paragraphs_of_an_excerpt(base):
     _, text, _ = Client(base).get("llms.txt")
     assert plain.PLAIN in text, "the excerpt of the article is glued or missing (#697)"
     assert "\ufeff" not in text and "\u200b" not in text, "a byte-order mark or zero-width space in llms.txt"
+
+
+@test
+def llms_txt_comes_from_a_cache_until_a_page_changes(base):
+    time.sleep(1.1)
+    _, first, _ = Client(base).get("llms.txt")
+    cache = os.path.join(pages.WORK, "data/llms.cache")
+    assert os.path.exists(cache), "no cache of llms.txt (#701)"
+    _, second, _ = Client(base).get("llms.txt")
+    assert second == first, "the cached llms.txt differs"
+    title = f"Na de cache {pages.RUN}"
+    pages.article(Client(base).login("sanne"), title, "published")
+    _, third, _ = Client(base).get("llms.txt")
+    assert f"[{title}](" in third, "a new article is missing: the cache was not renewed"
 
 
 if __name__ == "__main__":
