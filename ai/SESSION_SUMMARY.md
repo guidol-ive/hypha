@@ -59,6 +59,21 @@ date_last_review:
   `data/cache`). PR #519 for #406 (logged-in crawl 82 → 0 failures). New: KI-028 to KI-030.
 - Nothing of this session is committed.
 
+## 2026-10-29, scaling and a comparison with a large publisher
+
+- Scaling over 1, 2 and 8 CPUs measured and documented
+  (`ai/measurement/20261029_SCALABILITY_CPUS.md`, OPERATIONS.md, 06-beheer.md): one to two
+  workers per CPU; 16 workers on 1 CPU cut throughput to a quarter under a container CPU limit.
+  The home page does 211/345/733 req/s on 1/2/8 CPUs, and 2,179/4,129/6,192 with the page cache
+  of #518.
+- Compared the trial site with the home page of a large publisher. New issues and PRs:
+  #681 (PR #684, image size and lazy loading), #682 (PR #685, landmarks and a skip link), #683
+  (PR #686, shared JavaScript in `system/assets/hypha.js`). `Permissions-Policy` added to PR #671
+  (#432). All are in bouw, `compleet` and the trial branch, and tested on PHP 8.2 and 8.5.
+- Still open from the comparison: JSON-LD `NewsArticle` (#521, no PR yet), an RSS/Atom feed
+  (#128, no PR yet). The live trial site answers in about 350 ms of server time, against about
+  10 ms locally, and does not serve `llms.txt`: it seems to run older code, or without OPcache.
+
 ## 2026-10-28, trial site, fixes from use and SEO
 
 - The trial branch `issue520-compleet-proef` (bouw plus the needed PRs) runs at the trial site; `haal_hypha.ksh`
