@@ -46,11 +46,14 @@
 	*/
 
 	// Anonymous page cache: serve a cached page from the memory db
-	// before any site data is read, or fall through.
+	// before any site data is read, or fall through. /robots.txt and
+	// /sitemap.xml come from their own cache, see system/core/sitemap.php
 	require_once 'system/core/language.php';
 	require_once 'system/core/HyphaRequest.php';
 	require_once 'system/core/pagecache.php';
+	require_once 'system/core/sitemap.php';
 	HyphaPageCache::serveFast();
+	hypha_serveSitemapFast();
 
 	foreach (scandir("system/core/") as $_file) if (substr($_file, -4) == '.php') require_once("system/core/" . $_file);
 
@@ -106,9 +109,9 @@
 
 	// Answer search engines before any page is looked up, see system/core/sitemap.php
 	$_path = $hyphaRequest->getRelativeUrlPath(false);
-	if ($_path === 'robots.txt') serveRobotsTxt($hyphaUrl);
+	if ($_path === 'robots.txt') serveRobotsTxt($hyphaUrl, hypha_getSitemapCache()['allowed']);
 	if ($_path === 'llms.txt') serveLlmsTxt($hyphaUrl);
-	if (preg_match('/^sitemap(?:-([1-9][0-9]*))?\.xml$/', $_path, $_matches)) serveSitemap($hyphaUrl, isset($_matches[1]) ? (int)$_matches[1] : null);
+	if (preg_match('/^sitemap(?:-([1-9][0-9]*))?\.xml$/', $_path, $_matches)) serveSitemap($hyphaUrl, isset($_matches[1]) ? (int)$_matches[1] : null, hypha_getSitemapCache());
 	// The CSRF token for anonymous visitors is not in the HTML: the
 	// hypha() JavaScript function fetches it here before it posts.
 	if ($hyphaQuery === 'csrf-token' && $hyphaRequest->isPost()) {
