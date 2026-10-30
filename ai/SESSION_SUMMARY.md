@@ -59,6 +59,25 @@ date_last_review:
   `data/cache`). PR #519 for #406 (logged-in crawl 82 → 0 failures). New: KI-028 to KI-030.
 - Nothing of this session is committed.
 
+## 2026-10-30, caches, `compleet` complete and the commits of the maintainer
+
+- `robots.txt` and `sitemap.xml` are answered from `data/sitemap.cache` before `hypha.xml` is read
+  (PR #618); `llms.txt` lists the 10 newest public pages (PR #680). The redirect of `/` still goes
+  through all of Hypha (62 against 253 req/s): noted on #411, for after the PHP 8 migration.
+- `compleet` lacked nine own PRs (#476, #478-#480, #482-#485, #513); merged. Merging them showed
+  that a cache hit dropped the `X-Robots-Tag` of a test copy, and that `robots.txt` allowed the
+  honeypot link: fixed in `compleet`, noted on #479 and #480.
+- The maintainer merged #691, closed #540 for his own sanitizing (0b085fd) and pushed 20 commits.
+  Two of them broke things on `main`: an article without a featured image can be neither edited
+  nor saved (PR #702), and `hypha_make_relative()` drops the query and the anchor of a link and
+  ignores a port in the Host header (PR #703; commit comment on 2a14486). #639/#638 closed: fixed
+  by 2a14486. #670, #574, #582, #516 and #492 got `main` merged in (a forced push was refused).
+- bouw, `compleet` and the trial branch have `main` (ef13736), #702 and #703; the code of #540 is
+  out. bouw follows the new version selector form of `main` (Markdown pages, feed link). Tests
+  green on 8.2 and 8.5, apart from the llms test in bouw, which failed before too.
+- Still to do: check #649 again against a fresh copy of the test data, and rebuild the live
+  `compleet`.
+
 ## 2026-10-29, scaling and a comparison with a large publisher
 
 - Scaling over 1, 2 and 8 CPUs measured and documented
