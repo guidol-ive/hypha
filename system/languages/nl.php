@@ -49,7 +49,7 @@
 		"new-page" => "Nieuwe pagina",
 		"new-page-icon" => "<span class=\"hypha-icon hypha-icon-new-page\" aria-hidden=\"true\"></span>",
 		"index" => "Index",
-		"llms-intro" => "Dit bestand noemt de openbare pagina's van deze site voor taalmodellen en AI-agents (llmstxt.org). Alle adressen staan ook in de sitemap: [[sitemap]]",
+		"llms-intro" => "Dit bestand noemt de [[count]] nieuwste openbare pagina's van deze site voor taalmodellen en AI-agents (llmstxt.org). Alle pagina's staan in de sitemap: [[sitemap]]",
 		"llms-articles" => "Artikelen",
 		"llms-pages" => "Pagina's",
 		"index-icon" => "<span class=\"hypha-icon hypha-icon-index\" aria-hidden=\"true\"></span>",
