@@ -16,6 +16,7 @@
 {"message": "DOMDocument::loadHTML(): error parsing attribute name in Entity", "issue": null, "reason": "still seen after the fix of #527 (PR #533) on 2026-10-28; not in its scope, not yet traced to an issue"}
 {"message": "mail(): Sendmail exited with non-zero exit code 127", "issue": null, "reason": "test setup: the container has no sendmail"}
 {"message": "Call to a member function getElementsByTagName() on null in /var/www/html/system/core/base.php", "issue": null, "reason": "not yet traced to an issue"}
+{"message": "\"error\":\"Call to a member function getElementsByTagName() on null\",\"file\":\"/var/www/html/system/core/base.php\"", "issue": null, "reason": "the same message as the line above, as the audit trail of #476 logs it"}
 {"message": "Failed to open stream: No such file or directory in /var/www/html/system/core/database.php", "issue": null, "reason": "test setup: macOS bind mount, rename() briefly shows no file (docs/technical/TESTING.md)"}
 {"message": "open failed: fopen(data/", "issue": null, "reason": "test setup: macOS bind mount, rename() briefly shows no file (docs/technical/TESTING.md)"}
 {"message": "Increment on non-numeric string is deprecated, use str_increment() instead in /var/www/html/system/datatypes/index.php", "issue": 514}
