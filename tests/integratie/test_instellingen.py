@@ -176,5 +176,27 @@ def a_link_in_the_header_without_an_address_leads_home(base):
     finally:
         write_same_length(path, original)
 
+
+@test
+def a_link_to_the_site_keeps_its_anchor_and_query(base):
+    # Saving made links relative, but kept only the path: #top and ?page=2 became "", the anchor of a link to a page
+    # was lost, and with a port in the Host header a link to the site itself stayed absolute (2a14486 on main).
+    beheer = Client(base).login("beheer")
+    path = os.path.join(WORK, "data/hypha.xml")
+    original = open(path, "rb").read()
+    root = ET.parse(path).getroot()
+    links = ["#top", "?pagina=2", "/nl/Start#reacties", base.rstrip("/") + "/nl/Start#bron1", "https://elders.example/a#b"]
+    try:
+        beheer.get("settings")
+        header = "".join(f'<a href="{href}">link</a>' for href in links)
+        beheer.post("settings", "settingsSaveSiteElements", "", {"siteTitle": root.findtext("title"), "siteHeader": header, "siteFooter": "<p>Verzonnen voettekst</p>"})
+        stored = [a.get("href") for a in ET.parse(path).getroot().find("header").iter("a")]
+        # A link to a page is stored as the id of the page, with its anchor.
+        page = re.match(r"hypha:[^#]+", stored[2] or "")
+        assert page and stored == ["#top", "?pagina=2", page.group(0) + "#reacties", page.group(0) + "#bron1", links[4]], stored
+    finally:
+        write_same_length(path, original)
+
+
 if __name__ == "__main__":
     sys.exit(run(sys.argv[1]))
