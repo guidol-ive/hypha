@@ -26,8 +26,9 @@ not, where is the bottleneck?
   - **start**: `0a2cfe0`, the trial branch before the performance work;
   - **trial**: `issue520-compleet-proef`, with the line-level optimisations of #675 and #677 and
     the shared XPath object;
-  - **complete**: branch `compleet`, every open pull request merged, including the APCu page cache
-    of PR #518.
+  - **complete**: branch `compleet`, with the open pull requests of this fork merged, including the
+    APCu page cache of PR #518. At the time of measuring it lacked #476, #478-#480, #482-#485 and
+    #513; these were merged on 2026-10-30, after this measurement.
 
 ## 1. Workers matched to CPUs (2 workers on 1 CPU, otherwise 1 per CPU or 2 per CPU)
 
