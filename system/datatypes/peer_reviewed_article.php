@@ -129,7 +129,7 @@ class peer_reviewed_article extends HyphaDatatypePage {
 		self::STATUS_RETRACTED => [/*self::STATUS_DRAFT => 'to_draft'*/], // "to draft" is not supported yet
 	];
 
-	const URL_REGEX='/((https?:\/\/)|www.)[-\w\/]+\.[-~\w\/?=%.&#_]*[-~\w\/?=%&#_]/iu';
+	const URL_REGEX='/((https?:\/\/)|www.)[-\w\/]+\.[-~\w\/?=%.&#_;]*[-~\w\/?=%&#_;]/iu';
 	// [protocol://|www.] [word] . [suffix /path ?query&parameter=value#bookmark] [last char must not be a dot]
 	const MAX_COMMENT_LENGTH = 100 * 6; // Roughly hundred words
 	const MIN_COMMENT_STUB_LENGTH = self::MAX_COMMENT_LENGTH * 0.7;
@@ -364,7 +364,7 @@ class peer_reviewed_article extends HyphaDatatypePage {
 		/** @var HyphaDomElement $discussions */
 		$discussions = $this->xml->findOneXPath(self::FIELD_NAME_DISCUSSION_CONTAINER . '/' . self::FIELD_NAME_DISCUSSION_PUBLIC_CONTAINER);
 
-		$xpath = './/' . self::FIELD_NAME_DISCUSSION_COMMENT . '[@' . self::FIELD_NAME_DISCUSSION_COMMENT_PENDING . '!="1"]';
+		$xpath = './/' . self::FIELD_NAME_DISCUSSION_COMMENT . '[not(@' . self::FIELD_NAME_DISCUSSION_COMMENT_PENDING . '="1")]';
 		$commentCollection = $discussions->findXPath($xpath);
 
 		$commentCount = $commentCollection->length;
@@ -1606,7 +1606,7 @@ EOF;
 			$commentHtml .= ' | ' . ($resolved ? __('art-is-resolved') : __('art-is-blocking'));
 		}
 		$commentHtml .= '</p>';
-		return $this->html->createFromHtml($commentHtml);
+		return $this->html->createFromHtml($commentHtml, "rendering comments");
 	}
 
 	/**
