@@ -18,7 +18,6 @@
 		- *errors* Switch off php error reporting to the client.
 		- *sanity check* Check if the version of php is compatible with our script.
 		- *code scan* Client data sent through $_GET or $_POST variables are scanned for malicious code injection before continuing to the main script.
-		- *email obfuscation* Email addresses are obfuscated to prevent spambots from harvesting published email addresses. This function is actually registered later on once all core scripts are loaded. See below...
 	*/
 
 	$DEBUG = file_exists('DEBUG');
@@ -141,7 +140,10 @@
 	if (in_array($hyphaQuery, ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'])) serveFile('data/themes/' . $O_O->getThemeName() . '/' . $hyphaQuery, 'data/themes');
 
 	// jump to installation procedure when hypha.xml is missing
-	if (!is_file('data/hypha.xml')) header('Location: ' . $hyphaUrl . 'hypha.php');
+	if (!is_file('data/hypha.xml')) {
+		header('Location: ' . $hyphaUrl . 'hypha.php');
+		exit;
+	}
 
 	// Answer search engines before any page is looked up, see system/core/sitemap.php
 	$_path = $hyphaRequest->getRelativeUrlPath(false);
@@ -278,9 +280,6 @@
 			appendAsterisk($div, isAdmin());
 		}
 	}
-
-	// obfuscate email addresses to strangers. It's ok to send readable addresses to logged in members. This also prevents conflicts in the editor.
-//	if (!$O_O->isUser()) registerPostProcessingFunction('obfuscateEmail');
 
 	if ($hyphaPage) hypha_setBodyClass($O_O, $hyphaPage);
 	if ($hyphaPage) hypha_setAlternateLinks($O_O, $hyphaPage);
