@@ -84,6 +84,8 @@
 		"image-preview" => "Preview of the chosen image",
 		"base-url" => "Site address",
 		"base-url-explain" => "The address of the site, e.g. https://www.example.org/; used for links in e-mails and as canonical address. Leave empty to take it from each request.",
+		"allow-index" => "Search engines",
+		"allow-index-explain" => "Search engines may index this site; switch this off for a test copy.",
 		"invalid-base-url" => "The site address must be an http or https address, e.g. https://www.example.org/; it was not changed.",
 		"url" => "url",
 		"web" => "Web",

@@ -177,6 +177,13 @@
 		$canonical->setAttribute('rel', 'canonical');
 		$canonical->setAttribute('href', hypha_getBaseUrl() . $hyphaRequest->getRelativeUrlPath(false));
 	}
+	// Keep test copies out of search engines (see the hypha settings).
+	if (!hypha_getAllowIndex()) {
+		header('X-Robots-Tag: noindex, nofollow');
+		$metaRobots = $hyphaHtml->findOneXPath('head')->createChild('meta');
+		$metaRobots->setAttribute('name', 'robots');
+		$metaRobots->setAttribute('content', 'noindex, nofollow');
+	}
 	$hyphaHtml->linkStyle('system/assets/hypha-core.css');
 	$hyphaHtml->linkStyle($O_O->data->themeCss->getFilename());
 	$hyphaHtml->linkScript('system/assets/jquery-3.7.1.min.js');

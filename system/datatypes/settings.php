@@ -304,6 +304,10 @@
 		<th><?=__('default-new-page-type')?>:</th>
 		<td><select name="settingsDefaultNewPageType" id="settingsDefaultNewPageType"><?=self::typesOptionList(hypha_getDefaultNewPageType())?></select></td>
 	</tr>
+	<tr>
+		<th><?=__('allow-index')?>:</th>
+		<td><input name="settingsAllowIndex" id="settingsAllowIndex" type="checkbox" value="on"<?=hypha_getAllowIndex() ? ' checked="checked"' : ''?> /> <?=__('allow-index-explain')?></td>
+	</tr>
 </table>
 <?php
 				$form = $this->html->createForm(ob_get_clean());
@@ -329,6 +333,7 @@
 					hypha_setBaseUrl($baseUrl);
 				$digestInterval = 86400 * $_POST['settingsIntervalDays'] + 3600 * $_POST['settingsIntervalHours'] + 60 * $_POST['settingsIntervalMinutes'];
 				hypha_setDigestInterval($digestInterval);
+				hypha_setAllowIndex(isset($_POST['settingsAllowIndex']));
 				$hyphaXml->saveAndUnlock();
 			}
 			return 'reload';

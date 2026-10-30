@@ -84,6 +84,8 @@
 		"image-preview" => "Voorbeeld van de gekozen afbeelding",
 		"base-url" => "Adres van de site",
 		"base-url-explain" => "Het adres van de site, bijvoorbeeld https://www.example.org/; gebruikt voor links in e-mails en als canoniek adres. Leeg laten om het uit elk verzoek af te leiden.",
+		"allow-index" => "Zoekmachines",
+		"allow-index-explain" => "Zoekmachines mogen deze site indexeren; zet dit uit voor een testkopie.",
 		"invalid-base-url" => "Het adres van de site moet een http- of https-adres zijn, bijvoorbeeld https://www.example.org/; het is niet gewijzigd.",
 		"url" => "url",
 		"web" => "Web",
