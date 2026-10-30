@@ -801,6 +801,7 @@
 				$user = hypha_getUserById($userId);
 				hypha_setUser($user, '', '', '', '', '', 'admin');
 				$hyphaXml->saveAndUnlock();
+				hypha_audit('HYP-2001', 'notice', 'Admin rights granted', ['target_user_id' => $userId]);
 				writeToDigest(htmlspecialchars($hyphaUser->getAttribute('fullname')).__('granted-admin-rights-to').htmlspecialchars($user->getAttribute('fullname')), 'settings');
 			}
 			return 'reload';
@@ -818,6 +819,7 @@
 					$user = hypha_getUserByName($username);
 					hypha_setUser($user, '', '', '', '', '', 'user');
 					$hyphaXml->saveAndUnlock();
+					hypha_audit('HYP-2002', 'notice', 'Admin rights revoked', ['target_user_id' => $user->getAttribute('id')]);
 					writeToDigest(htmlspecialchars($hyphaUser->getAttribute('fullname')).__('took-admin-rights-from').htmlspecialchars($user->getAttribute('fullname')), 'settings');
 				} else {
 					$hyphaXml->unlock();
@@ -833,6 +835,7 @@
 				$hyphaXml->lockAndReload();
 				hypha_retireUser($userId, /* by_admin */ true);
 				$hyphaXml->saveAndUnlock();
+				hypha_audit('HYP-2003', 'notice', 'User removed', ['target_user_id' => $userId]);
 			}
 			return 'reload';
 		}
@@ -844,6 +847,7 @@
 				$user = hypha_getUserById($userId);
 				$error = hypha_setUser($user, '', '', '', '', '', 'user');
 				$hyphaXml->saveAndUnlock();
+				if (!$error) hypha_audit('HYP-2004', 'notice', 'User reactivated', ['target_user_id' => $userId]);
 				if ($error) {
 					notify($error);
 				} else {

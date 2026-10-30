@@ -10,6 +10,7 @@
 /data/hypha.throttle
 /data/hypha.honeypot
 /data/hypha.honeypot.paths
+/data/hypha.audit
 /mockup/node_modules
 DEBUG
 /data/themes/*/
