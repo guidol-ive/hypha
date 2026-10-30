@@ -8,6 +8,8 @@
 /data/hypha.probe
 /data/hypha.selfcheck
 /data/hypha.throttle
+/data/hypha.honeypot
+/data/hypha.honeypot.paths
 /mockup/node_modules
 DEBUG
 /data/themes/*/

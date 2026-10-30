@@ -130,6 +130,12 @@
 	// Do not run when data/ can be downloaded directly (see selfcheck.php).
 	hypha_selfCheckGuard($hyphaRequest->getRootUrlPath());
 
+	// Block clients that requested a scanner trap (see honeypot.php), and
+	// clients already blocked for doing so. Runs before any page is loaded.
+	// Uses the path including the language, so a trap pattern never
+	// matches a page.
+	hypha_honeypotGuard($hyphaRequest->getRelativeUrlPath(false));
+
 	// Shortcut for direct file requests
 	if (startsWith($hyphaQuery, 'data/themes/')) serveFile($hyphaQuery, 'data/themes');
 	if (startsWith($hyphaQuery, 'system/wymeditor')) serveFile($hyphaQuery, 'system/wymeditor');
@@ -192,6 +198,7 @@
 	$hyphaHtml->setTitle(hypha_getTitle());
 	$hyphaHtml->writeToElement('header', hypha_getHeader());
 	$hyphaHtml->writeToElement('footer', hypha_getFooter());
+	$hyphaHtml->writeToElement('footer', hypha_honeypotLinkHtml());
 	$hyphaHtml->writeToElement('menu', hypha_getMenu());
 	$defaultForm = $hyphaHtml->createForm();
 	$hyphaHtml->setDefaultForm($defaultForm);
