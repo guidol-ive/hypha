@@ -86,6 +86,7 @@
 	require_once 'system/core/language.php';
 	require_once 'system/core/HyphaRequest.php';
 	require_once 'system/core/pagecache.php';
+	require_once 'system/core/honeypot.php';
 	require_once 'system/core/sitemap.php';
 	HyphaPageCache::serveFast();
 	hypha_serveSitemapFast();

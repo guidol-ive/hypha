@@ -37,6 +37,14 @@ def robots_txt_and_the_sitemap_do_not_read_hypha_xml_while_the_cache_is_valid(ba
 
 
 @test
+def robots_txt_keeps_crawlers_away_from_the_honeypot_link(base):
+    _, robots, _ = Client(base).get("robots.txt")
+    assert "\nDisallow: /bot-trap\n" in robots, robots
+    _, text, _ = Client(base).get("nl/Start")
+    assert 'href="bot-trap"' in text, "the page has no honeypot link"
+
+
+@test
 def the_sitemap_is_built_again_after_a_change(base):
     time.sleep(1.1)
     client = Client(base)

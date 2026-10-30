@@ -329,6 +329,7 @@
 			}
 			self::countView($route['digestDue']);
 			self::sendHeaders($fresh ? 'hit' : 'stale', $entry['created']);
+			foreach ($entry['headers'] ?? [] as $header) header($header);
 			print $entry['html'];
 			exit;
 		}
@@ -410,16 +411,20 @@
 			$failed = http_response_code() !== 200;
 			$token = $O_O->peekCsrfToken();
 			if ($token && strpos($html, $token) !== false) $failed = true;
+			$headers = [];
 			foreach (headers_list() as $header) {
 				// A Set-Cookie (a session, a CSRF token) or a redirect
 				// means the response is not the same for everyone.
 				if (stripos($header, 'Location:') === 0 || stripos($header, 'Set-Cookie:') === 0) $failed = true;
+				// The noindex of a test copy is sent again on a hit.
+				if (stripos($header, 'X-Robots-Tag:') === 0) $headers[] = $header;
 			}
 			if (!$failed && HyphaMemoryDb::enabled()) {
 				HyphaMemoryDb::set('html:' . $key, [
 					'generation' => HyphaCacheGeneration::read(),
 					'created' => time(),
 					'html' => $html,
+					'headers' => $headers,
 				], self::cacheTtl() + self::staleTtl());
 			}
 			HyphaMemoryDb::release('html:' . $key);

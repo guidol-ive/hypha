@@ -452,6 +452,9 @@
 		echo "User-agent: *\n";
 		if ($allowed) {
 			echo "Allow: /\n";
+			// Keep crawlers away from the hidden link of the
+			// honeypot, so they are not blocked for following it.
+			echo 'Disallow: ' . (parse_url($rootUrl, PHP_URL_PATH) ?: '/') . HYPHA_HONEYPOT_LINK_PATH . "\n";
 			echo "\n";
 			echo 'Sitemap: ' . $rootUrl . "sitemap.xml\n";
 		}
