@@ -73,15 +73,6 @@
 
 			$version = false;
 
-			// advertise the feed of a page list on this page
-			if (!$this->privateFlag && $this->findFeedMacro($this->html->getElementById('main'))) {
-				$link = $this->html->findOneXPath('head')->createChild('link');
-				$link->setAttribute('rel', 'alternate');
-				$link->setAttribute('type', 'application/rss+xml');
-				$link->setAttribute('title', showPagename($this->pagename));
-				$link->setAttribute('href', $this->constructFullPath($this->pagename . '/' . self::PATH_RSS));
-			}
-
 			// setup addition widgets when client is logged in
 			if (isUser()) {
 				// show a drop down list of revisions
@@ -112,6 +103,15 @@
 				}
 			}
 			$this->html->writeToElement('main', $this->getContent($version));
+
+			// advertise the feed of a page list on this page
+			if (!$this->privateFlag && $this->findFeedMacro($this->html->getElementById('main'))) {
+				$link = $this->html->findOneXPath('head')->createChild('link');
+				$link->setAttribute('rel', 'alternate');
+				$link->setAttribute('type', 'application/rss+xml');
+				$link->setAttribute('title', showPagename($this->pagename));
+				$link->setAttribute('href', $this->constructFullPath($this->pagename . '/' . self::PATH_RSS));
+			}
 		}
 
 		/**

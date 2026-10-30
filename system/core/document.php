@@ -564,6 +564,8 @@
 			$name = $field->getAttribute('name');
 			$newField = $field->ownerDocument->createElement('input');
 			$newField->setAttribute('type', 'hidden');
+			// dataFor() gives null for a file field without a value,
+			// e.g. an article without a featured image
 			$newField->setAttribute('value', $value ?? '');
 			$newField->setAttribute('name', 'file_shadow_' . $name);
 			$newField->setAttribute('data-file-shadow-value-for', $name);
