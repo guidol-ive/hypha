@@ -200,6 +200,7 @@
 				$message.= '<a name="'.$id.'"></a>';
 				$message.= $page->digest(hypha_getLastDigestTime());
 			}
+			$message.= '</div>';
 			$hyphaXml->lockAndReload();
 			hypha_setLastDigestTime(time());
 			$hyphaXml->saveAndUnlock();
