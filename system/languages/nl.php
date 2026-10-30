@@ -55,7 +55,7 @@
 		"settings" => "Instellingen",
 		"theme" => "Thema",
 		"login-as-admin-to-delete" => "Log in als beheerder om deze pagina te verwijderen.",
-		"llms-intro" => "Dit bestand noemt de openbare pagina's van deze site voor taalmodellen en AI-agents (llmstxt.org). Alle adressen staan ook in de sitemap: [[sitemap]]",
+		"llms-intro" => "Dit bestand noemt de [[count]] nieuwste openbare pagina's van deze site voor taalmodellen en AI-agents (llmstxt.org). Alle pagina's staan in de sitemap: [[sitemap]]",
 		"llms-articles" => "Artikelen",
 		"llms-pages" => "Pagina's",
 		"image-index" => "Afbeeldingen-index",

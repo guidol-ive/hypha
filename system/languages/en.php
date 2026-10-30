@@ -55,7 +55,7 @@
 		"settings" => "Settings",
 		"theme" => "Theme",
 		"login-as-admin-to-delete" => "Log in as administrator to delete this page.",
-		"llms-intro" => "This file lists the public pages of this site for language models and AI agents (llmstxt.org). All addresses are also in the sitemap: [[sitemap]]",
+		"llms-intro" => "This file lists the [[count]] newest public pages of this site for language models and AI agents (llmstxt.org). All pages are in the sitemap: [[sitemap]]",
 		"llms-articles" => "Articles",
 		"llms-pages" => "Pages",
 		"image-index" => "Image index",
