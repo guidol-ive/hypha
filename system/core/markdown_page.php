@@ -215,9 +215,19 @@
 			$scratch = new Xml();
 			foreach (hypha_markdownWikify($scratch, $this->mdContent($this->language, $version), false) as $node) $main->appendChild($this->html->importNode($node, true));
 			if (isUser()) {
-				$this->html->writeToElement('versionList', versionSelector($this, $this->xml));
+				// The version selector is a form of its own, or a
+				// text when there are no versions; the revert button
+				// posts the chosen version with that form.
+				$form = versionSelector($this, $this->xml);
+				$versionList = $this->html->getElementById('versionList');
+				if (is_string($form)) {
+					$versionList->append($form);
+					$form = null;
+				} else {
+					$form->appendTo($versionList);
+				}
 				$commands = $this->html->getElementById('pageCommands');
-				if ($version) $commands->appendChild($this->makeActionButton(__('revert'), self::PATH_REVERT, self::CMD_REVERT));
+				if ($version) $commands->appendChild($this->makeActionButton(__('revert'), self::PATH_REVERT, self::CMD_REVERT, '', $form));
 				else {
 					$commands->appendChild($this->makeActionButton(__('edit'), self::PATH_EDIT));
 					$commands->appendChild($this->makeActionButton(__('translate'), self::PATH_TRANSLATE));
